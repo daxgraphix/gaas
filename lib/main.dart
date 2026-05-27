@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'dart:io' show Platform;
+import 'core/sound_manager.dart';
 import 'core/providers.dart';
 import 'core/notification_service.dart';
 import 'core/utils/game_flow_optimizer.dart';
@@ -13,9 +14,7 @@ import 'l10n/generated/app_localizations.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Platform-specific setup
   if (Platform.isAndroid || Platform.isIOS) {
-    // Mobile-specific settings
     SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
     SystemChrome.setSystemUIOverlayStyle(
       const SystemUiOverlayStyle(
@@ -24,7 +23,6 @@ void main() async {
       ),
     );
   } else if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
-    // Desktop-specific settings - allow multiple orientations
     SystemChrome.setPreferredOrientations([
       DeviceOrientation.portraitUp,
       DeviceOrientation.portraitDown,
@@ -33,16 +31,13 @@ void main() async {
     ]);
   }
 
-  // Initialize performance optimizations
   GameFlowOptimizer.optimizeMemoryUsage();
 
   try {
-    // Initialize database first (fastest)
     final dbInit = DatabaseService.instance;
 
     final container = ProviderContainer();
 
-    // Parallel initialization for better performance
     final futures = [
       dbInit,
       container.read(userSessionProvider.notifier).initializeUser(),
@@ -54,11 +49,11 @@ void main() async {
 
     await Future.wait(futures);
 
-    // Sync SoundManager with loaded Settings
     final settings = container.read(settingsProvider);
     container.read(soundManagerProvider).setMuted(!settings.soundEnabled);
+    await HapticManager.instance.initialize();
+    await SoundManager.instance.initialize();
 
-    // Initialize Notification Service (non-blocking)
     NotificationService().initialize();
 
     runApp(
@@ -78,6 +73,9 @@ class GAASApp extends ConsumerWidget {
     final currentTheme = ref.watch(themeProvider);
     final currentLocale = ref.watch(localeProvider);
     return MaterialApp(
+      // ValueKey forces rebuild of localization system when locale changes
+      // Without this, switching languages may not update AppLocalizations
+      key: ValueKey(currentLocale.code),
       title: 'GAAS',
       debugShowCheckedModeBanner: false,
       theme: AdaptiveTheme.getAdaptiveTheme(context, currentTheme),

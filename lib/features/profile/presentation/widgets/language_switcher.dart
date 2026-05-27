@@ -20,7 +20,6 @@ class LanguageSwitcher extends ConsumerWidget {
     return InkWell(
       onTap: () {
         ref.read(localeProvider.notifier).toggleLanguage();
-        // Show feedback
         final newLocale = ref.read(localeProvider);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(

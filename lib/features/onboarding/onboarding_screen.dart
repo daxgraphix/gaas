@@ -77,7 +77,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
   }
 
   void _nextPage(List<OnboardingPageData> pages) {
-    HapticManager.selectionClick();
+    HapticManager.instance.selectionClick();
     if (_currentPage < pages.length - 1) {
       _pageController.nextPage(
         duration: const Duration(milliseconds: 600),
@@ -89,7 +89,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
   }
 
   void _skip() {
-    HapticManager.lightImpact();
+    HapticManager.instance.lightImpact();
     _completeOnboarding();
   }
 
@@ -161,7 +161,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
             itemCount: pages.length,
             onPageChanged: (index) {
               setState(() => _currentPage = index);
-              HapticManager.lightImpact();
+              HapticManager.instance.lightImpact();
             },
             itemBuilder: (context, index) {
               return _buildPage(pages[index]);

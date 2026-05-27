@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/providers.dart';
 import '../../core/sound_manager.dart';
 import '../../l10n/generated/app_localizations.dart';
+import '../../data/models/statistics.dart';
 
 class RewardsScreen extends ConsumerWidget {
   const RewardsScreen({super.key});
@@ -44,11 +45,11 @@ class RewardsScreen extends ConsumerWidget {
                       case 3:
                         return const SizedBox(height: 32);
                       case 4:
-                        return _buildAchievementRewards(context, theme, l10n);
+                        return _buildAchievementRewards(context, theme, l10n, ref);
                       case 5:
                         return const SizedBox(height: 32);
                       case 6:
-                        return _buildSpecialRewards(context, theme, l10n);
+                        return _buildSpecialRewards(context, theme, l10n, ref);
                       default:
                         return const SizedBox.shrink();
                     }
@@ -111,7 +112,7 @@ class RewardsScreen extends ConsumerWidget {
               ),
               tooltip: l10n.switchLanguage,
               onPressed: () {
-                HapticManager.selectionClick();
+                HapticManager.instance.selectionClick();
                 ref.read(localeProvider.notifier).toggleLanguage();
                 final newLocale = ref.read(localeProvider);
                 ScaffoldMessenger.of(context).showSnackBar(
@@ -213,16 +214,6 @@ class RewardsScreen extends ConsumerWidget {
   }
 
   Widget _buildDailyRewards(BuildContext context, ThemeData theme, AppLocalizations l10n) {
-    final dailyRewards = [
-      {'day': 1, 'reward': '100 XP', 'claimed': true},
-      {'day': 2, 'reward': '150 XP', 'claimed': true},
-      {'day': 3, 'reward': '200 XP', 'claimed': true},
-      {'day': 4, 'reward': '250 XP', 'claimed': false},
-      {'day': 5, 'reward': '300 XP', 'claimed': false},
-      {'day': 6, 'reward': '350 XP', 'claimed': false},
-      {'day': 7, 'reward': '500 XP + Avatar', 'claimed': false},
-    ];
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -234,6 +225,8 @@ class RewardsScreen extends ConsumerWidget {
             color: theme.colorScheme.onSurface,
             letterSpacing: 1,
           ),
+          overflow: TextOverflow.ellipsis,
+          maxLines: 1,
         ),
         const SizedBox(height: 20),
         Container(
@@ -248,45 +241,55 @@ class RewardsScreen extends ConsumerWidget {
           ),
           child: Column(
             children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: dailyRewards.map((reward) {
-                  final isClaimed = reward['claimed'] as bool;
-                  final day = reward['day'] as int;
-                  final rewardText = reward['reward'] as String;
-
-                  return _buildDailyRewardItem(
-                    day: day,
-                    reward: rewardText,
-                    isClaimed: isClaimed,
-                    theme: theme,
-                  );
-                }).toList(),
+              SizedBox(
+                height: 80,
+                child: ListView.builder(
+                  scrollDirection: Axis.horizontal,
+                  itemCount: 7,
+                  physics: const BouncingScrollPhysics(),
+                  itemBuilder: (context, index) {
+                    final day = index + 1;
+                    final rewards = [100, 150, 200, 250, 300, 350, 500];
+                    return Container(
+                      width: 50,
+                      margin: const EdgeInsets.only(right: 8),
+                      child: _buildDailyRewardItem(
+                        day: day,
+                        reward: '$rewards[index] XP',
+                        isClaimed: day <= 3,
+                        theme: theme,
+                      ),
+                    );
+                  },
+                ),
               ),
               const SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: () {
-                  // Claim today's reward
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(l10n.dailyRewardClaimed),
-                      backgroundColor: theme.colorScheme.primary,
-                      behavior: SnackBarBehavior.floating,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () {
+                    HapticManager.instance.successPattern();
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(l10n.dailyRewardClaimed),
+                        backgroundColor: theme.colorScheme.primary,
+                        behavior: SnackBarBehavior.floating,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                       ),
+                    );
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: theme.colorScheme.primary,
+                    foregroundColor: theme.colorScheme.onPrimary,
+                    padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
                     ),
-                  );
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: theme.colorScheme.primary,
-                  foregroundColor: theme.colorScheme.onPrimary,
-                  padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
                   ),
+                  child: Text(l10n.claimTodaysReward),
                 ),
-                child: Text(l10n.claimTodaysReward),
               ),
             ],
           ),
@@ -302,6 +305,7 @@ class RewardsScreen extends ConsumerWidget {
     required ThemeData theme,
   }) {
     return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
       children: [
         Container(
           width: 40,
@@ -352,59 +356,71 @@ class RewardsScreen extends ConsumerWidget {
             fontSize: 10,
             color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
           ),
+          overflow: TextOverflow.ellipsis,
+          maxLines: 1,
         ),
       ],
     );
   }
 
-  Widget _buildAchievementRewards(BuildContext context, ThemeData theme, AppLocalizations l10n) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'ACHIEVEMENT REWARDS',
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-            color: theme.colorScheme.onSurface,
-            letterSpacing: 1,
-          ),
-        ),
-        const SizedBox(height: 20),
-        _buildRewardCard(
-          title: 'First Steps',
-          description: 'Complete your first math problem',
-          reward: '+50 XP',
-          progress: 1.0,
-          icon: Icons.flag,
-          color: theme.colorScheme.primary,
-          theme: theme,
-        ),
-        const SizedBox(height: 16),
-        _buildRewardCard(
-          title: 'Speed Demon',
-          description: 'Solve 10 problems in under 30 seconds',
-          reward: '+100 XP + Speed Badge',
-          progress: 0.7,
-          icon: Icons.flash_on,
-          color: theme.colorScheme.secondary,
-          theme: theme,
-        ),
-        const SizedBox(height: 16),
-        _buildRewardCard(
-          title: 'Math Master',
-          description: 'Achieve 95% accuracy on 50 problems',
-          reward: '+500 XP + Master Avatar',
-          progress: 0.3,
-          icon: Icons.school,
-          color: theme.colorScheme.tertiary,
-          theme: theme,
-        ),
-      ],
+  Widget _buildAchievementRewards(BuildContext context, ThemeData theme, AppLocalizations l10n, WidgetRef ref) {
+    return FutureBuilder<Statistics>(
+      future: ref.read(statisticsRepositoryProvider).getOverallStats(),
+      builder: (context, snapshot) {
+        final stats = snapshot.data ?? Statistics();
+        final accuracy = stats.totalQuestionsAnswered > 0
+            ? (stats.correctAnswers / stats.totalQuestionsAnswered) * 100
+            : 0.0;
+        
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'ACHIEVEMENT REWARDS',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: theme.colorScheme.onSurface,
+                letterSpacing: 1,
+              ),
+            ),
+            const SizedBox(height: 20),
+            _buildRewardCard(
+              title: 'Question Master',
+              description: 'Answer ${stats.totalQuestionsAnswered} questions',
+              reward: '+${(stats.totalQuestionsAnswered ~/ 10) * 10} XP',
+              progress: (stats.totalQuestionsAnswered / 100).clamp(0.0, 1.0),
+              icon: Icons.quiz,
+              color: theme.colorScheme.primary,
+              theme: theme,
+            ),
+            const SizedBox(height: 16),
+            _buildRewardCard(
+              title: 'Accuracy King',
+              description: 'Achieve ${accuracy.toStringAsFixed(0)}% accuracy',
+              reward: '+${accuracy.toInt()} XP',
+              progress: (accuracy / 100).clamp(0.0, 1.0),
+              icon: Icons.track_changes,
+              color: theme.colorScheme.secondary,
+              theme: theme,
+            ),
+            const SizedBox(height: 16),
+            _buildRewardCard(
+              title: 'Time Master',
+              description: 'Play for ${stats.timeSpentSeconds ~/ 60} minutes',
+              reward: '+${stats.timeSpentSeconds ~/ 60} XP',
+              progress: (stats.timeSpentSeconds / 3600).clamp(0.0, 1.0),
+              icon: Icons.timer,
+              color: theme.colorScheme.tertiary,
+              theme: theme,
+            ),
+          ],
+        );
+      },
     );
   }
 
-  Widget _buildRewardCard({
+Widget _buildRewardCard({
     required String title,
     required String description,
     required String reward,
@@ -436,6 +452,7 @@ class RewardsScreen extends ConsumerWidget {
         ],
       ),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
@@ -459,6 +476,8 @@ class RewardsScreen extends ConsumerWidget {
                         fontWeight: FontWeight.bold,
                         color: theme.colorScheme.onSurface,
                       ),
+                      overflow: TextOverflow.ellipsis,
+                      maxLines: 1,
                     ),
                     const SizedBox(height: 4),
                     Text(
@@ -467,22 +486,8 @@ class RewardsScreen extends ConsumerWidget {
                         fontSize: 14,
                         color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
                       ),
-                    ),
-                    const SizedBox(height: 8),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: theme.colorScheme.primary.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Text(
-                        reward,
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
-                          color: theme.colorScheme.primary,
-                        ),
-                      ),
+                      overflow: TextOverflow.ellipsis,
+                      maxLines: 2,
                     ),
                   ],
                 ),
@@ -490,6 +495,24 @@ class RewardsScreen extends ConsumerWidget {
             ],
           ),
           const SizedBox(height: 16),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              color: theme.colorScheme.primary.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Text(
+              reward,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+                color: theme.colorScheme.primary,
+              ),
+              overflow: TextOverflow.ellipsis,
+              maxLines: 1,
+            ),
+          ),
+          const SizedBox(height: 8),
           Container(
             height: 6,
             decoration: BoxDecoration(
@@ -516,75 +539,95 @@ class RewardsScreen extends ConsumerWidget {
               fontSize: 12,
               color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
             ),
-            textAlign: TextAlign.center,
+            overflow: TextOverflow.ellipsis,
+            maxLines: 1,
           ),
         ],
       ),
     );
   }
 
-  Widget _buildSpecialRewards(BuildContext context, ThemeData theme, AppLocalizations l10n) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'SPECIAL REWARDS',
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-            color: theme.colorScheme.onSurface,
-            letterSpacing: 1,
-          ),
-        ),
-        const SizedBox(height: 20),
-        Row(
+  Widget _buildSpecialRewards(BuildContext context, ThemeData theme, AppLocalizations l10n, WidgetRef ref) {
+    final user = ref.watch(userSessionProvider);
+    final streak = user?.loginStreak ?? 0;
+    
+    return FutureBuilder<Statistics>(
+      future: ref.read(statisticsRepositoryProvider).getOverallStats(),
+      builder: (context, snapshot) {
+        final stats = snapshot.data ?? Statistics();
+        final totalQuestions = stats.totalQuestionsAnswered;
+        
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Expanded(
-              child: _buildSpecialRewardItem(
-                title: 'Weekly Champion',
-                description: 'Top scorer this week',
-                icon: Icons.emoji_events,
-                color: theme.colorScheme.secondary,
-                theme: theme,
+            Text(
+              'SPECIAL REWARDS',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: theme.colorScheme.onSurface,
+                letterSpacing: 1,
               ),
             ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: _buildSpecialRewardItem(
-                title: 'Streak Master',
-                description: '7-day solving streak',
-                icon: Icons.local_fire_department,
-                color: theme.colorScheme.primary,
-                theme: theme,
-              ),
+            const SizedBox(height: 20),
+            Row(
+              children: [
+                Expanded(
+                  child: _buildSpecialRewardItem(
+                    title: 'Weekly Champion',
+                    description: 'Top scorer this week',
+                    icon: Icons.emoji_events,
+                    color: theme.colorScheme.secondary,
+                    theme: theme,
+                    progress: (stats.correctAnswers / 100).clamp(0.0, 1.0),
+                    isUnlocked: stats.correctAnswers >= 50,
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: _buildSpecialRewardItem(
+                    title: 'Streak Master',
+                    description: '$streak day streak',
+                    icon: Icons.local_fire_department,
+                    color: theme.colorScheme.primary,
+                    theme: theme,
+                    progress: (streak / 7).clamp(0.0, 1.0),
+                    isUnlocked: streak >= 7,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Expanded(
+                  child: _buildSpecialRewardItem(
+                    title: 'Puzzle Genius',
+                    description: 'Solve $totalQuestions riddles',
+                    icon: Icons.psychology,
+                    color: theme.colorScheme.tertiary,
+                    theme: theme,
+                    progress: (totalQuestions / 100).clamp(0.0, 1.0),
+                    isUnlocked: totalQuestions >= 100,
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: _buildSpecialRewardItem(
+                    title: 'Time Lord',
+                    description: 'Beat 50 speed challenges',
+                    icon: Icons.access_time,
+                    color: theme.colorScheme.primary,
+                    theme: theme,
+                    progress: (totalQuestions / 50).clamp(0.0, 1.0),
+                    isUnlocked: totalQuestions >= 50,
+                  ),
+                ),
+              ],
             ),
           ],
-        ),
-        const SizedBox(height: 16),
-        Row(
-          children: [
-            Expanded(
-              child: _buildSpecialRewardItem(
-                title: 'Puzzle Genius',
-                description: 'Solve 100 riddles',
-                icon: Icons.psychology,
-                color: theme.colorScheme.tertiary,
-                theme: theme,
-              ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: _buildSpecialRewardItem(
-                title: 'Time Lord',
-                description: 'Beat 50 speed challenges',
-                icon: Icons.access_time,
-                color: theme.colorScheme.primary,
-                theme: theme,
-              ),
-            ),
-          ],
-        ),
-      ],
+        );
+      },
     );
   }
 
@@ -594,24 +637,26 @@ class RewardsScreen extends ConsumerWidget {
     required IconData icon,
     required Color color,
     required ThemeData theme,
+    double progress = 1.0,
+    bool isUnlocked = true,
   }) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            color.withValues(alpha: 0.2),
-            color.withValues(alpha: 0.1),
+            color.withValues(alpha: isUnlocked ? 0.2 : 0.1),
+            color.withValues(alpha: isUnlocked ? 0.1 : 0.05),
           ],
         ),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: color.withValues(alpha: 0.3),
+          color: color.withValues(alpha: isUnlocked ? 0.3 : 0.15),
           width: 1,
         ),
         boxShadow: [
           BoxShadow(
-            color: color.withValues(alpha: 0.15),
+            color: color.withValues(alpha: isUnlocked ? 0.15 : 0.08),
             blurRadius: 12,
             offset: const Offset(0, 6),
           ),

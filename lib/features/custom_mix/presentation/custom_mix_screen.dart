@@ -28,7 +28,7 @@ class _CustomMixScreenState extends ConsumerState<CustomMixScreen> {
         leading: IconButton(
           icon: Icon(Icons.close, size: 20, color: theme.colorScheme.onSurface.withValues(alpha: 0.7)),
           onPressed: () {
-            HapticManager.selectionClick();
+            HapticManager.instance.selectionClick();
             Navigator.pop(context);
           },
         ),
@@ -192,7 +192,7 @@ class _CustomMixScreenState extends ConsumerState<CustomMixScreen> {
                   final isSelected = state.selectedOperations.contains(op);
                   return InkWell(
                     onTap: () {
-                      HapticManager.selectionClick();
+                      HapticManager.instance.selectionClick();
                       ref.read(customMixArithmeticProvider.notifier).toggleOperation(op);
                     },
                     child: Container(
@@ -268,7 +268,7 @@ class _CustomMixScreenState extends ConsumerState<CustomMixScreen> {
                   }).toList(),
                   onChanged: (value) {
                     if (value != null) {
-                      HapticManager.selectionClick();
+                      HapticManager.instance.selectionClick();
                       ref.read(customMixArithmeticProvider.notifier).setDifficulty(value);
                     }
                   },
@@ -294,7 +294,7 @@ class _CustomMixScreenState extends ConsumerState<CustomMixScreen> {
           child: ElevatedButton(
             onPressed: state.selectedOperations.isNotEmpty
                 ? () {
-                    HapticManager.mediumImpact();
+                    HapticManager.instance.mediumImpact();
                     ref.read(customMixArithmeticProvider.notifier).startMix();
                   }
                 : null,
@@ -409,7 +409,7 @@ class _CustomMixScreenState extends ConsumerState<CustomMixScreen> {
             ),
             child: ElevatedButton(
               onPressed: () {
-                HapticManager.lightImpact();
+                HapticManager.instance.lightImpact();
                 ref.read(customMixArithmeticProvider.notifier).nextQuestion();
               },
               style: ElevatedButton.styleFrom(
@@ -446,7 +446,7 @@ class _CustomMixScreenState extends ConsumerState<CustomMixScreen> {
                   ),
                   child: ElevatedButton(
                     onPressed: () {
-                      HapticManager.lightImpact();
+                      HapticManager.instance.lightImpact();
                       ref.read(customMixArithmeticProvider.notifier).undoLastAnswer();
                     },
                     style: ElevatedButton.styleFrom(
@@ -510,7 +510,7 @@ class _CustomMixScreenState extends ConsumerState<CustomMixScreen> {
                 ),
                 child: ElevatedButton(
                   onPressed: () {
-                    HapticManager.mediumImpact();
+                    HapticManager.instance.mediumImpact();
                     ref.read(customMixArithmeticProvider.notifier).endMix();
                   },
                   style: ElevatedButton.styleFrom(
@@ -636,7 +636,7 @@ class _CustomMixScreenState extends ConsumerState<CustomMixScreen> {
                 ),
                 child: ElevatedButton(
                   onPressed: isAnswered ? null : () {
-                    HapticManager.lightImpact();
+                    HapticManager.instance.lightImpact();
                     ref.read(customMixArithmeticProvider.notifier).answerQuestion(option);
                   },
                   style: ElevatedButton.styleFrom(
@@ -720,7 +720,7 @@ class _CustomMixScreenState extends ConsumerState<CustomMixScreen> {
             Center(
               child: TextButton(
                 onPressed: () {
-                  HapticManager.selectionClick();
+                  HapticManager.instance.selectionClick();
                   Navigator.pop(context);
                 },
                 child: const Text(
@@ -784,7 +784,7 @@ class _CustomMixScreenState extends ConsumerState<CustomMixScreen> {
           Center(
             child: TextButton(
               onPressed: () {
-                HapticManager.selectionClick();
+                HapticManager.instance.selectionClick();
                 Navigator.pop(context);
               },
               child: Text(

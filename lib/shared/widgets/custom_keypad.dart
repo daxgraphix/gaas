@@ -49,7 +49,7 @@ class CustomKeypad extends StatelessWidget {
               ),
               IconButton(
                 onPressed: () {
-                  HapticManager.lightImpact();
+                  HapticManager.instance.lightImpact();
                   onClear();
                 },
                 icon: Icon(
@@ -82,7 +82,7 @@ class CustomKeypad extends StatelessWidget {
                   context,
                   Icons.close,
                   () {
-                    HapticManager.mediumImpact();
+                    HapticManager.instance.mediumImpact();
                     onClear();
                   },
                 ),
@@ -93,7 +93,7 @@ class CustomKeypad extends StatelessWidget {
                   context,
                   Icons.check,
                   () {
-                    HapticManager.heavyImpact();
+                    HapticManager.instance.heavyImpact();
                     onSubmit();
                   },
                 ),
@@ -120,7 +120,7 @@ class CustomKeypad extends StatelessWidget {
       height: 65,
       child: InkWell(
         onTap: () {
-          HapticManager.selectionClick();
+          HapticManager.instance.selectionClick();
           onKeyPressed(key);
         },
         child: Container(

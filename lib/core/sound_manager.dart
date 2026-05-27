@@ -1,163 +1,164 @@
+import 'dart:io' show Platform;
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class HapticManager {
-  static bool _hapticsEnabled = true;
+  static final HapticManager _instance = HapticManager._internal();
+  static HapticManager get instance => _instance;
+  HapticManager._internal();
 
-  static Future<void> initialize() async {
+  bool _hapticsEnabled = true;
+  bool _platformSupportsHaptics = true;
+
+  Future<void> initialize() async {
     try {
       final prefs = await SharedPreferences.getInstance();
       _hapticsEnabled = prefs.getBool('haptics_enabled') ?? true;
     } catch (e) {
       _hapticsEnabled = true;
     }
+    
+    if (Platform.isWindows) {
+      _platformSupportsHaptics = false;
+    }
   }
 
-  static Future<void> setHapticsEnabled(bool enabled) async {
+  Future<void> setHapticsEnabled(bool enabled) async {
     _hapticsEnabled = enabled;
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('haptics_enabled', enabled);
   }
 
-  static void lightImpact() {
-    if (_hapticsEnabled) {
-      HapticFeedback.lightImpact();
-    }
+  bool get isEnabled => _hapticsEnabled && _platformSupportsHaptics;
+
+  Future<void> lightImpact() async {
+    if (!isEnabled) return;
+    await HapticFeedback.lightImpact();
   }
 
-  static void mediumImpact() {
-    if (_hapticsEnabled) {
-      HapticFeedback.mediumImpact();
-    }
+  Future<void> mediumImpact() async {
+    if (!isEnabled) return;
+    await HapticFeedback.mediumImpact();
   }
 
-  static void heavyImpact() {
-    if (_hapticsEnabled) {
-      HapticFeedback.heavyImpact();
-    }
+  Future<void> heavyImpact() async {
+    if (!isEnabled) return;
+    await HapticFeedback.heavyImpact();
   }
 
-  static void selectionClick() {
-    if (_hapticsEnabled) {
-      HapticFeedback.selectionClick();
-    }
+  Future<void> selectionClick() async {
+    if (!isEnabled) return;
+    await HapticFeedback.selectionClick();
   }
 
-  static void vibrate() {
-    if (_hapticsEnabled) {
-      HapticFeedback.vibrate();
-    }
+  Future<void> vibrate() async {
+    if (!isEnabled) return;
+    await HapticFeedback.vibrate();
   }
 
-  static void successPattern() async {
-    if (!_hapticsEnabled) return;
+  Future<void> successPattern() async {
+    if (!isEnabled) return;
     await HapticFeedback.lightImpact();
     await Future.delayed(const Duration(milliseconds: 50));
     await HapticFeedback.mediumImpact();
   }
 
-  static void errorPattern() async {
-    if (!_hapticsEnabled) return;
+  Future<void> errorPattern() async {
+    if (!isEnabled) return;
     await HapticFeedback.heavyImpact();
     await Future.delayed(const Duration(milliseconds: 50));
     await HapticFeedback.heavyImpact();
   }
 
-  static void correctAnswerPattern() async {
-    if (!_hapticsEnabled) return;
+  Future<void> correctAnswerPattern() async {
+    if (!isEnabled) return;
     await HapticFeedback.lightImpact();
-    await Future.delayed(const Duration(milliseconds: 120));
+    await Future.delayed(const Duration(milliseconds: 100));
     await HapticFeedback.mediumImpact();
+    await Future.delayed(const Duration(milliseconds: 100));
+    await HapticFeedback.lightImpact();
+  }
+
+  Future<void> wrongAnswerPattern() async {
+    if (!isEnabled) return;
+    await HapticFeedback.heavyImpact();
+    await Future.delayed(const Duration(milliseconds: 150));
+    await HapticFeedback.heavyImpact();
+  }
+
+  Future<void> achievementPattern() async {
+    if (!isEnabled) return;
+    await HapticFeedback.mediumImpact();
+    await Future.delayed(const Duration(milliseconds: 100));
+    await HapticFeedback.lightImpact();
+    await Future.delayed(const Duration(milliseconds: 100));
+    await HapticFeedback.heavyImpact();
+  }
+
+  Future<void> levelUpPattern() async {
+    if (!isEnabled) return;
+    await HapticFeedback.selectionClick();
+    await Future.delayed(const Duration(milliseconds: 150));
+    await HapticFeedback.lightImpact();
+    await Future.delayed(const Duration(milliseconds: 150));
+    await HapticFeedback.mediumImpact();
+  }
+
+  Future<void> streakPattern() async {
+    if (!isEnabled) return;
+    await HapticFeedback.lightImpact();
     await Future.delayed(const Duration(milliseconds: 80));
     await HapticFeedback.lightImpact();
+    await Future.delayed(const Duration(milliseconds: 80));
+    await HapticFeedback.mediumImpact();
+  }
+
+  Future<void> milestonePattern() async {
+    if (!isEnabled) return;
+    await HapticFeedback.mediumImpact();
     await Future.delayed(const Duration(milliseconds: 100));
+    await HapticFeedback.heavyImpact();
+    await Future.delayed(const Duration(milliseconds: 150));
+    await HapticFeedback.mediumImpact();
+  }
+
+  Future<void> buttonPressPattern() async {
+    if (!isEnabled) return;
     await HapticFeedback.selectionClick();
   }
 
-  static void wrongAnswerPattern() async {
-    if (!_hapticsEnabled) return;
-    await HapticFeedback.heavyImpact();
-    await Future.delayed(const Duration(milliseconds: 200));
-    await HapticFeedback.heavyImpact();
-    await Future.delayed(const Duration(milliseconds: 150));
-    await HapticFeedback.mediumImpact();
-  }
-
-  static void achievementPattern() async {
-    if (!_hapticsEnabled) return;
-    await HapticFeedback.mediumImpact();
-    await Future.delayed(const Duration(milliseconds: 150));
-    await HapticFeedback.lightImpact();
-    await Future.delayed(const Duration(milliseconds: 150));
-    await HapticFeedback.heavyImpact();
-    await Future.delayed(const Duration(milliseconds: 200));
-    await HapticFeedback.mediumImpact();
-    await Future.delayed(const Duration(milliseconds: 150));
-    await HapticFeedback.lightImpact();
-  }
-
-  static void levelUpPattern() async {
-    if (!_hapticsEnabled) return;
-    await HapticFeedback.selectionClick();
-    await Future.delayed(const Duration(milliseconds: 250));
-    await HapticFeedback.lightImpact();
-    await Future.delayed(const Duration(milliseconds: 200));
-    await HapticFeedback.mediumImpact();
-    await Future.delayed(const Duration(milliseconds: 200));
-    await HapticFeedback.heavyImpact();
-    await Future.delayed(const Duration(milliseconds: 300));
-    await HapticFeedback.mediumImpact();
-  }
-
-  static void streakPattern() async {
-    if (!_hapticsEnabled) return;
-    await HapticFeedback.lightImpact();
-    await Future.delayed(const Duration(milliseconds: 100));
-    await HapticFeedback.lightImpact();
-    await Future.delayed(const Duration(milliseconds: 100));
-    await HapticFeedback.mediumImpact();
-    await Future.delayed(const Duration(milliseconds: 200));
-    await HapticFeedback.lightImpact();
-    await Future.delayed(const Duration(milliseconds: 100));
-    await HapticFeedback.lightImpact();
-  }
-
-  static void milestonePattern() async {
-    if (!_hapticsEnabled) return;
-    await HapticFeedback.mediumImpact();
-    await Future.delayed(const Duration(milliseconds: 150));
-    await HapticFeedback.heavyImpact();
-    await Future.delayed(const Duration(milliseconds: 200));
-    await HapticFeedback.mediumImpact();
-    await Future.delayed(const Duration(milliseconds: 150));
-    await HapticFeedback.heavyImpact();
-    await Future.delayed(const Duration(milliseconds: 250));
-    await HapticFeedback.mediumImpact();
-  }
-
-  static void buttonPressPattern() async {
-    if (!_hapticsEnabled) return;
+  Future<void> transitionPattern() async {
+    if (!isEnabled) return;
     await HapticFeedback.selectionClick();
   }
 
-  void playHint() async {
-    // No special sound for hints
+  Future<void> navigationPattern() async {
+    if (!isEnabled) return;
+    await HapticFeedback.lightImpact();
   }
 
-  static void transitionPattern() {
-    if (_hapticsEnabled) {
-      HapticFeedback.selectionClick();
-    }
+  Future<void> gameStartPattern() async {
+    if (!isEnabled) return;
+    await HapticFeedback.mediumImpact();
+  }
+
+  Future<void> timerWarningPattern() async {
+    if (!isEnabled) return;
+    await HapticFeedback.lightImpact();
   }
 }
 
 class SoundManager {
+  static final SoundManager _instance = SoundManager._internal();
+  static SoundManager get instance => _instance;
+  SoundManager._internal();
+
   bool _isMuted = false;
   bool _soundEnabled = true;
   double _volume = 1.0;
 
-  SoundManager() {
-    _loadPreferences();
+  Future<void> initialize() async {
+    await _loadPreferences();
   }
 
   Future<void> _loadPreferences() async {
@@ -167,16 +168,10 @@ class SoundManager {
       _soundEnabled = prefs.getBool('sound_enabled') ?? true;
       _volume = prefs.getDouble('sound_volume') ?? 1.0;
     } catch (e) {
-      // Default values if loading fails
       _isMuted = false;
       _soundEnabled = true;
       _volume = 1.0;
     }
-  }
-
-  Future<void> initialize(bool soundEnabled) async {
-    _soundEnabled = soundEnabled;
-    _isMuted = !soundEnabled;
   }
 
   Future<void> setMuted(bool muted) async {
@@ -190,14 +185,14 @@ class SoundManager {
     await _savePreferences();
   }
 
-  Future<void> _savePreferences() async {
+Future<void> _savePreferences() async {
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setBool('sound_muted', _isMuted);
       await prefs.setBool('sound_enabled', _soundEnabled);
       await prefs.setDouble('sound_volume', _volume);
     } catch (e) {
-      // Ignore save errors
+      // Silently fail - use default values
     }
   }
 
@@ -210,7 +205,7 @@ class SoundManager {
 
     switch (effect) {
       case 'hint':
-        // No special sound for hints
+        await playHint();
         break;
       case 'correct':
         await playCorrect();
@@ -233,86 +228,112 @@ class SoundManager {
       case 'achievement':
         await playAchievement();
         break;
+      case 'start':
+        await playGameStart();
+        break;
+      case 'timer':
+        await playTimerTick();
+        break;
     }
+  }
+
+  Future<void> playHint() async {
+    if (_isMuted || !_soundEnabled) {
+      HapticManager.instance.lightImpact();
+      return;
+    }
+    await HapticManager.instance.lightImpact();
   }
 
   Future<void> playCorrect() async {
     if (_isMuted || !_soundEnabled) {
-      // Even when sound is disabled, provide haptic feedback
-      HapticManager.correctAnswerPattern();
+      HapticManager.instance.correctAnswerPattern();
       return;
     }
-    // Enhanced sound sequence for correct answer
-    await SystemSound.play(SystemSoundType.click);
-    await Future.delayed(const Duration(milliseconds: 150));
-    await SystemSound.play(SystemSoundType.click);
-    await Future.delayed(const Duration(milliseconds: 100));
-    await SystemSound.play(SystemSoundType.click);
-    HapticManager.correctAnswerPattern();
+    await HapticManager.instance.correctAnswerPattern();
   }
 
   Future<void> playIncorrect() async {
     if (_isMuted || !_soundEnabled) {
-      // Even when sound is disabled, provide haptic feedback
-      HapticManager.wrongAnswerPattern();
+      HapticManager.instance.wrongAnswerPattern();
       return;
     }
-    await SystemSound.play(SystemSoundType.alert);
-    HapticManager.wrongAnswerPattern();
+    await HapticManager.instance.wrongAnswerPattern();
   }
 
   Future<void> playSuccess() async {
-    if (_isMuted || !_soundEnabled) return;
-    await SystemSound.play(SystemSoundType.click);
-    HapticManager.successPattern();
+    if (_isMuted || !_soundEnabled) {
+      HapticManager.instance.successPattern();
+      return;
+    }
+    await HapticFeedback.lightImpact();
+    await Future.delayed(const Duration(milliseconds: 50));
+    await HapticFeedback.mediumImpact();
   }
 
   Future<void> playClick() async {
-    if (_isMuted || !_soundEnabled) return;
-    await SystemSound.play(SystemSoundType.click);
+    if (_isMuted || !_soundEnabled) {
+      HapticManager.instance.selectionClick();
+      return;
+    }
+    await HapticManager.instance.selectionClick();
   }
 
   Future<void> playStartupSound() async {
     if (_isMuted || !_soundEnabled) return;
-    await SystemSound.play(SystemSoundType.click);
+    await HapticManager.instance.selectionClick();
   }
 
   Future<void> playCorrectAnswer() async {
-    if (_isMuted || !_soundEnabled) return;
-    await playCorrect();
+    if (_isMuted || !_soundEnabled) {
+      HapticManager.instance.correctAnswerPattern();
+      return;
+    }
+    await HapticManager.instance.correctAnswerPattern();
   }
 
   Future<void> playWrongAnswer() async {
-    if (_isMuted || !_soundEnabled) return;
-    await playIncorrect();
+    if (_isMuted || !_soundEnabled) {
+      HapticManager.instance.wrongAnswerPattern();
+      return;
+    }
+    await HapticManager.instance.wrongAnswerPattern();
   }
 
   Future<void> playComplete() async {
-    if (_isMuted || !_soundEnabled) return;
-    await SystemSound.play(SystemSoundType.click);
-    HapticManager.successPattern();
+    if (_isMuted || !_soundEnabled) {
+      HapticManager.instance.successPattern();
+      return;
+    }
+    await HapticManager.instance.successPattern();
   }
 
   Future<void> playLevelUp() async {
-    if (_isMuted || !_soundEnabled) return;
-    await SystemSound.play(SystemSoundType.click);
-    HapticManager.levelUpPattern();
+    if (_isMuted || !_soundEnabled) {
+      HapticManager.instance.levelUpPattern();
+      return;
+    }
+    await HapticManager.instance.levelUpPattern();
   }
 
   Future<void> playAchievement() async {
-    if (_isMuted || !_soundEnabled) return;
-    await SystemSound.play(SystemSoundType.click);
-    HapticManager.achievementPattern();
+    if (_isMuted || !_soundEnabled) {
+      HapticManager.instance.achievementPattern();
+      return;
+    }
+    await HapticManager.instance.achievementPattern();
   }
 
   Future<void> playButtonPress() async {
-    if (_isMuted || !_soundEnabled) return;
-    await playClick();
+    if (_isMuted || !_soundEnabled) {
+      HapticManager.instance.selectionClick();
+      return;
+    }
+    await HapticManager.instance.selectionClick();
   }
 
   Future<void> playBackgroundMusic(String trackName) async {
-    // Background music is intentionally disabled on Windows to avoid native
-    // audio plugin build failures. Keep the method as a no-op for callers.
+    // Background music disabled for Windows compatibility
   }
 
   Future<void> stopBackgroundMusic() async {}
@@ -323,6 +344,22 @@ class SoundManager {
 
   Future<void> setBackgroundMusicVolume(double volume) async {
     setVolume(volume);
+  }
+
+  Future<void> playGameStart() async {
+    if (_isMuted || !_soundEnabled) {
+      HapticManager.instance.gameStartPattern();
+      return;
+    }
+    await HapticManager.instance.gameStartPattern();
+  }
+
+  Future<void> playTimerTick() async {
+    if (_isMuted || !_soundEnabled) {
+      HapticManager.instance.timerWarningPattern();
+      return;
+    }
+    await HapticManager.instance.timerWarningPattern();
   }
 
   Future<void> dispose() async {}

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../../../core/providers.dart';
 import '../../../core/themes/app_themes.dart';
+import '../../../core/utils/responsive_utils.dart';
 import '../../../l10n/generated/app_localizations.dart';
 import '../../calculator/calculator_screen.dart';
 import '../../profile_setup/profile_setup_screen.dart';
@@ -320,6 +321,7 @@ class ProfileScreen extends ConsumerWidget {
     ThemeData theme,
   ) {
     return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
       children: [
         Icon(icon, color: color.withValues(alpha: 0.6), size: 20),
         const SizedBox(height: 8),
@@ -329,6 +331,8 @@ class ProfileScreen extends ConsumerWidget {
             fontWeight: FontWeight.w900,
             color: theme.colorScheme.onSurface,
           ),
+          overflow: TextOverflow.ellipsis,
+          maxLines: 1,
         ),
         Text(
           label,
@@ -337,6 +341,8 @@ class ProfileScreen extends ConsumerWidget {
             fontSize: 9,
             letterSpacing: 1,
           ),
+          overflow: TextOverflow.ellipsis,
+          maxLines: 1,
         ),
       ],
     );
@@ -351,8 +357,9 @@ class ProfileScreen extends ConsumerWidget {
     SettingsState settings,
     AppLocalizations l10n,
   ) {
+    final isMobile = ResponsiveUtils.isMobile(context);
     return Padding(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(isMobile ? 12 : 16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -406,9 +413,10 @@ class ProfileScreen extends ConsumerWidget {
               icon: const Icon(Icons.swap_horiz, size: 20),
               onPressed: () {
                 ref.read(localeProvider.notifier).toggleLanguage();
+                final newLocale = ref.read(localeProvider);
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                    content: Text('${l10n.switchedTo} ${ref.read(localeProvider).name}'),
+                    content: Text('${AppLocalizations.of(context)?.switchedTo ?? 'Switched to'} ${newLocale.name}'),
                     duration: const Duration(seconds: 1),
                     backgroundColor: Theme.of(context).colorScheme.primary,
                   ),
@@ -445,7 +453,7 @@ class ProfileScreen extends ConsumerWidget {
               activeThumbColor: theme.colorScheme.tertiary,
             ),
           ),
-           _buildMenuCard(
+          _buildMenuCard(
             icon: Icons.vibration,
               title: l10n.hapticFeedback,
             subtitle: l10n.tactileResponse,
@@ -458,7 +466,7 @@ class ProfileScreen extends ConsumerWidget {
               },
               activeThumbColor: theme.colorScheme.error,
             ),
-           ),
+          ),
         ],
       ),
     );
@@ -647,18 +655,18 @@ class ProfileScreen extends ConsumerWidget {
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(8),
               ),
-              onTap: () {
-                ref.read(localeProvider.notifier).setLocale(locale);
-                Navigator.pop(context);
-                // Show success feedback
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text('${l10n.languageChanged} ${locale.name}'),
-                    duration: const Duration(seconds: 2),
-                    backgroundColor: Theme.of(context).colorScheme.primary,
-                  ),
-                );
-              },
+onTap: () {
+                 ref.read(localeProvider.notifier).setLocale(locale);
+                 Navigator.pop(context);
+                 // Show success feedback
+                 ScaffoldMessenger.of(context).showSnackBar(
+                   SnackBar(
+                     content: Text('${AppLocalizations.of(context)?.languageChanged ?? 'Language changed'} ${locale.name}'),
+                     duration: const Duration(seconds: 2),
+                     backgroundColor: Theme.of(context).colorScheme.primary,
+                   ),
+                 );
+               },
             );
           }).toList(),
         ),

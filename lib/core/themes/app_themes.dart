@@ -354,6 +354,7 @@ class GlassmorphicContainer extends StatelessWidget {
   final Color? backgroundColor;
   final double opacity;
   final bool useFrostedEffect;
+  final bool overflowProtected;
 
   const GlassmorphicContainer({
     super.key,
@@ -366,6 +367,7 @@ class GlassmorphicContainer extends StatelessWidget {
     this.backgroundColor,
     this.opacity = 0.1,
     this.useFrostedEffect = false,
+    this.overflowProtected = true,
   });
 
   @override
@@ -404,8 +406,16 @@ class GlassmorphicContainer extends StatelessWidget {
       ),
     );
 
+    Widget result = overflowProtected
+        ? SingleChildScrollView(
+            clipBehavior: Clip.hardEdge,
+            physics: const BouncingScrollPhysics(),
+            child: ConstrainedWidthBox(child: containerChild),
+          )
+        : containerChild;
+
     if (useFrostedEffect) {
-      return ClipRRect(
+      result = ClipRRect(
         borderRadius: BorderRadius.circular(borderRadius),
         child: BackdropFilter(
           filter: ImageFilter.blur(
@@ -417,7 +427,7 @@ class GlassmorphicContainer extends StatelessWidget {
       );
     }
 
-    return containerChild;
+    return result;
   }
 }
 
@@ -715,6 +725,7 @@ class PremiumCard extends StatefulWidget {
   final EdgeInsetsGeometry? margin;
   final double borderRadius;
   final Color? borderColor;
+  final bool overflowProtected;
 
   const PremiumCard({
     super.key,
@@ -724,6 +735,7 @@ class PremiumCard extends StatefulWidget {
     this.margin,
     this.borderRadius = 20,
     this.borderColor,
+    this.overflowProtected = true,
   });
 
   @override
@@ -751,42 +763,65 @@ class _PremiumCardState extends State<PremiumCard> {
       onTapCancel: widget.onTap != null
           ? () => setState(() => _isPressed = false)
           : null,
-      child:
-          Container(
-                margin: widget.margin,
-                padding: widget.padding ?? const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: isDark
-                      ? theme.colorScheme.surface.withValues(alpha: 0.8)
-                      : theme.colorScheme.surface,
-                  borderRadius: BorderRadius.circular(widget.borderRadius),
-                  border: Border.all(
-                    color:
-                        widget.borderColor ??
-                        (isDark
-                            ? Colors.white.withValues(alpha: 0.1)
-                            : theme.colorScheme.outline.withValues(alpha: 0.3)),
-                    width: 1,
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(
-                        alpha: isDark ? 0.3 : 0.08,
-                      ),
-                      blurRadius: _isPressed ? 5 : 16,
-                      offset: Offset(0, _isPressed ? 2 : 6),
-                    ),
-                  ],
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(widget.borderRadius),
+        child: Container(
+              margin: widget.margin,
+              padding: widget.padding ?? const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: isDark
+                    ? theme.colorScheme.surface.withValues(alpha: 0.8)
+                    : theme.colorScheme.surface,
+                borderRadius: BorderRadius.circular(widget.borderRadius),
+                border: Border.all(
+                  color:
+                      widget.borderColor ??
+                      (isDark
+                          ? Colors.white.withValues(alpha: 0.1)
+                          : theme.colorScheme.outline.withValues(alpha: 0.3)),
+                  width: 1,
                 ),
-                child: widget.child,
-              )
-              .animate(target: _isPressed ? 1 : 0)
-              .scale(
-                begin: const Offset(1, 1),
-                end: const Offset(0.98, 0.98),
-                duration: 100.ms,
-                curve: Curves.easeOut,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(
+                      alpha: isDark ? 0.3 : 0.08,
+                    ),
+                    blurRadius: _isPressed ? 5 : 16,
+                    offset: Offset(0, _isPressed ? 2 : 6),
+                  ),
+                ],
               ),
+              child: widget.overflowProtected
+                  ? SingleChildScrollView(
+                      clipBehavior: Clip.hardEdge,
+                      physics: const BouncingScrollPhysics(),
+                      child: ConstrainedWidthBox(child: widget.child),
+                    )
+                  : widget.child,
+            )
+            .animate(target: _isPressed ? 1 : 0)
+            .scale(
+              begin: const Offset(1, 1),
+              end: const Offset(0.98, 0.98),
+              duration: 100.ms,
+              curve: Curves.easeOut,
+            ),
+      ),
+    );
+  }
+}
+
+class ConstrainedWidthBox extends StatelessWidget {
+  final Widget child;
+  const ConstrainedWidthBox({super.key, required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    return ConstrainedBox(
+      constraints: BoxConstraints(
+        maxWidth: MediaQuery.of(context).size.width,
+      ),
+      child: child,
     );
   }
 }

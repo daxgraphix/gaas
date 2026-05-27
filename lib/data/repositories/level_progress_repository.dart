@@ -53,19 +53,19 @@ class LevelProgressRepository {
     return progress?.highScore ?? 0;
   }
 
-  Future<void> updateHighScore(String operationId, int level, int score) async {
+Future<void> updateHighScore(String operationId, int level, int score) async {
     var progress = await getProgress(operationId, level);
-
+    
     if (progress == null) {
       progress = LevelProgress(
         operationId: operationId,
         level: level,
-        stars: score >= 35 ? 3 : score >= 30 ? 2 : score >= 25 ? 1 : 0,
+        stars: score >= 40 ? 3 : score >= 31 ? 2 : score >= 22 ? 1 : 0,
         highScore: score,
         isUnlocked: true,
       );
     } else {
-      final newStars = score >= 35 ? 3 : score >= 30 ? 2 : score >= 25 ? 1 : 0;
+      final newStars = score >= 40 ? 3 : score >= 31 ? 2 : score >= 22 ? 1 : 0;
       progress = LevelProgress(
         id: progress.id,
         operationId: operationId,
@@ -79,7 +79,7 @@ class LevelProgressRepository {
     final database = await db;
     await database.saveLevelProgress(progress);
 
-    // Unlock next level only if score >= 35
+    // Unlock next level only if score >= 35 (out of 45)
     if (score >= 35 && level < 30) {
       var nextLevel = await getProgress(operationId, level + 1);
       if (nextLevel == null || !nextLevel.isUnlocked) {

@@ -43,7 +43,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> with TickerProvider
 
     _mainController.forward();
     unawaited(_boot());
-    SoundManager().playStartupSound();
+    SoundManager.instance.playStartupSound();
   }
 
   Future<void> _boot() async {

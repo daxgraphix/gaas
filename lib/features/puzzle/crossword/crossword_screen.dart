@@ -57,7 +57,7 @@ class _CrosswordScreenState extends ConsumerState<CrosswordScreen> with SingleTi
   }
 
   void _triggerShake() {
-    HapticManager.errorPattern();
+    HapticManager.instance.errorPattern();
     _shakeController.forward(from: 0);
   }
 
@@ -92,7 +92,7 @@ final theme = Theme.of(context);
         leading: IconButton(
           icon: const Icon(Icons.close, size: 20),
           onPressed: () {
-            HapticManager.selectionClick();
+            HapticManager.instance.selectionClick();
             Navigator.pop(context);
           },
         ),
@@ -185,7 +185,7 @@ final theme = Theme.of(context);
                     onTap: isBlocked
                         ? null
                         : () {
-                            HapticManager.selectionClick();
+                            HapticManager.instance.selectionClick();
                             _selectCell(row, col);
                           },
                     child: Container(
@@ -273,7 +273,7 @@ final theme = Theme.of(context);
     final theme = Theme.of(context);
     return InkWell(
       onTap: () {
-        HapticManager.selectionClick();
+        HapticManager.instance.selectionClick();
         _selectClue(clue);
       },
       child: Padding(
@@ -385,7 +385,7 @@ final theme = Theme.of(context);
     return Row(
       children: [
         _buildSpecialKey(Icons.backspace_outlined, () {
-          HapticManager.lightImpact();
+          HapticManager.instance.lightImpact();
           if (_selectedRow >= 0 && _selectedCol >= 0) {
             ref
                 .read(crosswordPuzzleProvider.notifier)
@@ -396,7 +396,7 @@ final theme = Theme.of(context);
         _buildSpecialKey(
           Icons.lightbulb_outline,
           () {
-          HapticManager.mediumImpact();
+          HapticManager.instance.mediumImpact();
           final user = ref.read(userSessionProvider);
           if (user != null && user.totalPoints >= hintCostPoints) {
             ref.read(crosswordPuzzleProvider.notifier).revealLetter();
@@ -415,7 +415,7 @@ final theme = Theme.of(context);
     return Expanded(
       child: InkWell(
         onTap: () {
-          HapticManager.lightImpact();
+          HapticManager.instance.lightImpact();
           _onLetterPressed(letter);
         },
         child: Container(

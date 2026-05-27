@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../../../core/sound_manager.dart';
 import '../../../core/providers.dart';
+import '../../../core/utils/responsive_utils.dart';
 import '../../../l10n/generated/app_localizations.dart';
 import '../../reports/reports_screen.dart';
 import '../../profile/presentation/profile_screen.dart';
@@ -227,7 +228,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
           ),
           tooltip: l10n.switchLanguage,
           onPressed: () {
-            HapticManager.selectionClick();
+            HapticManager.instance.selectionClick();
             ref.read(soundManagerProvider).playEffect('click');
             ref.read(localeProvider.notifier).toggleLanguage();
             final newLocale = ref.read(localeProvider);
@@ -261,7 +262,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       ),
       tooltip: l10n.profile,
       onPressed: () {
-        HapticManager.selectionClick();
+        HapticManager.instance.selectionClick();
         ref.read(soundManagerProvider).playEffect('click');
         Navigator.push(
           context,
@@ -281,9 +282,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     SessionStats sessionStats,
     AppLocalizations l10n,
   ) {
+    final isMobile = ResponsiveUtils.isMobile(context);
     return Stack(
       children: [
-        // Subtle particle background
         Positioned.fill(
           child: _buildParticleBackground(theme),
         ),
@@ -304,7 +305,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
             slivers: [
               SliverToBoxAdapter(
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 20, 20, 160),
+                  padding: EdgeInsets.fromLTRB(
+                    isMobile ? 16 : 24,
+                    20,
+                    isMobile ? 16 : 24,
+                    isMobile ? 160 : 200,
+                  ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -782,7 +788,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   Widget _buildActionButton(String title, IconData icon, Color color, VoidCallback onPressed, ThemeData theme) {
     return InkWell(
       onTap: () {
-        HapticManager.selectionClick();
+        HapticManager.instance.selectionClick();
         onPressed();
       },
       borderRadius: BorderRadius.circular(16),
@@ -909,6 +915,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   }
 
   Widget _buildGameModesGrid(ThemeData theme) {
+    final crossAxisCount = ResponsiveUtils.getResponsiveGridColumns(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -923,8 +930,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
         GridView.builder(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
-          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 2,
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: crossAxisCount,
             mainAxisSpacing: 16,
             crossAxisSpacing: 16,
             childAspectRatio: 1.2,
@@ -986,7 +993,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   Widget _buildGameModeCard(String title, IconData icon, Color color, VoidCallback onPressed, ThemeData theme) {
     return InkWell(
       onTap: () {
-        HapticManager.selectionClick();
+        HapticManager.instance.selectionClick();
         onPressed();
       },
       borderRadius: BorderRadius.circular(16),
@@ -1085,7 +1092,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
             scale: _fabScaleAnimation.value,
             child: FloatingActionButton(
               onPressed: () {
-                HapticManager.selectionClick();
+                HapticManager.instance.selectionClick();
                 ref.read(soundManagerProvider).playEffect('click');
                 _showQuickStartDialog(theme);
               },

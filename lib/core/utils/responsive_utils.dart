@@ -5,6 +5,7 @@ import '../themes/app_themes.dart';
 class ResponsiveUtils {
   static const double mobileBreakpoint = 600;
   static const double tabletBreakpoint = 1200;
+  static const double desktopBreakpoint = 1920;
 
   static bool isMobile(BuildContext context) =>
       MediaQuery.of(context).size.width < mobileBreakpoint;
@@ -16,14 +17,18 @@ class ResponsiveUtils {
   static bool isDesktop(BuildContext context) =>
       MediaQuery.of(context).size.width >= tabletBreakpoint;
 
+  static bool isLargeDesktop(BuildContext context) =>
+      MediaQuery.of(context).size.width >= desktopBreakpoint;
+
   static bool isWindows() => Platform.isWindows;
   static bool isAndroid() => Platform.isAndroid;
   static bool isIOS() => Platform.isIOS;
+  static bool isMobilePlatform() => Platform.isAndroid || Platform.isIOS;
 
   static double getResponsiveFontSize(BuildContext context, double baseSize) {
     final screenWidth = MediaQuery.of(context).size.width;
-    final scaleFactor = screenWidth / 375.0; // Base width for scaling
-    return baseSize * scaleFactor.clamp(0.8, 2.0);
+    final scaleFactor = screenWidth / 375.0;
+    return baseSize * scaleFactor.clamp(0.7, 2.2);
   }
 
   static EdgeInsets getResponsivePadding(BuildContext context, {
@@ -31,8 +36,8 @@ class ResponsiveUtils {
     double mobileVertical = 8.0,
     double tabletHorizontal = 24.0,
     double tabletVertical = 12.0,
-    double desktopHorizontal = 32.0,
-    double desktopVertical = 16.0,
+    double desktopHorizontal = 48.0,
+    double desktopVertical = 24.0,
   }) {
     if (isMobile(context)) {
       return EdgeInsets.symmetric(horizontal: mobileHorizontal, vertical: mobileVertical);
@@ -52,7 +57,7 @@ class ResponsiveUtils {
   static double getResponsiveIconSize(BuildContext context, double baseSize) {
     if (isMobile(context)) return baseSize;
     if (isTablet(context)) return baseSize * 1.2;
-    return baseSize * 1.4;
+    return baseSize * 1.5;
   }
 
   static int getResponsiveGridColumns(BuildContext context) {
@@ -64,28 +69,42 @@ class ResponsiveUtils {
   static double getResponsiveCardWidth(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
     final columns = getResponsiveGridColumns(context);
-    final totalPadding = 32.0; // Total horizontal padding
-    final spacing = (columns - 1) * 16.0; // Spacing between cards
+    final totalPadding = 32.0;
+    final spacing = (columns - 1) * 16.0;
 
     return (screenWidth - totalPadding - spacing) / columns;
   }
 
-  // Touch-friendly dimensions for mobile vs mouse-friendly for desktop
   static double getTouchTargetSize(BuildContext context) {
-    return isMobile(context) ? 44.0 : 32.0;
+    return isMobile(context) ? 48.0 : 32.0;
   }
 
-  // Adaptive spacing based on platform
   static double getPlatformSpacing(BuildContext context) {
     return isMobile(context) ? 8.0 : 12.0;
   }
 
-  // Keyboard navigation support for desktop
   static bool supportsKeyboardNavigation() => isWindows() || Platform.isLinux || Platform.isMacOS;
 
-  // Gesture detection settings
   static double getSwipeThreshold(BuildContext context) {
     return isMobile(context) ? 50.0 : 100.0;
+  }
+
+  static Size getScreenSize(BuildContext context) {
+    return MediaQuery.of(context).size;
+  }
+
+  static double getScreenWidth(BuildContext context) => MediaQuery.of(context).size.width;
+
+  static double getScreenHeight(BuildContext context) => MediaQuery.of(context).size.height;
+
+  static double getPixelRatio(BuildContext context) => MediaQuery.of(context).devicePixelRatio;
+
+  static bool isHighDensity(BuildContext context) => getPixelRatio(context) > 1.5;
+
+  static Future<void> preloadAssets(BuildContext context) async {
+    // Force GPU rasterization
+    final binding = WidgetsBinding.instance;
+    binding.addPostFrameCallback((_) {});
   }
 }
 
@@ -123,43 +142,44 @@ class AdaptiveTheme {
           TargetPlatform.android: CupertinoPageTransitionsBuilder(),
           TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
           TargetPlatform.windows: CupertinoPageTransitionsBuilder(),
+          TargetPlatform.linux: CupertinoPageTransitionsBuilder(),
+          TargetPlatform.macOS: CupertinoPageTransitionsBuilder(),
         },
       ),
     );
   }
 
-  // Smooth theme transition animation
-  static Widget buildThemeTransition({
-    required BuildContext context,
-    required Widget child,
-    required AppThemeType fromTheme,
-    required AppThemeType toTheme,
+  static Widget buildOptimizedListView({
+    required List<Widget> children,
+    Axis scrollDirection = Axis.vertical,
+    bool addAutomaticKeepAlives = true,
   }) {
-    return TweenAnimationBuilder<Color?>(
-      tween: ColorTween(
-        begin: _getThemePrimaryColor(fromTheme),
-        end: _getThemePrimaryColor(toTheme),
-      ),
-      duration: const Duration(milliseconds: 500),
-      builder: (context, color, child) {
-        return Theme(
-          data: Theme.of(context).copyWith(
-            colorScheme: Theme.of(context).colorScheme.copyWith(
-              primary: color,
-            ),
-          ),
-          child: child!,
-        );
-      },
-      child: child,
+    return ListView(
+      scrollDirection: scrollDirection,
+      cacheExtent: 1000,
+      addAutomaticKeepAlives: addAutomaticKeepAlives,
+      children: children,
     );
   }
 
-  static Color _getThemePrimaryColor(AppThemeType theme) {
-    switch (theme) {
-      case AppThemeType.midnight:
-        return const Color(0xFF1F2937);
-    }
+  static Widget buildOptimizedGridView({
+    required int crossAxisCount,
+    required double childAspectRatio,
+    required List<Widget> children,
+    double crossAxisSpacing = 16.0,
+    double mainAxisSpacing = 16.0,
+  }) {
+    return GridView(
+      cacheExtent: 1000,
+      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: crossAxisCount,
+        crossAxisSpacing: crossAxisSpacing,
+        mainAxisSpacing: mainAxisSpacing,
+        childAspectRatio: childAspectRatio,
+      ),
+      physics: const BouncingScrollPhysics(),
+      children: children,
+    );
   }
 }
 

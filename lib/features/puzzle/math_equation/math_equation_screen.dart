@@ -122,7 +122,7 @@ class _MathEquationScreenState extends ConsumerState<MathEquationScreen> with Ti
         _endGame();
       } else {
         _shakeController.forward(from: 0);
-        HapticManager.errorPattern();
+        HapticManager.instance.errorPattern();
       }
     }
   }
@@ -509,7 +509,7 @@ class _MathEquationScreenState extends ConsumerState<MathEquationScreen> with Ti
           } else {
             _enterNumber(value);
           }
-          HapticManager.selectionClick();
+          HapticManager.instance.selectionClick();
         },
         borderRadius: BorderRadius.circular(16),
         child: AnimatedContainer(

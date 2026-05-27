@@ -21,7 +21,8 @@ final levelProgressRepositoryProvider = Provider((ref) => LevelProgressRepositor
 final statisticsRepositoryProvider = Provider((ref) => StatisticsRepository());
 const int hintCostPoints = 0;
 
-final soundManagerProvider = Provider((ref) => SoundManager());
+final soundManagerProvider = Provider((ref) => SoundManager.instance);
+final hapticManagerProvider = Provider((ref) => HapticManager.instance);
 
 final themeProvider = StateNotifierProvider<ThemeNotifier, AppThemeType>((ref) {
   return ThemeNotifier();
@@ -100,7 +101,7 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
       notificationsEnabled: prefs.getBool('notifications_enabled') ?? true,
       soundVolume: prefs.getDouble('sound_volume') ?? 1.0,
     );
-    await HapticManager.setHapticsEnabled(hapticsEnabled);
+    await ref.read(hapticManagerProvider).setHapticsEnabled(hapticsEnabled);
   }
 
   Future<void> toggleSound(bool value) async {
@@ -482,6 +483,26 @@ class UserSessionNotifier extends StateNotifier<UserSession?> {
     await repo.updateUserSession(state!);
     state = state;
     return true;
+  }
+
+  Future<void> equipAvatar(String avatarId) async {
+    if (state == null) return;
+    final updatedUser = UserSession(
+      name: state!.name,
+      avatarShape: avatarId,
+      avatarColor: state!.avatarColor,
+      theme: state!.theme,
+      language: state!.language,
+      totalPoints: state!.totalPoints,
+      createdAt: state!.createdAt,
+      lastPlayedAt: state!.lastPlayedAt,
+      unlockedAvatars: state!.unlockedAvatars,
+      loginStreak: state!.loginStreak,
+    )..id = state!.id;
+
+    final repo = ref.read(userRepositoryProvider);
+    await repo.updateUserSession(updatedUser);
+    state = updatedUser;
   }
 }
 

@@ -355,7 +355,7 @@ class GameSessionNotifier extends StateNotifier<GameSession?> {
     }
 
     if (isCorrect) {
-      HapticManager.successPattern();
+      HapticManager.instance.successPattern();
       final baseScore = _getScoreForMode();
       newScore += (hintUsed ? (baseScore ~/ 2) : baseScore) * newCombo;
       newCorrect++;
@@ -372,7 +372,7 @@ class GameSessionNotifier extends StateNotifier<GameSession?> {
       }
       challengeNotifier.incrementProgress('streak', 1);
     } else {
-      HapticManager.errorPattern();
+      HapticManager.instance.errorPattern();
       newCombo = 1; // Reset combo on wrong answer
       if (state!.mode == GameMode.endless) {
         newLives--;
@@ -524,11 +524,11 @@ class GameSessionNotifier extends StateNotifier<GameSession?> {
     int newLives = state!.lives;
 
     if (isCorrect) {
-      HapticManager.successPattern();
+      HapticManager.instance.successPattern();
       newScore += 15;
       newCorrect++;
     } else {
-      HapticManager.errorPattern();
+      HapticManager.instance.errorPattern();
       if (state!.mode == GameMode.endless) {
         newLives--;
       }
@@ -631,7 +631,7 @@ class GameSessionNotifier extends StateNotifier<GameSession?> {
   }
 
   static const int questionsPerLevel = 15;
-  static const int correctToPass = 10;
+  static const int correctToPass = 35;
 
   void _endGame() {
     _timer?.cancel();
@@ -736,24 +736,20 @@ class GameSessionNotifier extends StateNotifier<GameSession?> {
     final percentage = (correct / total) * 100;
     if (percentage >= 90) return 3;
     if (percentage >= 70) return 2;
-    if (percentage >= 50) return 1;
+    if (percentage >= 60) return 1;
     return 0;
   }
 
   void _unlockNextLevel(String operation, int currentLevel) {
     try {
-      final notifier = ref.read(campaignUnlockedLevelsProvider.notifier);
-      final currentUnlocked = ref.read(campaignUnlockedLevelsProvider);
-      final nextLevelToUnlock = currentLevel + 1;
-
-      if (nextLevelToUnlock <= 30) {
-        final current = currentUnlocked[operation] ?? 2;
-        if (nextLevelToUnlock > current) {
-          notifier.update({...currentUnlocked, operation: nextLevelToUnlock});
-        }
+      final levelProgressRepo = ref.read(levelProgressRepositoryProvider);
+      final nextLevel = currentLevel + 1;
+      
+      if (nextLevel <= 30) {
+        levelProgressRepo.unlockLevel(operation, nextLevel);
       }
     } catch (e) {
-      // Provider might not be initialized yet
+      // Repository might not be initialized yet
     }
   }
 

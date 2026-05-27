@@ -17,51 +17,40 @@ class AvatarShopScreen extends ConsumerWidget {
     final theme = Theme.of(context);
 
     final availableAvatars = [
-      {'id': 'circle', 'name': 'Circle', 'cost': 0, 'icon': Icons.circle},
-      {'id': 'square', 'name': 'Square', 'cost': 0, 'icon': Icons.square},
-      {'id': 'star', 'name': 'Star', 'cost': 0, 'icon': Icons.star},
-      {'id': 'diamond', 'name': 'Diamond', 'cost': 500, 'icon': Icons.diamond},
-      {'id': 'shield', 'name': 'Shield', 'cost': 1000, 'icon': Icons.shield},
-      {
-        'id': 'crown',
-        'name': 'Crown',
-        'cost': 5000,
-        'icon': Icons.emoji_events,
-      },
-      {
-        'id': 'ninja',
-        'name': 'Ninja',
-        'cost': 10000,
-        'icon': Icons.sports_martial_arts,
-      },
-      {
-        'id': 'rocket',
-        'name': 'Rocket',
-        'cost': 15000,
-        'icon': Icons.rocket_launch,
-      },
+      {'id': 'circle', 'name': 'Circle', 'cost': 0, 'icon': Icons.circle, 'description': 'Default avatar'},
+      {'id': 'square', 'name': 'Square', 'cost': 0, 'icon': Icons.square, 'description': 'Default avatar'},
+      {'id': 'star', 'name': 'Star', 'cost': 0, 'icon': Icons.star, 'description': 'Default avatar'},
+      {'id': 'diamond', 'name': 'Diamond', 'cost': 500, 'icon': Icons.diamond, 'description': 'Premium avatar'},
+      {'id': 'shield', 'name': 'Shield', 'cost': 1000, 'icon': Icons.shield, 'description': 'Knight avatar'},
+      {'id': 'crown', 'name': 'Crown', 'cost': 2500, 'icon': Icons.emoji_events, 'description': 'Royal avatar'},
+      {'id': 'ninja', 'name': 'Ninja', 'cost': 5000, 'icon': Icons.sports_martial_arts, 'description': 'Stealth avatar'},
+      {'id': 'rocket', 'name': 'Rocket', 'cost': 10000, 'icon': Icons.rocket_launch, 'description': 'Space avatar'},
+      {'id': 'dragon', 'name': 'Dragon', 'cost': 20000, 'icon': Icons.local_fire_department, 'description': 'Legendary avatar'},
+      {'id': 'phoenix', 'name': 'Phoenix', 'cost': 50000, 'icon': Icons.mood, 'description': 'Mythical avatar'},
     ];
+
+    final lockedCount = availableAvatars.where((a) => (a['cost'] as int) > user.totalPoints).length;
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
       body: SafeArea(
         child: Column(
           children: [
-            _buildHeader(context, user, theme),
+            _buildHeader(context, user, theme, l10n, lockedCount),
             Divider(color: theme.colorScheme.onSurface.withValues(alpha: 0.1), height: 1, thickness: 0.5),
             Expanded(
               child: GridView.builder(
                 padding: const EdgeInsets.all(24),
                 gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                   crossAxisCount: 2,
-                  childAspectRatio: 0.85,
+                  childAspectRatio: 0.9,
                   crossAxisSpacing: 24,
                   mainAxisSpacing: 24,
                 ),
                 itemCount: availableAvatars.length,
                 itemBuilder: (context, index) {
                   final avatar = availableAvatars[index];
-                   return _buildAvatarCard(context, ref, user, avatar, theme, l10n);
+                  return _buildAvatarCard(context, ref, user, avatar, theme, l10n);
                 },
               ),
             ),
@@ -71,7 +60,7 @@ class AvatarShopScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildHeader(BuildContext context, dynamic user, ThemeData theme) {
+  Widget _buildHeader(BuildContext context, dynamic user, ThemeData theme, AppLocalizations l10n, int lockedCount) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       child: Row(
@@ -83,37 +72,52 @@ class AvatarShopScreen extends ConsumerWidget {
               size: 20,
             ),
             onPressed: () {
-              HapticManager.selectionClick();
+              HapticManager.instance.selectionClick();
               Navigator.pop(context);
             },
           ),
-           Expanded(
-             child: Text(
-               'AVATAR SHOP',
-               style: TextStyle(
-                 color: theme.colorScheme.onSurface,
-                 fontSize: 14,
-                 letterSpacing: 2,
-                 fontWeight: FontWeight.w300,
-               ),
-               textAlign: TextAlign.center,
-             ),
-           ),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'AVATAR SHOP',
+                  style: TextStyle(
+                    color: theme.colorScheme.onSurface,
+                    fontSize: 14,
+                    letterSpacing: 2,
+                    fontWeight: FontWeight.w300,
+                  ),
+                ),
+                Text(
+                  '$lockedCount locked • ${(user?.totalPoints ?? 0)} points',
+                  style: TextStyle(
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                    fontSize: 10,
+                  ),
+                ),
+              ],
+            ),
+          ),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            decoration: BoxDecoration(
+              color: theme.colorScheme.primary.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(12),
+            ),
             child: Row(
               children: [
                 Icon(
                   Icons.stars_outlined,
-                  color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
+                  color: theme.colorScheme.primary,
                   size: 16,
                 ),
                 const SizedBox(width: 8),
                 Text(
-                  '${user.totalPoints}',
+                  '${user?.totalPoints ?? 0}',
                   style: TextStyle(
-                    color: theme.colorScheme.onSurface,
-                    fontWeight: FontWeight.w200,
+                    color: theme.colorScheme.primary,
+                    fontWeight: FontWeight.bold,
                     fontSize: 16,
                   ),
                 ),
@@ -138,127 +142,124 @@ class AvatarShopScreen extends ConsumerWidget {
         (avatar['cost'] as int) == 0;
     final isEquipped = user.avatarShape == avatar['id'];
     final cost = avatar['cost'] as int;
+    final canAfford = (user.totalPoints ?? 0) >= cost;
 
-    return Container(
-      decoration: BoxDecoration(
-        border: Border.all(
-          color: isEquipped ? theme.colorScheme.primary : theme.colorScheme.onSurface.withValues(alpha: 0.1),
-          width: 0.5,
-        ),
-      ),
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            avatar['icon'] as IconData,
-            size: 48,
+    return GestureDetector(
+      onTap: isUnlocked && !isEquipped
+          ? () {
+              HapticManager.instance.selectionClick();
+              ref.read(userSessionProvider.notifier).equipAvatar(avatar['id'] as String);
+            }
+          : null,
+      child: Container(
+        decoration: BoxDecoration(
+          border: Border.all(
             color: isEquipped
                 ? theme.colorScheme.primary
-                : (isUnlocked ? theme.colorScheme.onSurface.withValues(alpha: 0.7) : theme.colorScheme.onSurface.withValues(alpha: 0.1)),
+                : isUnlocked
+                    ? theme.colorScheme.onSurface.withValues(alpha: 0.3)
+                    : theme.colorScheme.onSurface.withValues(alpha: 0.1),
+            width: 2,
           ),
-          const SizedBox(height: 16),
-          Text(
-            (avatar['name'] as String).toUpperCase(),
-            style: TextStyle(
-              color: isEquipped ? theme.colorScheme.primary : theme.colorScheme.onSurface.withValues(alpha: 0.4),
-              fontSize: 10,
-              letterSpacing: 1.5,
-              fontWeight: FontWeight.w300,
+          borderRadius: BorderRadius.circular(16),
+        ),
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Stack(
+              alignment: Alignment.center,
+              children: [
+                Container(
+                  width: 60,
+                  height: 60,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: LinearGradient(
+                      colors: isEquipped
+                          ? [theme.colorScheme.primary, theme.colorScheme.secondary]
+                          : isUnlocked
+                              ? [theme.colorScheme.onSurface.withValues(alpha: 0.2), theme.colorScheme.surface]
+                              : [theme.colorScheme.surface.withValues(alpha: 0.3), theme.colorScheme.surface],
+                    ),
+                  ),
+                  child: Icon(
+                    avatar['icon'] as IconData,
+                    size: 32,
+                    color: isEquipped
+                        ? theme.colorScheme.onPrimary
+                        : isUnlocked
+                            ? theme.colorScheme.onSurface.withValues(alpha: 0.7)
+                            : Colors.white10,
+                  ),
+                ),
+                if (!isUnlocked && !isEquipped)
+                  Positioned.fill(
+                    child: Container(
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: Colors.black.withValues(alpha: 0.5),
+                      ),
+                      child: const Icon(Icons.lock, size: 20, color: Colors.white38),
+                    ),
+                  ),
+              ],
             ),
-          ),
-          const SizedBox(height: 16),
-          if (isEquipped)
+            const SizedBox(height: 8),
             Text(
-              l10n.equipped,
+              (avatar['name'] as String).toUpperCase(),
               style: TextStyle(
-                color: theme.colorScheme.primary,
-                fontSize: 9,
+                color: isEquipped
+                    ? theme.colorScheme.primary
+                    : theme.colorScheme.onSurface,
+                fontSize: 11,
                 letterSpacing: 1,
-                fontWeight: FontWeight.w300,
+                fontWeight: FontWeight.w600,
               ),
-            )
-           else if (isUnlocked)
-             _buildMinimalButton(
-               context,
-               label: 'EQUIP',
-               onPressed: () {
-                 HapticManager.selectionClick();
-                 ref
-                     .read(userSessionProvider.notifier)
-                     .updateUser(avatarShape: avatar['id'] as String);
-               },
-             )
-           else
-             _buildMinimalButton(
-               context,
-               label: '$cost',
-               onPressed: () {
-                 HapticManager.selectionClick();
-                 _buyAvatar(context, ref, user, avatar['id'] as String, cost);
-               },
-               isAction: true,
+              overflow: TextOverflow.ellipsis,
             ),
-        ],
+            const SizedBox(height: 4),
+            if (cost > 0)
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                decoration: BoxDecoration(
+                  color: canAfford
+                      ? theme.colorScheme.primary.withValues(alpha: 0.2)
+                      : theme.colorScheme.onSurface.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  '$cost',
+                  style: TextStyle(
+                    color: canAfford
+                        ? theme.colorScheme.primary
+                        : theme.colorScheme.onSurface.withValues(alpha: 0.4),
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            if (isEquipped)
+              Container(
+                margin: const EdgeInsets.only(top: 4),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.primary,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  'EQUIPPED',
+                  style: TextStyle(
+                    color: theme.colorScheme.onPrimary,
+                    fontSize: 9,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+          ],
+        ),
       ),
     );
   }
 
-  Widget _buildMinimalButton(BuildContext context, {
-    required String label,
-    required VoidCallback onPressed,
-    bool isAction = false,
-  }) {
-    final theme = Theme.of(context);
-    return SizedBox(
-      width: double.infinity,
-      height: 32,
-      child: OutlinedButton(
-        onPressed: onPressed,
-        style: OutlinedButton.styleFrom(
-          side: BorderSide(
-            color: isAction ? theme.colorScheme.onSurface.withValues(alpha: 0.4) : theme.colorScheme.onSurface.withValues(alpha: 0.1),
-            width: 0.5,
-          ),
-          padding: EdgeInsets.zero,
-          shape: const RoundedRectangleBorder(),
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            color: isAction ? theme.colorScheme.primary : theme.colorScheme.onSurface.withValues(alpha: 0.7),
-            fontSize: 10,
-            letterSpacing: 1,
-            fontWeight: FontWeight.w300,
-          ),
-        ),
-      ),
-    );
   }
-
-  void _buyAvatar(
-    BuildContext context,
-    WidgetRef ref,
-    dynamic user,
-    String avatarId,
-    int cost,
-  ) async {
-    if (user.totalPoints < cost) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(AppLocalizations.of(context)!.notEnoughPoints),
-        ),
-      );
-      return;
-    }
-
-    final success = await ref
-        .read(userSessionProvider.notifier)
-        .unlockAvatar(avatarId, cost);
-    if (success && context.mounted) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(AppLocalizations.of(context)!.avatarUnlocked)));
-    }
-  }
-}

@@ -322,7 +322,7 @@ class _MathRiddleScreenState extends ConsumerState<MathRiddleScreen> with Single
           ),
           IconButton(
             onPressed: () {
-              HapticManager.lightImpact();
+              HapticManager.instance.lightImpact();
               if (_answerController.text.isNotEmpty) {
                 _answerController.text = _answerController.text.substring(
                   0,
@@ -337,7 +337,7 @@ class _MathRiddleScreenState extends ConsumerState<MathRiddleScreen> with Single
           ),
           IconButton(
             onPressed: () {
-              HapticManager.selectionClick();
+              HapticManager.instance.selectionClick();
               _revealAnswer();
             },
             icon: Icon(
@@ -358,7 +358,7 @@ class _MathRiddleScreenState extends ConsumerState<MathRiddleScreen> with Single
                 padding: const EdgeInsets.symmetric(vertical: 14),
               ),
               onPressed: () {
-                HapticManager.mediumImpact();
+                HapticManager.instance.mediumImpact();
                 if (_answerController.text.isNotEmpty) {
                   ref.read(mathRiddleProvider.notifier).submitAnswer();
                   final newState = ref.read(mathRiddleProvider);
@@ -412,7 +412,7 @@ class _MathRiddleScreenState extends ConsumerState<MathRiddleScreen> with Single
       itemBuilder: (context, index) {
         return InkWell(
           onTap: () {
-            HapticManager.lightImpact();
+            HapticManager.instance.lightImpact();
             if (_answerController.text.length < 6) {
               _answerController.text += keys[index];
               ref
@@ -473,7 +473,7 @@ class _MathRiddleScreenState extends ConsumerState<MathRiddleScreen> with Single
     ref.read(mathRiddleProvider.notifier).selectAnswer(correctAnswer);
 
     // Provide feedback
-    HapticManager.mediumImpact();
+    HapticManager.instance.mediumImpact();
     ref.read(soundManagerProvider).playEffect('hint');
 
     // Show a brief message
@@ -609,7 +609,7 @@ class _MathRiddleScreenState extends ConsumerState<MathRiddleScreen> with Single
     final l10n = AppLocalizations.of(context)!;
     // Play wrong answer sound and haptic
     ref.read(soundManagerProvider).playWrongAnswer();
-    HapticManager.wrongAnswerPattern();
+    HapticManager.instance.wrongAnswerPattern();
 
     // Show incorrect feedback overlay
     showDialog(

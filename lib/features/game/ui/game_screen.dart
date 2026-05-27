@@ -70,7 +70,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
   }
 
   void _triggerShake() {
-    HapticManager.errorPattern();
+    HapticManager.instance.errorPattern();
     _shakeController.forward(from: 0);
   }
 
@@ -126,7 +126,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
           _triggerShake();
           // Wrong answer feedback
           ref.read(soundManagerProvider).playWrongAnswer();
-          HapticManager.wrongAnswerPattern();
+          HapticManager.instance.wrongAnswerPattern();
         }
 
         // Did they answer correctly?
@@ -137,7 +137,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
           _questionAnimationController.forward(from: 0.0);
           // Correct answer feedback
           ref.read(soundManagerProvider).playCorrectAnswer();
-          HapticManager.correctAnswerPattern();
+          HapticManager.instance.correctAnswerPattern();
         }
 
         // Did combo increase?
@@ -218,7 +218,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
         children: [
           IconButton(
             onPressed: () {
-              HapticManager.mediumImpact();
+              HapticManager.instance.mediumImpact();
               ref.read(gameSessionProvider.notifier).endGame();
               Navigator.of(context).pop();
             },
@@ -603,7 +603,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
                 icon: Icons.lightbulb_outline,
                 label: AppLocalizations.of(context)!.hint,
                 onTap: () {
-                  HapticManager.lightImpact();
+                  HapticManager.instance.lightImpact();
                   final user = ref.read(userSessionProvider);
                   if (user != null && user.totalPoints >= hintCostPoints) {
                     ref.read(gameSessionProvider.notifier).useHint();
@@ -616,7 +616,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
                 icon: Icons.skip_next_rounded,
                 label: AppLocalizations.of(context)!.skip,
                 onTap: () {
-                  HapticManager.lightImpact();
+                  HapticManager.instance.lightImpact();
                   ref.read(gameSessionProvider.notifier).skipQuestion();
                   setState(() => _currentInput = '');
                 },
@@ -806,7 +806,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
                         PremiumPrimaryButton(
                           text: passed ? 'NEXT_PHASE' : 'RECALIBRATE',
                           onPressed: () {
-                            HapticManager.mediumImpact();
+                            HapticManager.instance.mediumImpact();
                             ref
                                 .read(gameSessionProvider.notifier)
                                 .startGame(
@@ -828,7 +828,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
                         width: double.infinity,
                         child: OutlinedButton(
                           onPressed: () {
-                            HapticManager.lightImpact();
+                            HapticManager.instance.lightImpact();
                             ref.read(gameSessionProvider.notifier).endGame();
                             Navigator.of(context).pop();
                           },

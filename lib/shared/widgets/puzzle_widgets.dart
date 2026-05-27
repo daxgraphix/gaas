@@ -49,7 +49,7 @@ class _TutorialOverlayState extends State<TutorialOverlay> {
               child: PageView.builder(
                 controller: _pageController,
                 onPageChanged: (page) {
-                  HapticManager.selectionClick();
+                  HapticManager.instance.selectionClick();
                   setState(() {
                     _currentPage = page;
                   });
@@ -119,7 +119,7 @@ class _TutorialOverlayState extends State<TutorialOverlay> {
   Widget _buildNextButton() {
     return OutlinedButton(
       onPressed: () {
-        HapticManager.mediumImpact();
+        HapticManager.instance.mediumImpact();
         if (_currentPage < widget.steps.length - 1) {
           _pageController.nextPage(
             duration: const Duration(milliseconds: 400),
@@ -210,7 +210,7 @@ class HintButton extends StatelessWidget {
     return InkWell(
       onTap: hintsRemaining > 0
           ? () {
-              HapticManager.lightImpact();
+              HapticManager.instance.lightImpact();
               onTap();
             }
           : null,

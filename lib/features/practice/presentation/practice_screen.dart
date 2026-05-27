@@ -186,7 +186,7 @@ class _PracticeScreenState extends ConsumerState<PracticeScreen> {
 
     return GestureDetector(
         onTap: () {
-          HapticManager.selectionClick();
+          HapticManager.instance.selectionClick();
           setState(() => _selectedOperation = op['id']);
         },
         child: AnimatedContainer(
@@ -322,7 +322,7 @@ class _PracticeScreenState extends ConsumerState<PracticeScreen> {
   Widget _buildToggleTile(String title, String subtitle, bool value, Function(bool) onChanged) {
     return InkWell(
       onTap: () {
-        HapticManager.lightImpact();
+        HapticManager.instance.lightImpact();
         onChanged(!value);
       },
       child: Padding(
@@ -362,7 +362,7 @@ class _PracticeScreenState extends ConsumerState<PracticeScreen> {
   Widget _buildStartButton(AppLocalizations l10n) {
     return GestureDetector(
       onTap: () {
-        HapticManager.heavyImpact();
+        HapticManager.instance.heavyImpact();
         _startPractice();
       },
       child: Container(

@@ -109,14 +109,14 @@ class RewardsScreen extends ConsumerWidget {
                   style: const TextStyle(fontSize: 18),
                 ),
               ),
-              tooltip: 'Switch Language',
+              tooltip: l10n.switchLanguage,
               onPressed: () {
                 HapticManager.selectionClick();
                 ref.read(localeProvider.notifier).toggleLanguage();
                 final newLocale = ref.read(localeProvider);
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                    content: Text('${l10n.languageChanged} to ${newLocale.name}'),
+                    content: Text('${l10n.languageChanged} ${newLocale.name}'),
                     duration: const Duration(seconds: 1),
                     backgroundColor: theme.colorScheme.primary,
                     behavior: SnackBarBehavior.floating,
@@ -269,7 +269,7 @@ class RewardsScreen extends ConsumerWidget {
                   // Claim today's reward
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: const Text('Daily reward claimed!'),
+                      content: Text(l10n.dailyRewardClaimed),
                       backgroundColor: theme.colorScheme.primary,
                       behavior: SnackBarBehavior.floating,
                       shape: RoundedRectangleBorder(
@@ -286,7 +286,7 @@ class RewardsScreen extends ConsumerWidget {
                     borderRadius: BorderRadius.circular(12),
                   ),
                 ),
-                child: const Text('CLAIM TODAY\'S REWARD'),
+                child: Text(l10n.claimTodaysReward),
               ),
             ],
           ),

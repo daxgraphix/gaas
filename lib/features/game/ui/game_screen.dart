@@ -7,6 +7,7 @@ import '../../../core/providers.dart';
 import '../logic/game_session_provider.dart';
 import '../../../shared/widgets/custom_keypad.dart';
 import '../../../core/sound_manager.dart';
+import '../../../l10n/generated/app_localizations.dart';
 
 
 
@@ -86,6 +87,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
   Widget build(BuildContext context) {
     final gameSession = ref.watch(gameSessionProvider);
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
 
     if (gameSession == null) {
       return Scaffold(
@@ -93,11 +95,11 @@ class _GameScreenState extends ConsumerState<GameScreen>
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Text('No game session'),
+              Text(l10n.noGameSession),
               const SizedBox(height: 16),
               ElevatedButton(
                 onPressed: () => Navigator.of(context).pop(),
-                child: const Text('Back to Menu'),
+                child: Text(l10n.backToMenu),
               ),
             ],
           ),
@@ -599,7 +601,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
             children: [
               _buildControlBtn(
                 icon: Icons.lightbulb_outline,
-                label: 'HINT',
+                label: AppLocalizations.of(context)!.hint,
                 onTap: () {
                   HapticManager.lightImpact();
                   final user = ref.read(userSessionProvider);
@@ -612,7 +614,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
               ),
               _buildControlBtn(
                 icon: Icons.skip_next_rounded,
-                label: 'SKIP',
+                label: AppLocalizations.of(context)!.skip,
                 onTap: () {
                   HapticManager.lightImpact();
                   ref.read(gameSessionProvider.notifier).skipQuestion();
@@ -830,7 +832,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
                             ref.read(gameSessionProvider.notifier).endGame();
                             Navigator.of(context).pop();
                           },
-                          child: const Text('ABORT_SESSION'),
+                          child: Text(AppLocalizations.of(context)!.abortSession),
                         ),
                       ),
                     ],

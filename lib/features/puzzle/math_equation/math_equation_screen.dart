@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../l10n/generated/app_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/sound_manager.dart';
 import '../../../core/math_engine/math_equation_engine.dart';
@@ -140,6 +141,7 @@ class _MathEquationScreenState extends ConsumerState<MathEquationScreen> with Ti
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
@@ -148,7 +150,7 @@ class _MathEquationScreenState extends ConsumerState<MathEquationScreen> with Ti
           icon: const Icon(Icons.arrow_back_ios_new, size: 20),
           onPressed: () => Navigator.pop(context),
         ),
-        title: Text('MATH EQUATIONS - LVL ${widget.level}'),
+        title: Text('${l10n.mathEquationsLevelPrefix} ${widget.level}'),
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(4),
           child: Container(

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../l10n/generated/app_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/providers.dart';
 import '../../core/game_adaptability/adaptive_game_system.dart';
@@ -160,6 +161,7 @@ class _EnhancedChallengeScreenState
   }
 
   Widget _buildChallengeList(List<DailyChallenge> challenges, ThemeData theme) {
+    final l10n = AppLocalizations.of(context)!;
     final now = DateTime.now();
     final dailyChallenges = challenges
         .where((c) => c.expiresAt.difference(now).inHours > 0)
@@ -172,7 +174,7 @@ class _EnhancedChallengeScreenState
           children: [
             Icon(Icons.celebration, size: 64, color: theme.colorScheme.primary),
             const SizedBox(height: 16),
-            Text('All challenges complete!', style: theme.textTheme.titleLarge),
+            Text(l10n.allChallengesComplete, style: theme.textTheme.titleLarge),
             const SizedBox(height: 8),
             Text(
               'Come back tomorrow',
@@ -196,6 +198,7 @@ class _EnhancedChallengeScreenState
   }
 
   Widget _buildChallengeCard(DailyChallenge challenge, ThemeData theme) {
+    final l10n = AppLocalizations.of(context)!;
     final progress = challenge.progress;
     final isComplete = challenge.isCompleted;
     final hoursLeft = challenge.expiresAt.difference(DateTime.now()).inHours;
@@ -344,7 +347,7 @@ class _EnhancedChallengeScreenState
                         vertical: 8,
                       ),
                     ),
-                    child: const Text('Play'),
+                    child: Text(l10n.play),
                   ),
               ],
             ),

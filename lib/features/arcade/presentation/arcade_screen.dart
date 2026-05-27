@@ -294,6 +294,7 @@ class ArcadeScreen extends ConsumerWidget {
   }
 
   void _showLevelDialog(BuildContext context, WidgetRef ref, String operation, GameMode mode) {
+    final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
     int selectedLevel = 1;
 
@@ -334,7 +335,7 @@ class ArcadeScreen extends ConsumerWidget {
                           label: Column(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              Text('L$level', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                              Text('${l10n.levelPrefix}$level', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
                               Text(difficulty, style: TextStyle(fontSize: 8, color: color)),
                             ],
                           ),
@@ -367,7 +368,7 @@ class ArcadeScreen extends ConsumerWidget {
                         borderRadius: BorderRadius.circular(8),
                       ),
                     ),
-                    child: const Text('START GAME'),
+                    child: Text(l10n.startGame),
                   ),
                 ),
               ],

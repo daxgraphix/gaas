@@ -899,7 +899,7 @@ abstract class AppLocalizations {
   /// No description provided for @unstoppable.
   ///
   /// In en, this message translates to:
-  /// **'🌟 UNSTOPPABLE!'**
+  /// **'Unstoppable!'**
   String get unstoppable;
 
   /// No description provided for @keepItUp.
@@ -1837,6 +1837,624 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Division Mode'**
   String get divisionProcedure;
+
+  /// No description provided for @timesUp.
+  ///
+  /// In en, this message translates to:
+  /// **'Time\'s Up!'**
+  String get timesUp;
+
+  /// No description provided for @yourScore.
+  ///
+  /// In en, this message translates to:
+  /// **'Your score'**
+  String get yourScore;
+
+  /// No description provided for @exit.
+  ///
+  /// In en, this message translates to:
+  /// **'Exit'**
+  String get exit;
+
+  /// No description provided for @dailyRewardClaimed.
+  ///
+  /// In en, this message translates to:
+  /// **'Daily reward claimed!'**
+  String get dailyRewardClaimed;
+
+  /// No description provided for @claimTodaysReward.
+  ///
+  /// In en, this message translates to:
+  /// **'CLAIM TODAY\'S REWARD'**
+  String get claimTodaysReward;
+
+  /// No description provided for @noGameSession.
+  ///
+  /// In en, this message translates to:
+  /// **'No game session'**
+  String get noGameSession;
+
+  /// No description provided for @crossword.
+  ///
+  /// In en, this message translates to:
+  /// **'Crossword'**
+  String get crossword;
+
+  /// No description provided for @playerLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Player'**
+  String get playerLabel;
+
+  /// No description provided for @generatingImage.
+  ///
+  /// In en, this message translates to:
+  /// **'Generating image...'**
+  String get generatingImage;
+
+  /// No description provided for @imageSharedSuccessfully.
+  ///
+  /// In en, this message translates to:
+  /// **'Image shared successfully!'**
+  String get imageSharedSuccessfully;
+
+  /// No description provided for @imageExportFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Image export failed'**
+  String get imageExportFailed;
+
+  /// No description provided for @preparingDocument.
+  ///
+  /// In en, this message translates to:
+  /// **'Preparing document for printing...'**
+  String get preparingDocument;
+
+  /// No description provided for @performanceReportTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'GAAS Performance Report'**
+  String get performanceReportTitle;
+
+  /// No description provided for @reportSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Report saved to: {path}'**
+  String reportSaved(Object path);
+
+  /// No description provided for @reportSaveFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Save failed: {error}'**
+  String reportSaveFailed(Object error);
+
+  /// No description provided for @generatingPdf.
+  ///
+  /// In en, this message translates to:
+  /// **'Generating PDF...'**
+  String get generatingPdf;
+
+  /// No description provided for @abortSession.
+  ///
+  /// In en, this message translates to:
+  /// **'ABORT SESSION'**
+  String get abortSession;
+
+  /// No description provided for @skip.
+  ///
+  /// In en, this message translates to:
+  /// **'SKIP'**
+  String get skip;
+
+  /// No description provided for @across.
+  ///
+  /// In en, this message translates to:
+  /// **'ACROSS'**
+  String get across;
+
+  /// No description provided for @down.
+  ///
+  /// In en, this message translates to:
+  /// **'DOWN'**
+  String get down;
+
+  /// No description provided for @allChallengesComplete.
+  ///
+  /// In en, this message translates to:
+  /// **'All challenges complete!'**
+  String get allChallengesComplete;
+
+  /// No description provided for @play.
+  ///
+  /// In en, this message translates to:
+  /// **'Play'**
+  String get play;
+
+  /// No description provided for @unlimitedTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlimited Time'**
+  String get unlimitedTime;
+
+  /// No description provided for @practiceWithoutPressure.
+  ///
+  /// In en, this message translates to:
+  /// **'Practice without pressure'**
+  String get practiceWithoutPressure;
+
+  /// No description provided for @showFeedback.
+  ///
+  /// In en, this message translates to:
+  /// **'Show Feedback'**
+  String get showFeedback;
+
+  /// No description provided for @seeCorrectAnswersImmediately.
+  ///
+  /// In en, this message translates to:
+  /// **'See correct answers immediately'**
+  String get seeCorrectAnswersImmediately;
+
+  /// No description provided for @answerRevealed.
+  ///
+  /// In en, this message translates to:
+  /// **'Answer revealed!'**
+  String get answerRevealed;
+
+  /// No description provided for @selectRiddleLevel.
+  ///
+  /// In en, this message translates to:
+  /// **'SELECT RIDDLE LEVEL'**
+  String get selectRiddleLevel;
+
+  /// No description provided for @selectCrosswordLevel.
+  ///
+  /// In en, this message translates to:
+  /// **'SELECT CROSSWORD LEVEL'**
+  String get selectCrosswordLevel;
+
+  /// No description provided for @loadingGame.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading game...'**
+  String get loadingGame;
+
+  /// No description provided for @thankYouForFeedback.
+  ///
+  /// In en, this message translates to:
+  /// **'Thank you for your feedback!'**
+  String get thankYouForFeedback;
+
+  /// No description provided for @notEnoughPoints.
+  ///
+  /// In en, this message translates to:
+  /// **'Not enough points! Keep playing to earn more.'**
+  String get notEnoughPoints;
+
+  /// No description provided for @avatarUnlocked.
+  ///
+  /// In en, this message translates to:
+  /// **'Avatar unlocked!'**
+  String get avatarUnlocked;
+
+  /// No description provided for @documentSentToPrinter.
+  ///
+  /// In en, this message translates to:
+  /// **'Document sent to printer!'**
+  String get documentSentToPrinter;
+
+  /// No description provided for @printFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Print failed'**
+  String printFailed(Object error);
+
+  /// No description provided for @noProgressDataAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'No progress data available'**
+  String get noProgressDataAvailable;
+
+  /// No description provided for @exportOptions.
+  ///
+  /// In en, this message translates to:
+  /// **'Export Options'**
+  String get exportOptions;
+
+  /// No description provided for @exportAsPdf.
+  ///
+  /// In en, this message translates to:
+  /// **'Export as PDF'**
+  String get exportAsPdf;
+
+  /// No description provided for @generateDetailedPdfReport.
+  ///
+  /// In en, this message translates to:
+  /// **'Generate and share detailed PDF report'**
+  String get generateDetailedPdfReport;
+
+  /// No description provided for @shareAsImage.
+  ///
+  /// In en, this message translates to:
+  /// **'Share as Image'**
+  String get shareAsImage;
+
+  /// No description provided for @captureHighQualityImage.
+  ///
+  /// In en, this message translates to:
+  /// **'Capture and share report as high-quality image'**
+  String get captureHighQualityImage;
+
+  /// No description provided for @printReport.
+  ///
+  /// In en, this message translates to:
+  /// **'Print Report'**
+  String get printReport;
+
+  /// No description provided for @sendReportToPrinter.
+  ///
+  /// In en, this message translates to:
+  /// **'Send report to printer'**
+  String get sendReportToPrinter;
+
+  /// No description provided for @saveToDevice.
+  ///
+  /// In en, this message translates to:
+  /// **'Save to Device'**
+  String get saveToDevice;
+
+  /// No description provided for @savePdfToDeviceStorage.
+  ///
+  /// In en, this message translates to:
+  /// **'Save PDF to device storage'**
+  String get savePdfToDeviceStorage;
+
+  /// No description provided for @firstSteps.
+  ///
+  /// In en, this message translates to:
+  /// **'First Steps'**
+  String get firstSteps;
+
+  /// No description provided for @speedDemonTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Speed Demon'**
+  String get speedDemonTitle;
+
+  /// No description provided for @mathMasterTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Math Master'**
+  String get mathMasterTitle;
+
+  /// No description provided for @weeklyChampion.
+  ///
+  /// In en, this message translates to:
+  /// **'Weekly Champion'**
+  String get weeklyChampion;
+
+  /// No description provided for @streakMaster.
+  ///
+  /// In en, this message translates to:
+  /// **'Streak Master'**
+  String get streakMaster;
+
+  /// No description provided for @puzzleGenius.
+  ///
+  /// In en, this message translates to:
+  /// **'Puzzle Genius'**
+  String get puzzleGenius;
+
+  /// No description provided for @timeLordTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Time Lord'**
+  String get timeLordTitle;
+
+  /// No description provided for @onFire.
+  ///
+  /// In en, this message translates to:
+  /// **'On Fire'**
+  String get onFire;
+
+  /// No description provided for @perfectScore.
+  ///
+  /// In en, this message translates to:
+  /// **'Perfect Score'**
+  String get perfectScore;
+
+  /// No description provided for @weekendMaster.
+  ///
+  /// In en, this message translates to:
+  /// **'Weekend Master'**
+  String get weekendMaster;
+
+  /// No description provided for @equip.
+  ///
+  /// In en, this message translates to:
+  /// **'EQUIP'**
+  String get equip;
+
+  /// No description provided for @coreConcept.
+  ///
+  /// In en, this message translates to:
+  /// **'Core Concept'**
+  String get coreConcept;
+
+  /// No description provided for @adventureTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'ADVENTURE'**
+  String get adventureTitle;
+
+  /// No description provided for @campaignProgression.
+  ///
+  /// In en, this message translates to:
+  /// **'Campaign Progression'**
+  String get campaignProgression;
+
+  /// No description provided for @challengeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'CHALLENGE'**
+  String get challengeTitle;
+
+  /// No description provided for @arcadeDailyMissions.
+  ///
+  /// In en, this message translates to:
+  /// **'Arcade + Daily Missions'**
+  String get arcadeDailyMissions;
+
+  /// No description provided for @puzzlesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'PUZZLES'**
+  String get puzzlesTitle;
+
+  /// No description provided for @crosswordsMathRiddles.
+  ///
+  /// In en, this message translates to:
+  /// **'Crosswords + Math Riddles'**
+  String get crosswordsMathRiddles;
+
+  /// No description provided for @firstVictory.
+  ///
+  /// In en, this message translates to:
+  /// **'First Victory'**
+  String get firstVictory;
+
+  /// No description provided for @campaignMaster.
+  ///
+  /// In en, this message translates to:
+  /// **'Campaign Master'**
+  String get campaignMaster;
+
+  /// No description provided for @mathGenius.
+  ///
+  /// In en, this message translates to:
+  /// **'Math Genius'**
+  String get mathGenius;
+
+  /// No description provided for @campaignGrinder.
+  ///
+  /// In en, this message translates to:
+  /// **'Campaign Grinder'**
+  String get campaignGrinder;
+
+  /// No description provided for @duelMaster.
+  ///
+  /// In en, this message translates to:
+  /// **'Duel Master'**
+  String get duelMaster;
+
+  /// No description provided for @endlessSurvivor.
+  ///
+  /// In en, this message translates to:
+  /// **'Endless Survivor'**
+  String get endlessSurvivor;
+
+  /// No description provided for @divisionExpert.
+  ///
+  /// In en, this message translates to:
+  /// **'Division Expert'**
+  String get divisionExpert;
+
+  /// No description provided for @additionMastery.
+  ///
+  /// In en, this message translates to:
+  /// **'Addition Mastery'**
+  String get additionMastery;
+
+  /// No description provided for @singleDigitAddition.
+  ///
+  /// In en, this message translates to:
+  /// **'Single Digit Addition'**
+  String get singleDigitAddition;
+
+  /// No description provided for @twoDigitAddition.
+  ///
+  /// In en, this message translates to:
+  /// **'Two Digit Addition'**
+  String get twoDigitAddition;
+
+  /// No description provided for @threeDigitAddition.
+  ///
+  /// In en, this message translates to:
+  /// **'Three Digit Addition'**
+  String get threeDigitAddition;
+
+  /// No description provided for @additionWithCarrying.
+  ///
+  /// In en, this message translates to:
+  /// **'Addition with Carrying'**
+  String get additionWithCarrying;
+
+  /// No description provided for @advancedAddition.
+  ///
+  /// In en, this message translates to:
+  /// **'Advanced Addition'**
+  String get advancedAddition;
+
+  /// No description provided for @subtractionMastery.
+  ///
+  /// In en, this message translates to:
+  /// **'Subtraction Mastery'**
+  String get subtractionMastery;
+
+  /// No description provided for @singleDigitSubtraction.
+  ///
+  /// In en, this message translates to:
+  /// **'Single Digit Subtraction'**
+  String get singleDigitSubtraction;
+
+  /// No description provided for @twoDigitSubtraction.
+  ///
+  /// In en, this message translates to:
+  /// **'Two Digit Subtraction'**
+  String get twoDigitSubtraction;
+
+  /// No description provided for @threeDigitSubtraction.
+  ///
+  /// In en, this message translates to:
+  /// **'Three Digit Subtraction'**
+  String get threeDigitSubtraction;
+
+  /// No description provided for @subtractionWithBorrowing.
+  ///
+  /// In en, this message translates to:
+  /// **'Subtraction with Borrowing'**
+  String get subtractionWithBorrowing;
+
+  /// No description provided for @advancedSubtraction.
+  ///
+  /// In en, this message translates to:
+  /// **'Advanced Subtraction'**
+  String get advancedSubtraction;
+
+  /// No description provided for @wordProblemsSubtraction.
+  ///
+  /// In en, this message translates to:
+  /// **'Word Problems - Subtraction'**
+  String get wordProblemsSubtraction;
+
+  /// No description provided for @multiplicationMastery.
+  ///
+  /// In en, this message translates to:
+  /// **'Multiplication Mastery'**
+  String get multiplicationMastery;
+
+  /// No description provided for @timesTables1to5.
+  ///
+  /// In en, this message translates to:
+  /// **'Times Tables 1-5'**
+  String get timesTables1to5;
+
+  /// No description provided for @timesTables6to10.
+  ///
+  /// In en, this message translates to:
+  /// **'Times Tables 6-10'**
+  String get timesTables6to10;
+
+  /// No description provided for @twoDigitMultiplication.
+  ///
+  /// In en, this message translates to:
+  /// **'Two Digit Multiplication'**
+  String get twoDigitMultiplication;
+
+  /// No description provided for @threeDigitMultiplication.
+  ///
+  /// In en, this message translates to:
+  /// **'Three Digit Multiplication'**
+  String get threeDigitMultiplication;
+
+  /// No description provided for @multiplicationWordProblems.
+  ///
+  /// In en, this message translates to:
+  /// **'Multiplication Word Problems'**
+  String get multiplicationWordProblems;
+
+  /// No description provided for @advancedMultiplication.
+  ///
+  /// In en, this message translates to:
+  /// **'Advanced Multiplication'**
+  String get advancedMultiplication;
+
+  /// No description provided for @multiplicationPatterns.
+  ///
+  /// In en, this message translates to:
+  /// **'Multiplication Patterns'**
+  String get multiplicationPatterns;
+
+  /// No description provided for @divisionMastery.
+  ///
+  /// In en, this message translates to:
+  /// **'Division Mastery'**
+  String get divisionMastery;
+
+  /// No description provided for @divisionBasics.
+  ///
+  /// In en, this message translates to:
+  /// **'Division Basics'**
+  String get divisionBasics;
+
+  /// No description provided for @divisionWithRemainders.
+  ///
+  /// In en, this message translates to:
+  /// **'Division with Remainders'**
+  String get divisionWithRemainders;
+
+  /// No description provided for @twoDigitDivision.
+  ///
+  /// In en, this message translates to:
+  /// **'Two Digit Division'**
+  String get twoDigitDivision;
+
+  /// No description provided for @threeDigitDivision.
+  ///
+  /// In en, this message translates to:
+  /// **'Three Digit Division'**
+  String get threeDigitDivision;
+
+  /// No description provided for @divisionWordProblems.
+  ///
+  /// In en, this message translates to:
+  /// **'Division Word Problems'**
+  String get divisionWordProblems;
+
+  /// No description provided for @longDivision.
+  ///
+  /// In en, this message translates to:
+  /// **'Long Division'**
+  String get longDivision;
+
+  /// No description provided for @legend.
+  ///
+  /// In en, this message translates to:
+  /// **'Legend'**
+  String get legend;
+
+  /// No description provided for @century.
+  ///
+  /// In en, this message translates to:
+  /// **'Century'**
+  String get century;
+
+  /// No description provided for @mathEquationsLevelPrefix.
+  ///
+  /// In en, this message translates to:
+  /// **'MATH EQUATIONS - LVL'**
+  String get mathEquationsLevelPrefix;
+
+  /// No description provided for @selectDifficultyLevel.
+  ///
+  /// In en, this message translates to:
+  /// **'SELECT DIFFICULTY LEVEL'**
+  String get selectDifficultyLevel;
+
+  /// No description provided for @levelPrefix.
+  ///
+  /// In en, this message translates to:
+  /// **'L'**
+  String get levelPrefix;
 }
 
 class _AppLocalizationsDelegate

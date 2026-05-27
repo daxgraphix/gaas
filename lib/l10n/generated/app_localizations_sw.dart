@@ -48,7 +48,7 @@ class AppLocalizationsSw extends AppLocalizations {
   String get levelsCompleted => 'Ngazi Zilizokamilika';
 
   @override
-  String get accuracy => 'USAHIHI';
+  String get accuracy => 'Usahihi';
 
   @override
   String get timePlayed => 'Muda wa Kucheza';
@@ -81,7 +81,7 @@ class AppLocalizationsSw extends AppLocalizations {
   String get unlocked => 'Imefunguliwa';
 
   @override
-  String get score => 'ALAMA';
+  String get score => 'Pointi';
 
   @override
   String get lives => 'Maisha';
@@ -93,7 +93,7 @@ class AppLocalizationsSw extends AppLocalizations {
   String get gameOver => 'Mchezo Umekwisha';
 
   @override
-  String get correct => 'Correct!';
+  String get correct => 'Sahihi!';
 
   @override
   String get incorrect => 'Si sahihi!';
@@ -195,7 +195,7 @@ class AppLocalizationsSw extends AppLocalizations {
   String get minutes => 'dakika';
 
   @override
-  String get seconds => 's';
+  String get seconds => 'sekunde';
 
   @override
   String get highScore => 'Alama ya Juu';
@@ -222,7 +222,7 @@ class AppLocalizationsSw extends AppLocalizations {
   String get operationMatrix => 'Matriksi ya Operesheni';
 
   @override
-  String get difficultyLevel => 'KIWANGO_CHA_UGUMU';
+  String get difficultyLevel => 'Kiwango cha Ugumu';
 
   @override
   String get initiateMixSequence => 'Anza Mchanganyiko';
@@ -276,7 +276,7 @@ class AppLocalizationsSw extends AppLocalizations {
   String get speedMetrics => 'Vipimo vya Kasi';
 
   @override
-  String get temporalInvestment => 'UWEKEZAJI_WA_MUDA';
+  String get temporalInvestment => 'Muda Uliotumika';
 
   @override
   String get realTimeAccuracy => 'Usahihi wa Wakati Halisi';
@@ -315,7 +315,7 @@ class AppLocalizationsSw extends AppLocalizations {
   String get adventure => 'Utapani';
 
   @override
-  String get gameModes => '🎮 Aina za Michezo';
+  String get gameModes => 'Aina za Michezo';
 
   @override
   String get puzzleWorld => 'Ulimwengu wa Mafumbo';
@@ -510,7 +510,7 @@ class AppLocalizationsSw extends AppLocalizations {
   String get responseAnalytics => 'UCHAMBUZI_WA_MAJIBU';
 
   @override
-  String get avgResponse => 'WASTANI_WA_MAJIBU';
+  String get avgResponse => 'Wastani wa Majibu';
 
   @override
   String get fastest => 'Haraka Zaidi';
@@ -573,7 +573,7 @@ class AppLocalizationsSw extends AppLocalizations {
   String get totalLevelsAttempted => 'Jumla ya ngazi zilizojaribiwa';
 
   @override
-  String get player => 'Mchezaji';
+  String get player => 'MCHEZAJI';
 
   @override
   String get del => 'FUTA';
@@ -883,4 +883,323 @@ class AppLocalizationsSw extends AppLocalizations {
 
   @override
   String get divisionProcedure => 'Hali ya Kugawanya';
+
+  @override
+  String get timesUp => 'Wakati Umeisha!';
+
+  @override
+  String get yourScore => 'Alama yako';
+
+  @override
+  String get exit => 'Toka';
+
+  @override
+  String get dailyRewardClaimed => 'Zawadi ya kila siku imenukuliwa!';
+
+  @override
+  String get claimTodaysReward => 'DAWA YA KUITWA SIKU YA LEO';
+
+  @override
+  String get noGameSession => 'Hakuna kipindi cha mchezo';
+
+  @override
+  String get crossword => 'Neno la kuvuta';
+
+  @override
+  String get playerLabel => 'Mchezaji';
+
+  @override
+  String get generatingImage => 'Inaundwa picha...';
+
+  @override
+  String get imageSharedSuccessfully => 'Picha imeshirikiwa kwa mafanikio!';
+
+  @override
+  String get imageExportFailed => 'Kutoa picha imefeli';
+
+  @override
+  String get preparingDocument => 'Kuandaa hati kwa kuchapisha...';
+
+  @override
+  String get performanceReportTitle => 'Ripoti ya Utendaji ya GAAS';
+
+  @override
+  String reportSaved(Object path) {
+    return 'Ripoti imehifadhiwa: $path';
+  }
+
+  @override
+  String reportSaveFailed(Object error) {
+    return 'Hifadhi imeshindwa: $error';
+  }
+
+  @override
+  String get generatingPdf => 'Inaundwa PDF...';
+
+  @override
+  String get abortSession => 'GHAIRI KIPINDI';
+
+  @override
+  String get skip => 'RUKIA';
+
+  @override
+  String get across => 'KWA UPANDE';
+
+  @override
+  String get down => 'KWA CHINI';
+
+  @override
+  String get allChallengesComplete => 'Changamoto zote zimekamilika!';
+
+  @override
+  String get play => 'Cheza';
+
+  @override
+  String get unlimitedTime => 'Muda Usio na Kikomo';
+
+  @override
+  String get practiceWithoutPressure => 'Mazoezi bila shinikizo';
+
+  @override
+  String get showFeedback => 'Onyesha Maoni';
+
+  @override
+  String get seeCorrectAnswersImmediately => 'Ona majibu sahihi mara moja';
+
+  @override
+  String get answerRevealed => 'Jibu limefunuliwa!';
+
+  @override
+  String get selectRiddleLevel => 'CHAGUA NGazi YA FUMBO';
+
+  @override
+  String get selectCrosswordLevel => 'CHAGUA NGazi YA NENO LA KUVUTA';
+
+  @override
+  String get loadingGame => 'Inapakia mchezo...';
+
+  @override
+  String get thankYouForFeedback => 'Asante kwa maoni yako!';
+
+  @override
+  String get notEnoughPoints =>
+      'Pointi hazitoshi! Endelea kucheza ili upate zaidi.';
+
+  @override
+  String get avatarUnlocked => 'Picha ya mtumiaji imefunguliwa!';
+
+  @override
+  String get documentSentToPrinter => 'Hati imetumwa kwa printa!';
+
+  @override
+  String printFailed(Object error) {
+    return 'Kuchapisha kumeshindwa: $error';
+  }
+
+  @override
+  String get noProgressDataAvailable =>
+      'Hakuna data ya maendeleo inayopatikana';
+
+  @override
+  String get exportOptions => 'Chaguzi za Kuhamisha';
+
+  @override
+  String get exportAsPdf => 'Hamisha kama PDF';
+
+  @override
+  String get generateDetailedPdfReport =>
+      'Tengeneza na shiriki ripoti ya kina ya PDF';
+
+  @override
+  String get shareAsImage => 'Shiriki kama Picha';
+
+  @override
+  String get captureHighQualityImage =>
+      'Piga picha ya ubora wa juu na ishiriki ripoti';
+
+  @override
+  String get printReport => 'Chapisha Ripoti';
+
+  @override
+  String get sendReportToPrinter => 'Tuma ripoti kwa printa';
+
+  @override
+  String get saveToDevice => 'Hifadhi kwenye Kifaa';
+
+  @override
+  String get savePdfToDeviceStorage => 'Hifadhi PDF kwenye hifadhi ya kifaa';
+
+  @override
+  String get firstSteps => 'Hatua za Mwanzo';
+
+  @override
+  String get speedDemonTitle => 'Shetani wa Kasi';
+
+  @override
+  String get mathMasterTitle => 'Mwalimu wa Hesabu';
+
+  @override
+  String get weeklyChampion => 'Bingwa wa Wiki';
+
+  @override
+  String get streakMaster => 'Bingwa wa Mfululizo';
+
+  @override
+  String get puzzleGenius => 'Genius wa Mafumbo';
+
+  @override
+  String get timeLordTitle => 'Bwana wa Muda';
+
+  @override
+  String get onFire => 'Anawaka!';
+
+  @override
+  String get perfectScore => 'Alama Kamili';
+
+  @override
+  String get weekendMaster => 'Bingwa wa Wikiendi';
+
+  @override
+  String get equip => 'VAZA';
+
+  @override
+  String get coreConcept => 'Dhana ya Msingi';
+
+  @override
+  String get adventureTitle => 'UTAPANI';
+
+  @override
+  String get campaignProgression => 'Maendeleo ya Msafara';
+
+  @override
+  String get challengeTitle => 'CHANGAMOTO';
+
+  @override
+  String get arcadeDailyMissions => 'Ukumbi + Misheni ya Kila Siku';
+
+  @override
+  String get puzzlesTitle => 'MAFUMBO';
+
+  @override
+  String get crosswordsMathRiddles => 'Maneno ya Kuvuta + Fumbo za Hesabu';
+
+  @override
+  String get firstVictory => 'Ushindi wa Kwanza';
+
+  @override
+  String get campaignMaster => 'Bingwa wa Msafara';
+
+  @override
+  String get mathGenius => 'Genius wa Hesabu';
+
+  @override
+  String get campaignGrinder => 'Msafiri wa Msafara';
+
+  @override
+  String get duelMaster => 'Bingwa wa Pambano';
+
+  @override
+  String get endlessSurvivor => 'Mshindi wa Endless';
+
+  @override
+  String get divisionExpert => 'Mtaalamu wa Kugawanya';
+
+  @override
+  String get additionMastery => 'Ujuzi wa Kuongeza';
+
+  @override
+  String get singleDigitAddition => 'Kuongeza Nambari Moja';
+
+  @override
+  String get twoDigitAddition => 'Kuongeza Nambari Mbili';
+
+  @override
+  String get threeDigitAddition => 'Kuongeza Nambari Tatu';
+
+  @override
+  String get additionWithCarrying => 'Kuongeza kwa Kubeba';
+
+  @override
+  String get advancedAddition => 'Kuongeza ya Juu';
+
+  @override
+  String get subtractionMastery => 'Ujuzi wa Kutoa';
+
+  @override
+  String get singleDigitSubtraction => 'Kutoa Nambari Moja';
+
+  @override
+  String get twoDigitSubtraction => 'Kutoa Nambari Mbili';
+
+  @override
+  String get threeDigitSubtraction => 'Kutoa Nambari Tatu';
+
+  @override
+  String get subtractionWithBorrowing => 'Kutoa kwa Kukopa';
+
+  @override
+  String get advancedSubtraction => 'Kutoa ya Juu';
+
+  @override
+  String get wordProblemsSubtraction => 'Matatizo ya Maneno - Kutoa';
+
+  @override
+  String get multiplicationMastery => 'Ujuzi wa Kuzidisha';
+
+  @override
+  String get timesTables1to5 => 'Majedwali ya Kuzidisha 1-5';
+
+  @override
+  String get timesTables6to10 => 'Majedwali ya Kuzidisha 6-10';
+
+  @override
+  String get twoDigitMultiplication => 'Kuzidisha Nambari Mbili';
+
+  @override
+  String get threeDigitMultiplication => 'Kuzidisha Nambari Tatu';
+
+  @override
+  String get multiplicationWordProblems => 'Matatizo ya Maneno - Kuzidisha';
+
+  @override
+  String get advancedMultiplication => 'Kuzidisha ya Juu';
+
+  @override
+  String get multiplicationPatterns => 'Mifumo ya Kuzidisha';
+
+  @override
+  String get divisionMastery => 'Ujuzi wa Kugawanya';
+
+  @override
+  String get divisionBasics => 'Misingi ya Kugawanya';
+
+  @override
+  String get divisionWithRemainders => 'Kugawanya na Mabaki';
+
+  @override
+  String get twoDigitDivision => 'Kugawanya Nambari Mbili';
+
+  @override
+  String get threeDigitDivision => 'Kugawanya Nambari Tatu';
+
+  @override
+  String get divisionWordProblems => 'Matatizo ya Maneno - Kugawanya';
+
+  @override
+  String get longDivision => 'Kugawanya kwa Muda Mrefu';
+
+  @override
+  String get legend => 'Hadithi';
+
+  @override
+  String get century => 'Karne';
+
+  @override
+  String get mathEquationsLevelPrefix => 'HESABU za MATH - NGazi';
+
+  @override
+  String get selectDifficultyLevel => 'CHAGUA KIWANGO CHA UGUMU';
+
+  @override
+  String get levelPrefix => 'N';
 }

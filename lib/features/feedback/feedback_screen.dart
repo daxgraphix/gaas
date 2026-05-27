@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../l10n/generated/app_localizations.dart';
 
 class FeedbackScreen extends StatefulWidget {
   const FeedbackScreen({super.key});
@@ -278,7 +279,7 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
   void _submitFeedback() {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: const Text('Thank you for your feedback!'),
+        content: Text(AppLocalizations.of(context)!.thankYouForFeedback),
         backgroundColor: Colors.green,
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),

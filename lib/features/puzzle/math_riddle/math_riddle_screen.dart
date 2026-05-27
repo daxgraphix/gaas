@@ -89,6 +89,7 @@ class _MathRiddleScreenState extends ConsumerState<MathRiddleScreen> with Single
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
     final state = ref.watch(mathRiddleProvider);
 
     return Scaffold(
@@ -98,7 +99,7 @@ class _MathRiddleScreenState extends ConsumerState<MathRiddleScreen> with Single
           icon: const Icon(Icons.close, size: 20),
           onPressed: () => Navigator.pop(context),
         ),
-        title: Text('Level ${widget.difficulty}'),
+        title: Text('${l10n.level} ${widget.difficulty}'),
         actions: [
           IconButton(
             icon: const Icon(Icons.grid_view_rounded, size: 20),
@@ -454,6 +455,7 @@ class _MathRiddleScreenState extends ConsumerState<MathRiddleScreen> with Single
 
   void _revealAnswer() {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
     final state = ref.read(mathRiddleProvider);
     if (state.currentRiddle == null && state.currentLogic == null && state.currentSequence == null) return;
 
@@ -477,7 +479,7 @@ class _MathRiddleScreenState extends ConsumerState<MathRiddleScreen> with Single
     // Show a brief message
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: const Text('Answer revealed!'),
+        content: Text(l10n.answerRevealed),
         duration: const Duration(seconds: 1),
         backgroundColor: theme.colorScheme.secondary,
       ),

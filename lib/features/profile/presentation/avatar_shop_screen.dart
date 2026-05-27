@@ -245,8 +245,8 @@ class AvatarShopScreen extends ConsumerWidget {
   ) async {
     if (user.totalPoints < cost) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Not enough points! Keep playing to earn more.'),
+        SnackBar(
+          content: Text(AppLocalizations.of(context)!.notEnoughPoints),
         ),
       );
       return;
@@ -258,7 +258,7 @@ class AvatarShopScreen extends ConsumerWidget {
     if (success && context.mounted) {
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(const SnackBar(content: Text('Avatar unlocked!')));
+      ).showSnackBar(SnackBar(content: Text(AppLocalizations.of(context)!.avatarUnlocked)));
     }
   }
 }

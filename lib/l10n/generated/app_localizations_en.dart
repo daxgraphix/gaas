@@ -408,7 +408,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get hotStreak => '🔥 HOT STREAK!';
 
   @override
-  String get unstoppable => '🌟 UNSTOPPABLE!';
+  String get unstoppable => 'Unstoppable!';
 
   @override
   String get keepItUp => '⚡ KEEP IT UP!';
@@ -882,4 +882,321 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get divisionProcedure => 'Division Mode';
+
+  @override
+  String get timesUp => 'Time\'s Up!';
+
+  @override
+  String get yourScore => 'Your score';
+
+  @override
+  String get exit => 'Exit';
+
+  @override
+  String get dailyRewardClaimed => 'Daily reward claimed!';
+
+  @override
+  String get claimTodaysReward => 'CLAIM TODAY\'S REWARD';
+
+  @override
+  String get noGameSession => 'No game session';
+
+  @override
+  String get crossword => 'Crossword';
+
+  @override
+  String get playerLabel => 'Player';
+
+  @override
+  String get generatingImage => 'Generating image...';
+
+  @override
+  String get imageSharedSuccessfully => 'Image shared successfully!';
+
+  @override
+  String get imageExportFailed => 'Image export failed';
+
+  @override
+  String get preparingDocument => 'Preparing document for printing...';
+
+  @override
+  String get performanceReportTitle => 'GAAS Performance Report';
+
+  @override
+  String reportSaved(Object path) {
+    return 'Report saved to: $path';
+  }
+
+  @override
+  String reportSaveFailed(Object error) {
+    return 'Save failed: $error';
+  }
+
+  @override
+  String get generatingPdf => 'Generating PDF...';
+
+  @override
+  String get abortSession => 'ABORT SESSION';
+
+  @override
+  String get skip => 'SKIP';
+
+  @override
+  String get across => 'ACROSS';
+
+  @override
+  String get down => 'DOWN';
+
+  @override
+  String get allChallengesComplete => 'All challenges complete!';
+
+  @override
+  String get play => 'Play';
+
+  @override
+  String get unlimitedTime => 'Unlimited Time';
+
+  @override
+  String get practiceWithoutPressure => 'Practice without pressure';
+
+  @override
+  String get showFeedback => 'Show Feedback';
+
+  @override
+  String get seeCorrectAnswersImmediately => 'See correct answers immediately';
+
+  @override
+  String get answerRevealed => 'Answer revealed!';
+
+  @override
+  String get selectRiddleLevel => 'SELECT RIDDLE LEVEL';
+
+  @override
+  String get selectCrosswordLevel => 'SELECT CROSSWORD LEVEL';
+
+  @override
+  String get loadingGame => 'Loading game...';
+
+  @override
+  String get thankYouForFeedback => 'Thank you for your feedback!';
+
+  @override
+  String get notEnoughPoints => 'Not enough points! Keep playing to earn more.';
+
+  @override
+  String get avatarUnlocked => 'Avatar unlocked!';
+
+  @override
+  String get documentSentToPrinter => 'Document sent to printer!';
+
+  @override
+  String printFailed(Object error) {
+    return 'Print failed';
+  }
+
+  @override
+  String get noProgressDataAvailable => 'No progress data available';
+
+  @override
+  String get exportOptions => 'Export Options';
+
+  @override
+  String get exportAsPdf => 'Export as PDF';
+
+  @override
+  String get generateDetailedPdfReport =>
+      'Generate and share detailed PDF report';
+
+  @override
+  String get shareAsImage => 'Share as Image';
+
+  @override
+  String get captureHighQualityImage =>
+      'Capture and share report as high-quality image';
+
+  @override
+  String get printReport => 'Print Report';
+
+  @override
+  String get sendReportToPrinter => 'Send report to printer';
+
+  @override
+  String get saveToDevice => 'Save to Device';
+
+  @override
+  String get savePdfToDeviceStorage => 'Save PDF to device storage';
+
+  @override
+  String get firstSteps => 'First Steps';
+
+  @override
+  String get speedDemonTitle => 'Speed Demon';
+
+  @override
+  String get mathMasterTitle => 'Math Master';
+
+  @override
+  String get weeklyChampion => 'Weekly Champion';
+
+  @override
+  String get streakMaster => 'Streak Master';
+
+  @override
+  String get puzzleGenius => 'Puzzle Genius';
+
+  @override
+  String get timeLordTitle => 'Time Lord';
+
+  @override
+  String get onFire => 'On Fire';
+
+  @override
+  String get perfectScore => 'Perfect Score';
+
+  @override
+  String get weekendMaster => 'Weekend Master';
+
+  @override
+  String get equip => 'EQUIP';
+
+  @override
+  String get coreConcept => 'Core Concept';
+
+  @override
+  String get adventureTitle => 'ADVENTURE';
+
+  @override
+  String get campaignProgression => 'Campaign Progression';
+
+  @override
+  String get challengeTitle => 'CHALLENGE';
+
+  @override
+  String get arcadeDailyMissions => 'Arcade + Daily Missions';
+
+  @override
+  String get puzzlesTitle => 'PUZZLES';
+
+  @override
+  String get crosswordsMathRiddles => 'Crosswords + Math Riddles';
+
+  @override
+  String get firstVictory => 'First Victory';
+
+  @override
+  String get campaignMaster => 'Campaign Master';
+
+  @override
+  String get mathGenius => 'Math Genius';
+
+  @override
+  String get campaignGrinder => 'Campaign Grinder';
+
+  @override
+  String get duelMaster => 'Duel Master';
+
+  @override
+  String get endlessSurvivor => 'Endless Survivor';
+
+  @override
+  String get divisionExpert => 'Division Expert';
+
+  @override
+  String get additionMastery => 'Addition Mastery';
+
+  @override
+  String get singleDigitAddition => 'Single Digit Addition';
+
+  @override
+  String get twoDigitAddition => 'Two Digit Addition';
+
+  @override
+  String get threeDigitAddition => 'Three Digit Addition';
+
+  @override
+  String get additionWithCarrying => 'Addition with Carrying';
+
+  @override
+  String get advancedAddition => 'Advanced Addition';
+
+  @override
+  String get subtractionMastery => 'Subtraction Mastery';
+
+  @override
+  String get singleDigitSubtraction => 'Single Digit Subtraction';
+
+  @override
+  String get twoDigitSubtraction => 'Two Digit Subtraction';
+
+  @override
+  String get threeDigitSubtraction => 'Three Digit Subtraction';
+
+  @override
+  String get subtractionWithBorrowing => 'Subtraction with Borrowing';
+
+  @override
+  String get advancedSubtraction => 'Advanced Subtraction';
+
+  @override
+  String get wordProblemsSubtraction => 'Word Problems - Subtraction';
+
+  @override
+  String get multiplicationMastery => 'Multiplication Mastery';
+
+  @override
+  String get timesTables1to5 => 'Times Tables 1-5';
+
+  @override
+  String get timesTables6to10 => 'Times Tables 6-10';
+
+  @override
+  String get twoDigitMultiplication => 'Two Digit Multiplication';
+
+  @override
+  String get threeDigitMultiplication => 'Three Digit Multiplication';
+
+  @override
+  String get multiplicationWordProblems => 'Multiplication Word Problems';
+
+  @override
+  String get advancedMultiplication => 'Advanced Multiplication';
+
+  @override
+  String get multiplicationPatterns => 'Multiplication Patterns';
+
+  @override
+  String get divisionMastery => 'Division Mastery';
+
+  @override
+  String get divisionBasics => 'Division Basics';
+
+  @override
+  String get divisionWithRemainders => 'Division with Remainders';
+
+  @override
+  String get twoDigitDivision => 'Two Digit Division';
+
+  @override
+  String get threeDigitDivision => 'Three Digit Division';
+
+  @override
+  String get divisionWordProblems => 'Division Word Problems';
+
+  @override
+  String get longDivision => 'Long Division';
+
+  @override
+  String get legend => 'Legend';
+
+  @override
+  String get century => 'Century';
+
+  @override
+  String get mathEquationsLevelPrefix => 'MATH EQUATIONS - LVL';
+
+  @override
+  String get selectDifficultyLevel => 'SELECT DIFFICULTY LEVEL';
+
+  @override
+  String get levelPrefix => 'L';
 }

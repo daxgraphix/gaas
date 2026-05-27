@@ -412,14 +412,14 @@ class _EnhancedPracticeScreenState extends ConsumerState<EnhancedPracticeScreen>
               ),
               const Divider(),
               SwitchListTile(
-                title: const Text('Unlimited Time'),
-                subtitle: const Text('Practice without pressure'),
+                title: Text(AppLocalizations.of(context)!.unlimitedTime),
+                subtitle: Text(AppLocalizations.of(context)!.practiceWithoutPressure),
                 value: _unlimitedTime,
                 onChanged: (v) => setState(() => _unlimitedTime = v),
               ),
               SwitchListTile(
-                title: const Text('Show Feedback'),
-                subtitle: const Text('See correct answers immediately'),
+                title: Text(AppLocalizations.of(context)!.showFeedback),
+                subtitle: Text(AppLocalizations.of(context)!.seeCorrectAnswersImmediately),
                 value: _showFeedback,
                 onChanged: (v) => setState(() => _showFeedback = v),
               ),

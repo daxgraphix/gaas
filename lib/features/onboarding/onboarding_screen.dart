@@ -4,6 +4,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import '../../core/themes/app_themes.dart';
 import '../../core/sound_manager.dart';
 import '../profile_setup/profile_setup_screen.dart';
+import '../../l10n/generated/app_localizations.dart';
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
@@ -19,10 +20,10 @@ class _OnboardingScreenState extends State<OnboardingScreen>
   late Animation<Alignment> _gradientAnimation;
   int _currentPage = 0;
 
-  final List<OnboardingPageData> _pages = [
+  List<OnboardingPageData> _getPages(AppLocalizations l10n) => [
     OnboardingPageData(
-      title: 'GAAS',
-      subtitle: 'Core Concept',
+      title: l10n.appTitle,
+      subtitle: l10n.coreConcept,
       description:
           'A gamified adaptive arithmetic system that personalizes math practice with instant feedback and rewarding progression.',
       icon: Icons.qr_code_scanner_rounded,
@@ -75,9 +76,9 @@ class _OnboardingScreenState extends State<OnboardingScreen>
     super.dispose();
   }
 
-  void _nextPage() {
+  void _nextPage(List<OnboardingPageData> pages) {
     HapticManager.selectionClick();
-    if (_currentPage < _pages.length - 1) {
+    if (_currentPage < pages.length - 1) {
       _pageController.nextPage(
         duration: const Duration(milliseconds: 600),
         curve: Curves.easeOut,
@@ -111,7 +112,9 @@ class _OnboardingScreenState extends State<OnboardingScreen>
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final accent = _pages[_currentPage].accentColor;
+    final l10n = AppLocalizations.of(context)!;
+    final pages = _getPages(l10n);
+    final accent = pages[_currentPage].accentColor;
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
@@ -155,13 +158,13 @@ class _OnboardingScreenState extends State<OnboardingScreen>
 
           PageView.builder(
             controller: _pageController,
-            itemCount: _pages.length,
+            itemCount: pages.length,
             onPageChanged: (index) {
               setState(() => _currentPage = index);
               HapticManager.lightImpact();
             },
             itemBuilder: (context, index) {
-              return _buildPage(_pages[index]);
+              return _buildPage(pages[index]);
             },
           ),
 
@@ -176,7 +179,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                 // Minimalist Progress
                 Row(
                   children: List.generate(
-                    _pages.length,
+                    pages.length,
                     (index) => AnimatedContainer(
                       duration: 300.ms,
                       margin: const EdgeInsets.only(right: 8),
@@ -228,7 +231,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
             child: Column(
               children: [
                 GestureDetector(
-                  onTap: _nextPage,
+                  onTap: () => _nextPage(pages),
                   child: Container(
                     width: double.infinity,
                     height: 64,
@@ -248,7 +251,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Text(
-                            _currentPage == _pages.length - 1
+                            _currentPage == pages.length - 1
                                 ? 'GET STARTED'
                                 : 'NEXT',
                             style: theme.textTheme.labelLarge?.copyWith(

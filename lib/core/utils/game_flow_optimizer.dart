@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import '../../l10n/generated/app_localizations.dart';
 import '../../../core/game_adaptability/dynamic_difficulty_system.dart';
 import '../math_engine/math_engine.dart';
 
@@ -203,6 +204,7 @@ class CrossPlatformNavigator {
     // Check if context is still mounted after async operation
     if (!context.mounted) return null;
 
+    final l10n = AppLocalizations.of(context)!;
     return Navigator.push<T>(
       context,
       MaterialPageRoute(
@@ -213,7 +215,7 @@ class CrossPlatformNavigator {
               children: [
                 GameFlowOptimizer.buildPlatformLoadingIndicator(context),
                 const SizedBox(height: 16),
-                const Text('Loading game...'),
+                Text(l10n.loadingGame),
               ],
             ),
           ),

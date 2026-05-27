@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../l10n/generated/app_localizations.dart';
 import '../math_equation/math_equation_screen.dart';
 
 class CrosswordLevelSelectionScreen extends StatelessWidget {
@@ -7,6 +8,7 @@ class CrosswordLevelSelectionScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
@@ -15,7 +17,7 @@ class CrosswordLevelSelectionScreen extends StatelessWidget {
           icon: const Icon(Icons.arrow_back_ios_new, size: 20),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text('SELECT CROSSWORD LEVEL'),
+        title: Text(l10n.selectCrosswordLevel),
       ),
       body: SafeArea(
         child: Padding(
@@ -24,7 +26,7 @@ class CrosswordLevelSelectionScreen extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'CHOOSE DIFFICULTY',
+                l10n.selectLevel.toUpperCase(),
                 style: theme.textTheme.labelSmall?.copyWith(
                   fontWeight: FontWeight.w900,
                   letterSpacing: 2,
@@ -39,7 +41,7 @@ class CrosswordLevelSelectionScreen extends StatelessWidget {
                   crossAxisSpacing: 16,
                   children: List.generate(30, (index) {
                     final level = index + 1;
-                    final difficulty = level <= 10 ? 'EASY' : level <= 20 ? 'MEDIUM' : 'HARD';
+                    final difficulty = level <= 10 ? l10n.easy.toUpperCase() : level <= 20 ? l10n.medium.toUpperCase() : l10n.hard.toUpperCase();
                     final color = level <= 10 ? Colors.green : level <= 20 ? Colors.orange : Colors.red;
 
                     return _buildLevelCard(

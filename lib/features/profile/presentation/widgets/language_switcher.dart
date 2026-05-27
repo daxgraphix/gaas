@@ -16,7 +16,6 @@ class LanguageSwitcher extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final currentLocale = ref.watch(localeProvider);
-    final l10n = AppLocalizations.of(context);
 
     return InkWell(
       onTap: () {
@@ -25,7 +24,7 @@ class LanguageSwitcher extends ConsumerWidget {
         final newLocale = ref.read(localeProvider);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('${l10n?.language ?? 'Language'} → ${newLocale.name}'),
+            content: Text('${AppLocalizations.of(context)?.switchedTo ?? 'Switched to'} ${newLocale.name}'),
             duration: const Duration(seconds: 1),
             backgroundColor: Theme.of(context).colorScheme.primary,
           ),
@@ -86,13 +85,13 @@ class LanguageToggleButton extends ConsumerWidget {
         currentLocale.flag,
         style: const TextStyle(fontSize: 20),
       ),
-      tooltip: 'Switch Language (${currentLocale.name})',
+      tooltip: '${AppLocalizations.of(context)?.switchLanguage ?? 'Switch Language'} (${currentLocale.name})',
       onPressed: () {
         ref.read(localeProvider.notifier).toggleLanguage();
         final newLocale = ref.read(localeProvider);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Switched to ${newLocale.name}'),
+            content: Text('${AppLocalizations.of(context)?.switchedTo ?? 'Switched to'} ${newLocale.name}'),
             duration: const Duration(seconds: 1),
           ),
         );

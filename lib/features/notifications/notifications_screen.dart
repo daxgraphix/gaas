@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../l10n/generated/app_localizations.dart';
 
 class NotificationsScreen extends StatefulWidget {
   const NotificationsScreen({super.key});
@@ -106,6 +107,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
     final notifications = _getNotifications(theme);
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
@@ -137,7 +139,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                 padding: const EdgeInsets.all(24),
                 itemCount: _getFilteredNotifications(notifications).length,
                 itemBuilder: (context, index) {
-                  return _buildNotificationItem(_getFilteredNotifications(notifications)[index], theme);
+                  return _buildNotificationItem(_getFilteredNotifications(notifications)[index], theme, l10n);
                 },
               ),
             ),
@@ -212,7 +214,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     );
   }
 
-  Widget _buildNotificationItem(Map<String, dynamic> item, ThemeData theme) {
+  Widget _buildNotificationItem(Map<String, dynamic> item, ThemeData theme, AppLocalizations l10n) {
     final bool isRead = item['isRead'];
     final Color color = item['color'];
 
@@ -284,9 +286,9 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                           child: OutlinedButton(
                             onPressed: () {
                               // Handle action
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text('Action: ${item['action']}')),
-                              );
+ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('Action: ${item['action']}')),
+              );
                             },
                             style: OutlinedButton.styleFrom(
                               side: BorderSide(color: color.withValues(alpha: 0.5)),

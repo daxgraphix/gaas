@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/providers.dart';
 import '../../../core/sound_manager.dart';
+import '../../../l10n/generated/app_localizations.dart';
 
 class CrosswordScreen extends ConsumerStatefulWidget {
   final String theme;
@@ -70,7 +71,8 @@ class _CrosswordScreenState extends ConsumerState<CrosswordScreen> with SingleTi
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
     final puzzleState = ref.watch(crosswordPuzzleProvider);
     final puzzle = puzzleState.puzzle;
 
@@ -94,7 +96,7 @@ class _CrosswordScreenState extends ConsumerState<CrosswordScreen> with SingleTi
             Navigator.pop(context);
           },
         ),
-        title: Text('CROSSWORD - ${widget.theme.toUpperCase()}'),
+        title: Text('${l10n.crossword} - ${widget.theme.toUpperCase()}'),
         actions: [
           Padding(
             padding: const EdgeInsets.only(right: 16),
@@ -139,7 +141,7 @@ class _CrosswordScreenState extends ConsumerState<CrosswordScreen> with SingleTi
                 ),
               ),
             ),
-            _buildKeyboard(context),
+            _buildKeyboard(context, l10n),
           ],
         ),
       ),
@@ -311,7 +313,7 @@ class _CrosswordScreenState extends ConsumerState<CrosswordScreen> with SingleTi
     );
   }
 
-  Widget _buildKeyboard(BuildContext context) {
+  Widget _buildKeyboard(BuildContext context, AppLocalizations l10n) {
     final theme = Theme.of(context);
     final letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
     final user = ref.watch(userSessionProvider);
@@ -339,19 +341,19 @@ class _CrosswordScreenState extends ConsumerState<CrosswordScreen> with SingleTi
             child: Row(
               children: [
                 _buildModeChip(
-                  label: 'ACROSS',
+                  label: l10n.across,
                   selected: _currentDirection == 'across',
                   onTap: () => setState(() => _currentDirection = 'across'),
                 ),
                 const SizedBox(width: 8),
                 _buildModeChip(
-                  label: 'DOWN',
+                  label: l10n.down,
                   selected: _currentDirection == 'down',
                   onTap: () => setState(() => _currentDirection = 'down'),
                 ),
                 const Spacer(),
                 Text(
-                  'Hint $hintCostPoints pts',
+                  '${l10n.hint} $hintCostPoints pts',
                   style: TextStyle(
                     color: theme.brightness == Brightness.light
                         ? (canUseHint ? theme.colorScheme.primary : theme.colorScheme.onSurface.withValues(alpha: 0.4))

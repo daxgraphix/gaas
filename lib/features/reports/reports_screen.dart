@@ -82,8 +82,8 @@ class ReportsScreen extends ConsumerWidget {
       // Show loading
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Generating image...'),
+        SnackBar(
+          content: Text(l10n.generatingImage),
           duration: Duration(seconds: 2),
         ),
       );
@@ -144,7 +144,7 @@ class ReportsScreen extends ConsumerWidget {
 
       await Share.shareXFiles(
         [XFile(file.path)],
-        text: 'GAAS Performance Report',
+        text: l10n.performanceReportTitle,
         subject: 'Mathematics Learning Progress',
       );
 
@@ -155,8 +155,8 @@ class ReportsScreen extends ConsumerWidget {
 
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Image shared successfully!'),
+        SnackBar(
+          content: Text(l10n.imageSharedSuccessfully),
           backgroundColor: Colors.green,
         ),
       );
@@ -164,7 +164,7 @@ class ReportsScreen extends ConsumerWidget {
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Image export failed: $e'),
+          content: Text('${l10n.imageExportFailed}: $e'),
           backgroundColor: Theme.of(context).colorScheme.error,
         ),
       );
@@ -175,8 +175,8 @@ class ReportsScreen extends ConsumerWidget {
     try {
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Preparing document for printing...'),
+        SnackBar(
+          content: Text(l10n.preparingDocument),
           duration: Duration(seconds: 2),
         ),
       );
@@ -207,7 +207,7 @@ class ReportsScreen extends ConsumerWidget {
                 ),
                 pw.SizedBox(height: 20),
                 if (user != null) ...[
-                  pw.Text('Player: ${user.name}', style: pw.TextStyle(fontSize: 14)),
+                  pw.Text('${l10n.playerLabel}: ${user.name}', style: pw.TextStyle(fontSize: 14)),
                   pw.SizedBox(height: 10),
                 ],
                 pw.Divider(),
@@ -230,8 +230,8 @@ class ReportsScreen extends ConsumerWidget {
 
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Document sent to printer!'),
+        SnackBar(
+          content: Text(l10n.documentSentToPrinter),
           backgroundColor: Colors.green,
         ),
       );
@@ -239,7 +239,7 @@ class ReportsScreen extends ConsumerWidget {
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Print failed: $e'),
+          content: Text('${l10n.printFailed}: $e'),
           backgroundColor: Theme.of(context).colorScheme.error,
         ),
       );
@@ -250,8 +250,8 @@ class ReportsScreen extends ConsumerWidget {
     try {
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Generating PDF...'),
+        SnackBar(
+          content: Text(l10n.generatingPdf),
           duration: Duration(seconds: 2),
         ),
       );
@@ -277,7 +277,7 @@ class ReportsScreen extends ConsumerWidget {
                   style: pw.TextStyle(fontSize: 20, fontWeight: pw.FontWeight.bold),
                 ),
                 pw.SizedBox(height: 20),
-                if (user != null) pw.Text('Player: ${user.name}', style: pw.TextStyle(fontSize: 14)),
+                if (user != null) pw.Text('${l10n.playerLabel}: ${user.name}', style: pw.TextStyle(fontSize: 14)),
                 pw.SizedBox(height: 20),
                 _buildPdfStatRow('Total Stars', totalStars.value?.toString() ?? '0'),
                 _buildPdfStatRow('Levels Completed', completedLevels.value?.toString() ?? '0'),
@@ -307,7 +307,7 @@ class ReportsScreen extends ConsumerWidget {
         if (!context.mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Report saved to: ${file.path}'),
+            content: Text(l10n.reportSaved(file.path)),
             backgroundColor: Theme.of(context).colorScheme.primary,
             behavior: SnackBarBehavior.floating,
           ),
@@ -319,7 +319,7 @@ class ReportsScreen extends ConsumerWidget {
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Save failed: $e'),
+          content: Text(l10n.reportSaveFailed(e.toString())),
           backgroundColor: Theme.of(context).colorScheme.error,
         ),
       );
@@ -868,7 +868,7 @@ class ReportsScreen extends ConsumerWidget {
                   );
                 }),
               ] else ...[
-                const Center(child: Text('No progress data available')),
+                Center(child: Text(l10n.noProgressDataAvailable)),
               ],
             ],
           ),
@@ -1037,7 +1037,7 @@ class ReportsScreen extends ConsumerWidget {
       final scaffoldMessenger = ScaffoldMessenger.of(context);
       scaffoldMessenger.showSnackBar(
         SnackBar(
-          content: const Text('Generating PDF...'),
+          content: Text(l10n.generatingPdf),
           duration: const Duration(seconds: 2),
         ),
       );
@@ -1063,7 +1063,7 @@ class ReportsScreen extends ConsumerWidget {
                   style: pw.TextStyle(fontSize: 20, fontWeight: pw.FontWeight.bold),
                 ),
                 pw.SizedBox(height: 20),
-                if (user != null) pw.Text('Player: ${user.name}', style: pw.TextStyle(fontSize: 14)),
+                if (user != null) pw.Text('${l10n.playerLabel}: ${user.name}', style: pw.TextStyle(fontSize: 14)),
                 pw.SizedBox(height: 20),
                 _buildPdfStatRow('Total Stars', totalStars.value?.toString() ?? '0'),
                 _buildPdfStatRow('Levels Completed', completedLevels.value?.toString() ?? '0'),
@@ -1093,7 +1093,7 @@ class ReportsScreen extends ConsumerWidget {
         if (!context.mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Report saved to: ${file.path}'),
+            content: Text(l10n.reportSaved(file.path)),
             backgroundColor: Theme.of(context).colorScheme.primary,
             behavior: SnackBarBehavior.floating,
           ),
@@ -1105,7 +1105,7 @@ class ReportsScreen extends ConsumerWidget {
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Save failed: $e'),
+          content: Text(l10n.reportSaveFailed(e.toString())),
           backgroundColor: Theme.of(context).colorScheme.error,
         ),
       );

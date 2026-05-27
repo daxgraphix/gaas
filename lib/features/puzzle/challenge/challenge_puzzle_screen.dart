@@ -6,6 +6,7 @@ import '../../../core/themes/app_themes.dart';
 import '../crossword/crossword_screen.dart';
 import '../math_riddle/math_riddle_screen.dart';
 import '../../../data/models/math_riddle.dart';
+import '../../../l10n/generated/app_localizations.dart';
 
 class ChallengePuzzleScreen extends ConsumerStatefulWidget {
   const ChallengePuzzleScreen({super.key});
@@ -648,36 +649,39 @@ class _ChallengePuzzleScreenState extends ConsumerState<ChallengePuzzleScreen> {
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (context) => AlertDialog(
-        title: const Text('Time\'s Up!'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(Icons.timer_off, size: 48, color: Colors.red),
-            const SizedBox(height: 16),
-            Text('Your score: ${challengeState.score}'),
+      builder: (context) {
+        final l10n = AppLocalizations.of(context);
+        return AlertDialog(
+          title: Text(l10n?.timesUp ?? "Time's Up!"),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.timer_off, size: 48, color: Colors.red),
+              const SizedBox(height: 16),
+              Text('${l10n?.yourScore ?? 'Your score'}: ${challengeState.score}'),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+                Navigator.pop(context);
+              },
+              child: Text(l10n?.exit ?? 'Exit'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pop(context);
+                setState(() {
+                  _isPlaying = false;
+                });
+                ref.read(challengeModeProvider.notifier).reset();
+              },
+              child: Text(l10n?.tryAgain ?? 'Try Again'),
+            ),
           ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              Navigator.pop(context);
-            },
-            child: const Text('Exit'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(context);
-              setState(() {
-                _isPlaying = false;
-              });
-              ref.read(challengeModeProvider.notifier).reset();
-            },
-            child: const Text('Try Again'),
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 

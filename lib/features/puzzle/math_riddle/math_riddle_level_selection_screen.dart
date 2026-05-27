@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../data/models/math_riddle.dart';
 import '../math_riddle/math_riddle_screen.dart';
+import '../../../l10n/generated/app_localizations.dart';
 
 class MathRiddleLevelSelectionScreen extends StatefulWidget {
   const MathRiddleLevelSelectionScreen({super.key});
@@ -15,6 +16,7 @@ class _MathRiddleLevelSelectionScreenState extends State<MathRiddleLevelSelectio
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
@@ -23,7 +25,7 @@ class _MathRiddleLevelSelectionScreenState extends State<MathRiddleLevelSelectio
           icon: const Icon(Icons.arrow_back_ios_new, size: 20),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text('SELECT RIDDLE LEVEL'),
+        title: Text(l10n.selectRiddleLevel),
       ),
       body: SafeArea(
         child: Padding(
@@ -32,7 +34,7 @@ class _MathRiddleLevelSelectionScreenState extends State<MathRiddleLevelSelectio
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'LOGIC RIDDLES ONLY',
+                l10n.logicRiddles.toUpperCase(),
                 style: theme.textTheme.labelSmall?.copyWith(
                   fontWeight: FontWeight.w900,
                   letterSpacing: 2,
@@ -43,7 +45,7 @@ class _MathRiddleLevelSelectionScreenState extends State<MathRiddleLevelSelectio
               _buildTypeSelection(theme),
               const SizedBox(height: 24),
               Text(
-                'CHOOSE DIFFICULTY',
+                l10n.selectLevel.toUpperCase(),
                 style: theme.textTheme.labelSmall?.copyWith(
                   fontWeight: FontWeight.w900,
                   letterSpacing: 2,

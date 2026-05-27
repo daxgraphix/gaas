@@ -678,10 +678,11 @@ class ProfileScreen extends ConsumerWidget {
     AppThemeType currentTheme,
     ThemeData theme,
   ) {
+    final l10n = AppLocalizations.of(context)!;
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Select Theme'),
+        title: Text(l10n.selectTheme),
         content: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,

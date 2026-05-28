@@ -23,13 +23,10 @@ class HomeScreen extends ConsumerStatefulWidget {
 
 class _HomeScreenState extends ConsumerState<HomeScreen>
     with TickerProviderStateMixin {
-  late final AppLocalizations l10n;
   late AnimationController _fabAnimationController;
   late AnimationController _cardAnimationController;
   late Animation<double> _fabScaleAnimation;
   late Animation<double> _cardSlideAnimation;
-
-  final int _currentStreak = 0;
 
   @override
   void initState() {
@@ -40,27 +37,32 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     )..repeat(reverse: true);
 
     _cardAnimationController = AnimationController(
-      duration: const Duration(milliseconds: 800),
+      duration: const Duration(milliseconds: 600),
       vsync: this,
     );
 
     _fabScaleAnimation = Tween<double>(
       begin: 1.0,
-      end: 1.1,
+      end: 1.05,
     ).animate(CurvedAnimation(
       parent: _fabAnimationController,
       curve: Curves.easeInOut,
     ));
 
     _cardSlideAnimation = Tween<double>(
-      begin: 50.0,
+      begin: 30.0,
       end: 0.0,
     ).animate(CurvedAnimation(
       parent: _cardAnimationController,
-      curve: Curves.elasticOut,
+      curve: Curves.easeOutCubic,
     ));
 
     _cardAnimationController.forward();
+    
+    // Load level progress
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(levelProgressProvider.notifier).loadProgress();
+    });
   }
 
   @override
@@ -68,12 +70,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     _fabAnimationController.dispose();
     _cardAnimationController.dispose();
     super.dispose();
-  }
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    l10n = AppLocalizations.of(context)!;
   }
 
   @override
@@ -99,16 +95,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
       extendBody: true,
-      appBar: _buildAdvancedAppBar(theme, greeting),
+      appBar: _buildAdvancedAppBar(theme, greeting, l10n),
       body: _buildAdvancedBody(
         theme, user, totalStars, completedLevels, totalTime, accuracy, sessionStats, l10n,
       ),
-      floatingActionButton: _buildAnimatedFAB(theme),
+      floatingActionButton: _buildAnimatedFAB(theme, l10n),
       bottomNavigationBar: _buildModernBottomNav(theme, l10n),
     );
   }
 
-  PreferredSizeWidget _buildAdvancedAppBar(ThemeData theme, String greeting) {
+  PreferredSizeWidget _buildAdvancedAppBar(ThemeData theme, String greeting, AppLocalizations l10n) {
     return AppBar(
       backgroundColor: Colors.transparent,
       elevation: 0,
@@ -172,48 +168,51 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       actions: [
         _buildStreakIndicator(theme),
         const SizedBox(width: 8),
-        _buildLanguageToggle(theme),
+        _buildLanguageToggle(theme, l10n),
         const SizedBox(width: 8),
-        _buildProfileButton(theme),
+        _buildProfileButton(theme, l10n),
       ],
     );
   }
 
   Widget _buildStreakIndicator(ThemeData theme) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.tertiaryContainer,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: theme.colorScheme.tertiary.withValues(alpha: 0.3),
-          width: 1,
-        ),
-      ),
-      child: Row(
-        children: [
-          Icon(
-            Icons.local_fire_department,
-            color: theme.colorScheme.tertiary,
-            size: 16,
-          ),
-          const SizedBox(width: 4),
-          Text(
-            '$_currentStreak',
-            style: theme.textTheme.bodySmall?.copyWith(
-              fontWeight: FontWeight.bold,
-              color: theme.colorScheme.onTertiaryContainer,
+    return Consumer(
+      builder: (context, ref, child) {
+        final streak = ref.watch(bestStreakProvider).value ?? 0;
+        if (streak == 0) return const SizedBox.shrink();
+        return Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          decoration: BoxDecoration(
+            color: theme.colorScheme.tertiaryContainer,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: theme.colorScheme.tertiary.withValues(alpha: 0.3),
+              width: 1,
             ),
           ),
-        ],
-      ),
-    ).animate(target: _currentStreak > 0 ? 1 : 0)
-        .scale(begin: const Offset(1, 1), end: const Offset(1.2, 1.2))
-        .then()
-        .scale(begin: const Offset(1.2, 1.2), end: const Offset(1, 1));
+          child: Row(
+            children: [
+              Icon(
+                Icons.local_fire_department,
+                color: theme.colorScheme.tertiary,
+                size: 16,
+              ),
+              const SizedBox(width: 4),
+              Text(
+                '$streak',
+                style: theme.textTheme.bodySmall?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: theme.colorScheme.onTertiaryContainer,
+                ),
+              ),
+            ],
+          ),
+        ).animate().scale(duration: 400.ms, curve: Curves.easeOutBack);
+      },
+    );
   }
 
-  Widget _buildLanguageToggle(ThemeData theme) {
+  Widget _buildLanguageToggle(ThemeData theme, AppLocalizations l10n) {
     return Consumer(
       builder: (context, ref, child) {
         final currentLocale = ref.watch(localeProvider);
@@ -249,7 +248,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     );
   }
 
-  Widget _buildProfileButton(ThemeData theme) {
+  Widget _buildProfileButton(ThemeData theme, AppLocalizations l10n) {
     return IconButton(
       icon: CircleAvatar(
         radius: 14,
@@ -314,7 +313,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _buildWelcomeSection(theme),
+                      _buildWelcomeSection(theme, l10n),
                       const SizedBox(height: 24),
                   _buildStatsOverview(
                     theme, totalStars, completedLevels, totalTime, accuracy, l10n,
@@ -322,11 +321,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                   const SizedBox(height: 24),
                   _buildSessionStats(theme, sessionStats, l10n),
                       const SizedBox(height: 32),
-                      _buildQuickActions(theme),
-                      const SizedBox(height: 32),
-                      _buildDailyChallenge(theme),
-                      const SizedBox(height: 32),
-                      _buildGameModesGrid(theme),
+_buildQuickActions(theme, l10n),
+                       const SizedBox(height: 32),
+                       _buildDailyChallenge(theme, l10n),
+                       const SizedBox(height: 32),
+                       _buildGameModesGrid(theme, l10n),
                     ],
                   ),
                 ),
@@ -338,7 +337,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     );
   }
 
-  Widget _buildWelcomeSection(ThemeData theme) {
+  Widget _buildWelcomeSection(ThemeData theme, AppLocalizations l10n) {
     return AnimatedBuilder(
       animation: _cardSlideAnimation,
       builder: (context, child) {
@@ -589,11 +588,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   }
 
   Widget _buildStatCard(String title, String value, Color color, IconData icon, ThemeData theme) {
-    final isLoading = value == '...' || value == '0 ⭐' || value == '0 🎯' || value == '0h ⏰' || value == '0% 🎯';
-
     return Container(
       width: double.infinity,
-      constraints: const BoxConstraints(minHeight: 120),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: theme.colorScheme.surface,
@@ -612,56 +608,33 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(12),
-              boxShadow: isLoading ? null : [
-                BoxShadow(
-                  color: color.withValues(alpha: 0.3),
-                  blurRadius: 8,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-            child: Icon(icon, color: color, size: 24),
-          ).animate(target: isLoading ? 1 : 0)
-              .shimmer(duration: 1200.ms, color: color.withValues(alpha: 0.3)),
+          Icon(icon, color: color, size: 24),
           const SizedBox(height: 8),
-          Flexible(
-            child: Text(
-              value,
-              style: theme.textTheme.headlineSmall?.copyWith(
-                fontWeight: FontWeight.bold,
-                color: color,
-              ),
-              textAlign: TextAlign.center,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
+          Text(
+            value,
+            style: theme.textTheme.headlineSmall?.copyWith(
+              fontWeight: FontWeight.bold,
+              color: color,
             ),
-          ).animate(target: isLoading ? 1 : 0)
-              .shimmer(duration: 1200.ms, color: color.withValues(alpha: 0.3)),
+            textAlign: TextAlign.center,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+          ),
           const SizedBox(height: 4),
-          Flexible(
-            child: Text(
-              title,
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
-              ),
-              textAlign: TextAlign.center,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
+          Text(
+            title,
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
             ),
+            textAlign: TextAlign.center,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
           ),
         ],
       ),
-    ).animate()
-        .fadeIn(duration: 600.ms)
-        .scale(begin: const Offset(0.8, 0.8), end: const Offset(1, 1))
-        .then(delay: 200.ms)
-        .shake(curve: Curves.elasticOut);
+    ).animate().fadeIn(duration: 400.ms).scale(begin: const Offset(0.9, 0.9), end: const Offset(1, 1));
   }
 
   Widget _buildSessionStats(ThemeData theme, SessionStats sessionStats, AppLocalizations l10n) {
@@ -746,7 +719,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
         .scale(begin: const Offset(0.9, 0.9), end: const Offset(1, 1));
   }
 
-  Widget _buildQuickActions(ThemeData theme) {
+  Widget _buildQuickActions(ThemeData theme, AppLocalizations l10n) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -822,7 +795,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
         .slideY(begin: 0.2, end: 0);
   }
 
-  Widget _buildDailyChallenge(ThemeData theme) {
+  Widget _buildDailyChallenge(ThemeData theme, AppLocalizations l10n) {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -914,7 +887,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
         .slideX(begin: 0.2, end: 0);
   }
 
-  Widget _buildGameModesGrid(ThemeData theme) {
+  Widget _buildGameModesGrid(ThemeData theme, AppLocalizations l10n) {
     final crossAxisCount = ResponsiveUtils.getResponsiveGridColumns(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1060,7 +1033,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
         .then(delay: 100.ms);
   }
 
-  Widget _buildAnimatedFAB(ThemeData theme) {
+  Widget _buildAnimatedFAB(ThemeData theme, AppLocalizations l10n) {
     return AnimatedBuilder(
       animation: _fabScaleAnimation,
       builder: (context, child) {
@@ -1094,7 +1067,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
               onPressed: () {
                 HapticManager.instance.selectionClick();
                 ref.read(soundManagerProvider).playEffect('click');
-                _showQuickStartDialog(theme);
+                _showQuickStartDialog(theme, l10n);
               },
               backgroundColor: Colors.transparent,
               foregroundColor: theme.colorScheme.onPrimary,
@@ -1236,7 +1209,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     );
   }
 
-  void _showQuickStartDialog(ThemeData theme) {
+  void _showQuickStartDialog(ThemeData theme, AppLocalizations l10n) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(

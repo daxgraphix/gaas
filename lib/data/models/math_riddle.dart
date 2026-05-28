@@ -32,8 +32,8 @@ class MathRiddle {
     double timeScore = (timeSeconds < 30)
         ? 3
         : (timeSeconds < 60)
-        ? 2
-        : 1;
+            ? 2
+            : 1;
     double hintPenalty = hintsUsed * 0.3;
     double score = timeScore - hintPenalty;
     if (score >= 2.5) return 3;
@@ -43,39 +43,75 @@ class MathRiddle {
 }
 
 class MathRiddleState {
-  final MathRiddle riddle;
+  final MathRiddle? currentRiddle;
+  final NumberSequence? currentSequence;
+  final LogicMathChallenge? currentLogic;
   final String? selectedAnswer;
   final List<String> revealedHints;
   final bool isCorrect;
   final bool isAnswered;
   final int timeSpentSeconds;
+  final int level;
+  final int questionIndex;
+  final int correctAnswers;
+  final int totalQuestions;
+  final int hintsUsed;
+  final List<dynamic> allChallenges;
 
   const MathRiddleState({
-    required this.riddle,
+    this.currentRiddle,
+    this.currentSequence,
+    this.currentLogic,
     this.selectedAnswer,
     this.revealedHints = const [],
     this.isCorrect = false,
     this.isAnswered = false,
     this.timeSpentSeconds = 0,
+    this.level = 1,
+    this.questionIndex = 0,
+    this.correctAnswers = 0,
+    this.totalQuestions = 20,
+    this.hintsUsed = 0,
+    this.allChallenges = const [],
   });
 
   MathRiddleState copyWith({
-    MathRiddle? riddle,
+    MathRiddle? currentRiddle,
+    NumberSequence? currentSequence,
+    LogicMathChallenge? currentLogic,
     String? selectedAnswer,
     List<String>? revealedHints,
     bool? isCorrect,
     bool? isAnswered,
     int? timeSpentSeconds,
+    int? level,
+    int? questionIndex,
+    int? correctAnswers,
+    int? totalQuestions,
+    int? hintsUsed,
+    List<dynamic>? allChallenges,
   }) {
     return MathRiddleState(
-      riddle: riddle ?? this.riddle,
+      currentRiddle: currentRiddle ?? this.currentRiddle,
+      currentSequence: currentSequence ?? this.currentSequence,
+      currentLogic: currentLogic ?? this.currentLogic,
       selectedAnswer: selectedAnswer ?? this.selectedAnswer,
       revealedHints: revealedHints ?? this.revealedHints,
       isCorrect: isCorrect ?? this.isCorrect,
       isAnswered: isAnswered ?? this.isAnswered,
       timeSpentSeconds: timeSpentSeconds ?? this.timeSpentSeconds,
+      level: level ?? this.level,
+      questionIndex: questionIndex ?? this.questionIndex,
+      correctAnswers: correctAnswers ?? this.correctAnswers,
+      totalQuestions: totalQuestions ?? this.totalQuestions,
+      hintsUsed: hintsUsed ?? this.hintsUsed,
+      allChallenges: allChallenges ?? this.allChallenges,
     );
   }
+
+  double get levelProgress => totalQuestions > 0 ? questionIndex / totalQuestions : 0;
+  bool get levelPassed => correctAnswers >= 16;
+  int get stars => levelPassed ? 3 : 0;
 }
 
 class NumberSequence {

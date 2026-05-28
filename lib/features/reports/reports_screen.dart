@@ -10,6 +10,7 @@ import 'package:share_plus/share_plus.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:printing/printing.dart';
 import '../../core/providers.dart';
+import '../../core/themes/app_themes.dart';
 import '../../l10n/generated/app_localizations.dart';
 
 class ReportsScreen extends ConsumerWidget {
@@ -542,41 +543,103 @@ class ReportsScreen extends ConsumerWidget {
     AsyncValue<int> totalTime,
     AppLocalizations l10n,
   ) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          l10n.performanceAnalytics,
-          style: theme.textTheme.titleLarge?.copyWith(
-            fontWeight: FontWeight.bold,
-            color: theme.colorScheme.onSurface,
-          ),
-        ),
-        const SizedBox(height: 16),
-        Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: theme.colorScheme.surface,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: theme.colorScheme.outline.withValues(alpha: 0.3)),
-          ),
-          child: Column(
-            children: [
-              Text(
-                'Current Session',
-                style: theme.textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
+    return Consumer(
+      builder: (context, ref, child) {
+        final stats = ref.watch(sessionStatsProvider);
+        final trends = ref.watch(performanceTrendsProvider);
+        final bestStreak = ref.watch(bestStreakProvider);
+        final totalHints = ref.watch(averageHintsUsedProvider);
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              l10n.performanceAnalytics,
+              style: theme.textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.bold,
+                color: theme.colorScheme.onSurface,
               ),
-              const SizedBox(height: 16),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
+            ),
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: theme.colorScheme.surface,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: theme.colorScheme.outline.withValues(alpha: 0.3)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _buildMetricItem('Accuracy', '${accuracy.value?.toStringAsFixed(1) ?? '0'}%', theme),
-                  _buildMetricItem('Time', '${(totalTime.value ?? 0) ~/ 60}m', theme),
+                  Text(
+                    'Current Session',
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    children: [
+                      _buildMetricItem('Accuracy', '${accuracy.value?.toStringAsFixed(1) ?? '0'}%', theme),
+                      _buildMetricItem('Time', '${(totalTime.value ?? 0) ~/ 60}m', theme),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  const Divider(height: 1, color: Colors.white10),
+                  const SizedBox(height: 12),
+                  Text(
+                    'Real-Time Stats',
+                    style: theme.textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w600,
+                      color: theme.colorScheme.primary,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      _buildMiniStat('Questions', '${stats.questionsAnswered}', theme),
+                      _buildMiniStat('Correct', '${stats.correctAnswers}', theme),
+                      _buildMiniStat('Hints', '${stats.hintsUsed}', theme),
+                      _buildMiniStat('Avg/Time', '${stats.timeSpent > 0 ? (stats.timeSpent / stats.questionsAnswered).toStringAsFixed(1) : '0'}s', theme),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      _buildMiniStat('Avg Accuracy', '${trends.averageAccuracy.toStringAsFixed(1)}%', theme),
+                      _buildMiniStat('Best Streak', '${bestStreak.value ?? 0}', theme),
+                      _buildMiniStat('Total Hints', '${totalHints.value?.toStringAsFixed(1) ?? '0'}/q', theme),
+                      _buildMiniStat('Sessions', '${trends.accuracyHistory.length}', theme),
+                    ],
+                  ),
                 ],
               ),
-            ],
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildMiniStat(String label, String value, ThemeData theme) {
+    return Column(
+      children: [
+        Text(
+          value,
+          style: theme.textTheme.bodyMedium?.copyWith(
+            fontWeight: FontWeight.bold,
+            color: theme.colorScheme.primary,
+          ),
+        ),
+        const SizedBox(height: 2),
+        Text(
+          label,
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+            fontSize: 10,
           ),
         ),
       ],
@@ -831,49 +894,92 @@ class ReportsScreen extends ConsumerWidget {
     AsyncValue<Map<String, List<dynamic>>> levelProgress,
     AppLocalizations l10n,
   ) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          l10n.levelMasteryBreakdown,
-          style: theme.textTheme.titleLarge?.copyWith(
-            fontWeight: FontWeight.bold,
-            color: theme.colorScheme.onSurface,
-          ),
-        ),
-        const SizedBox(height: 16),
-        Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: theme.colorScheme.surface,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: theme.colorScheme.outline.withValues(alpha: 0.3)),
-          ),
-          child: Column(
-            children: [
-              if (levelProgress is AsyncData && levelProgress.value != null) ...[
-                ...levelProgress.value!.entries.map((entry) {
-                  final operation = entry.key;
-                  final levels = entry.value;
-                  final completed = levels.where((level) => (level as dynamic).stars > 0).length;
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 4),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(operation.toUpperCase()),
-                        Text('$completed/${levels.length}'),
-                      ],
+    return Consumer(
+      builder: (context, ref, child) {
+        final analytics = ref.watch(analyticsProvider);
+        
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              l10n.levelMasteryBreakdown,
+              style: theme.textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.bold,
+                color: theme.colorScheme.onSurface,
+              ),
+            ),
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: theme.colorScheme.surface,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: theme.colorScheme.outline.withValues(alpha: 0.3)),
+              ),
+              child: Column(
+                children: [
+                  if (levelProgress is AsyncData && levelProgress.value != null) ...[
+                    ...levelProgress.value!.entries.map((entry) {
+                      final operation = entry.key;
+                      final levels = entry.value;
+                      final completed = levels.where((level) => (level as dynamic).stars > 0).length;
+                      final unlocked = levels.where((level) => (level as dynamic).isUnlocked == true).length;
+                      final totalStars = levels.fold<int>(0, (sum, level) => sum + ((level as dynamic).stars as int));
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 4),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(operation.toUpperCase()),
+                            Row(
+                              children: [
+                                Icon(Icons.star, size: 14, color: AppDesignTokens.neonYellow),
+                                const SizedBox(width: 4),
+                                Text('$totalStars'),
+                                const SizedBox(width: 12),
+                                Text('$completed/${levels.length}'),
+                                const SizedBox(width: 8),
+                                Text('($unlocked unlocked)', style: TextStyle(fontSize: 10, color: theme.colorScheme.onSurface.withValues(alpha: 0.3))),
+                              ],
+                            ),
+                          ],
+                        ),
+                      );
+                    }),
+                  ] else ...[
+                    Center(child: Text(l10n.noProgressDataAvailable)),
+                  ],
+                  const SizedBox(height: 12),
+                  const Divider(height: 1, color: Colors.white10),
+                  const SizedBox(height: 12),
+                  Text(
+                    'Game Mode Distribution',
+                    style: theme.textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w600,
+                      color: theme.colorScheme.primary,
                     ),
-                  );
-                }),
-              ] else ...[
-                Center(child: Text(l10n.noProgressDataAvailable)),
-              ],
-            ],
-          ),
-        ),
-      ],
+                  ),
+                  const SizedBox(height: 8),
+                  ...analytics.operationUsage.entries.map((entry) {
+                    final mode = entry.key;
+                    final count = entry.value;
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 2),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(mode.toUpperCase()),
+                          Text('$count sessions'),
+                        ],
+                      ),
+                    );
+                  }),
+                ],
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 

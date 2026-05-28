@@ -5,7 +5,8 @@ import 'dart:async';
 import 'dart:math';
 import '../../../core/providers.dart';
 import '../../../core/sound_manager.dart';
-import '../../../data/models/math_riddle.dart' hide MathRiddleState;
+import '../../../core/themes/app_themes.dart';
+import '../../../data/models/math_riddle.dart';
 import '../../../l10n/generated/app_localizations.dart';
 
 class MathRiddleScreen extends ConsumerStatefulWidget {
@@ -44,8 +45,6 @@ class _MathRiddleScreenState extends ConsumerState<MathRiddleScreen> with Single
     WidgetsBinding.instance.addPostFrameCallback((_) => _loadPuzzle());
   }
 
-
-
   void _startTimer() {
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
       ref.read(mathRiddleProvider.notifier).incrementTime();
@@ -64,24 +63,16 @@ class _MathRiddleScreenState extends ConsumerState<MathRiddleScreen> with Single
     _answerController.clear();
     switch (widget.riddleType) {
       case MathRiddleType.arithmetic:
-        ref
-            .read(mathRiddleProvider.notifier)
-            .loadArithmeticProblem(widget.difficulty);
+        ref.read(mathRiddleProvider.notifier).loadArithmeticProblem(widget.difficulty);
         break;
       case MathRiddleType.wordProblem:
-        ref
-            .read(mathRiddleProvider.notifier)
-            .loadWordProblem(widget.difficulty);
+        ref.read(mathRiddleProvider.notifier).loadWordProblem(widget.difficulty);
         break;
       case MathRiddleType.numberSequence:
-        ref
-            .read(mathRiddleProvider.notifier)
-            .loadNumberSequence(widget.difficulty);
+        ref.read(mathRiddleProvider.notifier).loadNumberSequence(widget.difficulty);
         break;
       case MathRiddleType.logicChallenge:
-        ref
-            .read(mathRiddleProvider.notifier)
-            .loadLogicChallenge(widget.difficulty);
+        ref.read(mathRiddleProvider.notifier).loadLogicChallenge(widget.difficulty);
         break;
     }
   }
@@ -92,20 +83,54 @@ class _MathRiddleScreenState extends ConsumerState<MathRiddleScreen> with Single
     final l10n = AppLocalizations.of(context)!;
     final state = ref.watch(mathRiddleProvider);
 
+    // Check if level is complete (after answering last question)
+    if (state.isAnswered && state.questionIndex >= state.totalQuestions) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _showLevelComplete(state, theme, l10n);
+      });
+    }
+
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
         leading: IconButton(
           icon: const Icon(Icons.close, size: 20),
+          tooltip: 'Close',
           onPressed: () => Navigator.pop(context),
         ),
-        title: Text('${l10n.level} ${widget.difficulty}'),
+        title: Text('${l10n.level} ${state.level}'),
         actions: [
           IconButton(
-            icon: const Icon(Icons.grid_view_rounded, size: 20),
-            onPressed: () {},
+            icon: const Icon(Icons.home_outlined, size: 20),
+            tooltip: 'Home',
+            onPressed: () {
+              HapticManager.instance.selectionClick();
+              Navigator.of(context).popUntil((route) => route.isFirst);
+            },
+          ),
+          const SizedBox(width: 4),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Center(
+              child: Text(
+                '${state.questionIndex}/${state.totalQuestions}',
+                style: TextStyle(
+                  color: AppDesignTokens.neonCyan,
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
           ),
         ],
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(4),
+          child: LinearProgressIndicator(
+            value: state.levelProgress,
+            backgroundColor: theme.colorScheme.onSurface.withValues(alpha: 0.1),
+            color: theme.colorScheme.primary,
+          ),
+        ),
       ),
       body: Column(
         children: [
@@ -153,7 +178,7 @@ class _MathRiddleScreenState extends ConsumerState<MathRiddleScreen> with Single
     }
 
     final screenWidth = MediaQuery.of(context).size.width;
-    final fontSize = (screenWidth * 0.08).clamp(24.0, 36.0); // Responsive font size
+    final fontSize = (screenWidth * 0.08).clamp(24.0, 36.0);
 
     return ConstrainedBox(
       constraints: BoxConstraints(
@@ -187,7 +212,6 @@ class _MathRiddleScreenState extends ConsumerState<MathRiddleScreen> with Single
   }
 
   Widget _buildLogicLine(String line, ThemeData theme) {
-    // Basic parser for shapes in the string
     final parts = line.split(' ');
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
@@ -300,6 +324,34 @@ class _MathRiddleScreenState extends ConsumerState<MathRiddleScreen> with Single
       height: 72,
       child: Row(
         children: [
+          IconButton(
+            icon: Icon(
+              Icons.skip_next,
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+              size: 20,
+            ),
+            tooltip: 'Skip',
+            onPressed: state.isAnswered || state.questionIndex >= state.totalQuestions
+                ? null
+                : () {
+                    HapticManager.instance.selectionClick();
+                    ref.read(mathRiddleProvider.notifier).skipQuestion(state.level);
+                  },
+          ),
+          IconButton(
+            icon: Icon(
+              Icons.replay,
+              color: state.questionIndex > 1 ? theme.colorScheme.onSurface.withValues(alpha: 0.5) : theme.colorScheme.onSurface.withValues(alpha: 0.1),
+              size: 20,
+            ),
+            tooltip: 'Previous',
+            onPressed: state.questionIndex > 1
+                ? () {
+                    HapticManager.instance.selectionClick();
+                    ref.read(mathRiddleProvider.notifier).previousQuestion();
+                  }
+                : null,
+          ),
           Expanded(
             flex: 3,
             child: Padding(
@@ -328,9 +380,7 @@ class _MathRiddleScreenState extends ConsumerState<MathRiddleScreen> with Single
                   0,
                   _answerController.text.length - 1,
                 );
-                ref
-                    .read(mathRiddleProvider.notifier)
-                    .selectAnswer(_answerController.text);
+                ref.read(mathRiddleProvider.notifier).selectAnswer(_answerController.text);
               }
             },
             icon: Icon(Icons.close, color: theme.colorScheme.onSurface.withValues(alpha: 0.3), size: 18),
@@ -342,7 +392,7 @@ class _MathRiddleScreenState extends ConsumerState<MathRiddleScreen> with Single
             },
             icon: Icon(
               Icons.lightbulb_outline,
-                color: theme.colorScheme.onSurface.withValues(alpha: 0.3),
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.3),
               size: 20,
             ),
           ),
@@ -362,11 +412,10 @@ class _MathRiddleScreenState extends ConsumerState<MathRiddleScreen> with Single
                 if (_answerController.text.isNotEmpty) {
                   ref.read(mathRiddleProvider.notifier).submitAnswer();
                   final newState = ref.read(mathRiddleProvider);
-                  if (newState.isCorrect) {
-                    _showSuccess(newState);
-                  } else {
+                  if (!newState.isCorrect) {
                     _showIncorrectFeedback();
                   }
+                  _answerController.clear();
                 }
               },
               child: Text(
@@ -389,7 +438,7 @@ class _MathRiddleScreenState extends ConsumerState<MathRiddleScreen> with Single
     final theme = Theme.of(context);
     final keys = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0'];
     final screenWidth = MediaQuery.of(context).size.width;
-    final crossAxisCount = screenWidth < 400 ? 4 : 5; // Responsive columns
+    final crossAxisCount = screenWidth < 400 ? 4 : 5;
     final bool isLight = theme.brightness == Brightness.light;
     final keyBackground = isLight
         ? theme.colorScheme.surface
@@ -415,9 +464,7 @@ class _MathRiddleScreenState extends ConsumerState<MathRiddleScreen> with Single
             HapticManager.instance.lightImpact();
             if (_answerController.text.length < 6) {
               _answerController.text += keys[index];
-              ref
-                  .read(mathRiddleProvider.notifier)
-                  .selectAnswer(_answerController.text);
+              ref.read(mathRiddleProvider.notifier).selectAnswer(_answerController.text);
             }
           },
           child: Container(
@@ -442,7 +489,7 @@ class _MathRiddleScreenState extends ConsumerState<MathRiddleScreen> with Single
                 keys[index],
                 style: TextStyle(
                   color: keyText,
-                  fontSize: (screenWidth * 0.045).clamp(14.0, 20.0), // Responsive font
+                  fontSize: (screenWidth * 0.045).clamp(14.0, 20.0),
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -468,15 +515,12 @@ class _MathRiddleScreenState extends ConsumerState<MathRiddleScreen> with Single
       correctAnswer = state.currentSequence!.correctAnswer;
     }
 
-    // Set the answer in the controller
     _answerController.text = correctAnswer;
     ref.read(mathRiddleProvider.notifier).selectAnswer(correctAnswer);
 
-    // Provide feedback
     HapticManager.instance.mediumImpact();
     ref.read(soundManagerProvider).playEffect('hint');
 
-    // Show a brief message
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(l10n.answerRevealed),
@@ -486,34 +530,14 @@ class _MathRiddleScreenState extends ConsumerState<MathRiddleScreen> with Single
     );
   }
 
-  void _showSuccess(MathRiddleState state) {
-    final theme = Theme.of(context);
-    final difficulty = widget.difficulty;
-    final stars = state.stars > 0
-        ? state.stars
-        : 3; // Fallback to 3 if engine didn't calculate
+  void _showLevelComplete(MathRiddleState state, ThemeData theme, AppLocalizations l10n) {
+    final passed = state.levelPassed;
+    final correctAnswers = state.correctAnswers;
+    final totalQuestions = state.totalQuestions;
 
-    final operationId =
-        widget.operationId ??
-        (widget.riddleType == MathRiddleType.logicChallenge
-            ? 'logic'
-            : 'arithmetic');
-
-    ref
-        .read(levelProgressRepositoryProvider)
-        .updateStars(
-          operationId,
-          difficulty,
-          stars,
-          stars * 100, // Score
-        )
-        .then((_) {
-          ref.read(levelProgressProvider.notifier).loadProgress();
-          // Update Daily Challenge
-          if (stars > 0) {
-            ref.read(dailyChallengeProvider.notifier).incrementProgress('stars', stars);
-          }
-        });
+    if (passed && widget.operationId != null) {
+      ref.read(levelProgressProvider.notifier).unlockNextLevel(widget.operationId!, state.level);
+    }
 
     showDialog(
       context: context,
@@ -525,9 +549,9 @@ class _MathRiddleScreenState extends ConsumerState<MathRiddleScreen> with Single
         ),
         title: Center(
           child: Text(
-            'CORRECT',
+            passed ? 'LEVEL COMPLETE' : 'NOT PASSED',
             style: TextStyle(
-              color: theme.colorScheme.onPrimary,
+              color: passed ? AppDesignTokens.neonGreen : AppDesignTokens.neonPink,
               letterSpacing: 4,
               fontWeight: FontWeight.w100,
               fontSize: 18,
@@ -537,23 +561,19 @@ class _MathRiddleScreenState extends ConsumerState<MathRiddleScreen> with Single
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: List.generate(
-                3,
-                (i) => Icon(
-                  Icons.star,
-                  size: 32,
-                  color: i < stars ? theme.colorScheme.onPrimary : theme.colorScheme.onPrimary.withValues(alpha: 0.2),
-                ),
-              ),
-            ),
-            const SizedBox(height: 20),
             Text(
-              'Level Complete',
+              '$correctAnswers/$totalQuestions correct',
               style: TextStyle(
                 color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
                 fontWeight: FontWeight.w200,
+              ),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              passed ? 'Next level unlocked!' : 'Need 16+ correct to pass',
+              style: TextStyle(
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                fontSize: 12,
               ),
             ),
           ],
@@ -563,6 +583,7 @@ class _MathRiddleScreenState extends ConsumerState<MathRiddleScreen> with Single
             onPressed: () {
               Navigator.pop(context);
               Navigator.pop(context);
+              ref.read(mathRiddleProvider.notifier).reset();
             },
             child: Text(
               'BACK TO LEVELS',
@@ -572,98 +593,43 @@ class _MathRiddleScreenState extends ConsumerState<MathRiddleScreen> with Single
               ),
             ),
           ),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              Navigator.pushReplacement(
-                context,
-                PageRouteBuilder(
-                  pageBuilder: (context, animation, secondaryAnimation) =>
-                      MathRiddleScreen(
-                        riddleType: widget.riddleType,
-                        difficulty: widget.difficulty + 1,
-                        operationId: widget.operationId,
-                      ),
-                  transitionsBuilder:
-                      (context, animation, secondaryAnimation, child) {
-                        return FadeTransition(opacity: animation, child: child);
-                      },
+          if (passed)
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+                ref.read(mathRiddleProvider.notifier).reset();
+                Navigator.pushReplacement(
+                  context,
+                  PageRouteBuilder(
+                    pageBuilder: (context, animation, secondaryAnimation) =>
+                        MathRiddleScreen(
+                          riddleType: widget.riddleType,
+                          difficulty: widget.difficulty + 1,
+                          operationId: widget.operationId,
+                        ),
+                    transitionsBuilder: (context, animation, secondaryAnimation, child) {
+                      return FadeTransition(opacity: animation, child: child);
+                    },
+                  ),
+                );
+              },
+              child: Text(
+                'NEXT LEVEL',
+                style: TextStyle(
+                  color: theme.colorScheme.primary,
+                  fontWeight: FontWeight.w300,
                 ),
-              );
-            },
-            child: Text(
-              'NEXT LEVEL',
-              style: TextStyle(
-                color: theme.colorScheme.onPrimary,
-                fontWeight: FontWeight.w300,
               ),
             ),
-          ),
         ],
       ),
     );
   }
 
   void _showIncorrectFeedback() {
-    final theme = Theme.of(context);
-    final l10n = AppLocalizations.of(context)!;
-    // Play wrong answer sound and haptic
     ref.read(soundManagerProvider).playWrongAnswer();
     HapticManager.instance.wrongAnswerPattern();
-
-    // Show incorrect feedback overlay
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => AlertDialog(
-        backgroundColor: Theme.of(context).colorScheme.errorContainer,
-        shape: RoundedRectangleBorder(
-          side: BorderSide(color: theme.colorScheme.error, width: 2),
-        ),
-        title: Center(
-            child: Text(
-              l10n.incorrect.toUpperCase(),
-              style: TextStyle(
-                color: theme.colorScheme.onError,
-                letterSpacing: 4,
-                fontWeight: FontWeight.w100,
-                fontSize: 18,
-              ),
-            ),
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              Icons.close,
-              color: theme.colorScheme.onError,
-              size: 48,
-            ),
-            SizedBox(height: 16),
-            Text(
-              l10n.tryAgain,
-              style: TextStyle(
-                color: theme.colorScheme.onError,
-                fontWeight: FontWeight.w200,
-              ),
-              textAlign: TextAlign.center,
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(
-              l10n.tryAgain,
-              style: TextStyle(
-                color: Colors.red,
-                fontWeight: FontWeight.w300,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
+    _answerController.clear();
   }
 }
 

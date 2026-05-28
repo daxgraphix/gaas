@@ -8,7 +8,6 @@ import '../../../l10n/generated/app_localizations.dart';
 import '../../game/logic/game_session_provider.dart';
 import '../../game/ui/game_screen.dart';
 import '../../../data/models/level_progress.dart';
-import '../../../data/repositories/level_progress_repository.dart';
 
 class CampaignScreen extends ConsumerStatefulWidget {
   const CampaignScreen({super.key});
@@ -20,12 +19,6 @@ class CampaignScreen extends ConsumerStatefulWidget {
 class _CampaignScreenState extends ConsumerState<CampaignScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
-  final Map<String, int> _localUnlockedLevels = {
-    'addition': 2,
-    'subtraction': 1,
-    'multiplication': 1,
-    'division': 1,
-  };
 
   @override
   void initState() {
@@ -34,20 +27,8 @@ class _CampaignScreenState extends ConsumerState<CampaignScreen>
     _loadUnlockedLevels();
   }
 
-  void _loadUnlockedLevels() async {
-    final repo = LevelProgressRepository();
-    for (final op in ['addition', 'subtraction', 'multiplication', 'division']) {
-      int maxUnlocked = 1;
-      for (int level = 1; level <= 30; level++) {
-        final progress = await repo.getProgress(op, level);
-        if (progress?.isUnlocked == true) {
-          maxUnlocked = level;
-        }
-      }
-      setState(() {
-        _localUnlockedLevels[op] = maxUnlocked;
-      });
-    }
+  void _loadUnlockedLevels() {
+    ref.read(levelProgressProvider.notifier).loadProgress();
   }
 
   @override
@@ -115,10 +96,10 @@ class _CampaignScreenState extends ConsumerState<CampaignScreen>
           TabBarView(
             controller: _tabController,
             children: [
-              _buildLevelGrid('addition', progressMap['addition'] ?? [], _localUnlockedLevels['addition'] ?? 2),
-              _buildLevelGrid('subtraction', progressMap['subtraction'] ?? [], _localUnlockedLevels['subtraction'] ?? 1),
-              _buildLevelGrid('multiplication', progressMap['multiplication'] ?? [], _localUnlockedLevels['multiplication'] ?? 1),
-              _buildLevelGrid('division', progressMap['division'] ?? [], _localUnlockedLevels['division'] ?? 1),
+              _buildLevelGrid('addition', progressMap['addition'] ?? []),
+              _buildLevelGrid('subtraction', progressMap['subtraction'] ?? []),
+              _buildLevelGrid('multiplication', progressMap['multiplication'] ?? []),
+              _buildLevelGrid('division', progressMap['division'] ?? [])
             ],
           ),
         ],
@@ -137,7 +118,7 @@ class _CampaignScreenState extends ConsumerState<CampaignScreen>
     return '';
   }
 
-  Widget _buildLevelGrid(String type, List<LevelProgress> progressList, int unlockedCount) {
+  Widget _buildLevelGrid(String type, List<LevelProgress> progressList) {
     final theme = Theme.of(context);
     return Container(
       decoration: BoxDecoration(
@@ -165,20 +146,18 @@ class _CampaignScreenState extends ConsumerState<CampaignScreen>
               operationId: type,
               level: level,
               stars: 0,
-              isUnlocked: level <= unlockedCount,
+              isUnlocked: level == 1,
               highScore: 0,
             ),
           );
 
-          final isUnlocked = level <= unlockedCount;
-
-          return _buildGridNode(level, isUnlocked, progress.stars, actualSubType, type, progressList, unlockedCount);
+          return _buildGridNode(level, progress.isUnlocked, progress.stars, actualSubType, type);
         }),
       ),
     );
   }
 
-  Widget _buildGridNode(int level, bool isUnlocked, int stars, String subType, String primaryType, List<LevelProgress> progressList, int unlockedCount) {
+  Widget _buildGridNode(int level, bool isUnlocked, int stars, String subType, String primaryType) {
     final theme = Theme.of(context);
     final accentColor = isUnlocked ? theme.colorScheme.primary : theme.colorScheme.onSurface.withValues(alpha: 0.1);
     final label = _getShortLabel(subType, primaryType);

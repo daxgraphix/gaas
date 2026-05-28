@@ -159,7 +159,7 @@ class _CustomMixScreenState extends ConsumerState<CustomMixScreen> {
     );
   }
 
-  Widget _buildSetupMode(CustomMixArithmeticState state) {
+Widget _buildSetupMode(CustomMixArithmeticState state) {
     final theme = Theme.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -168,19 +168,20 @@ class _CustomMixScreenState extends ConsumerState<CustomMixScreen> {
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
             color: Colors.white.withValues(alpha: 0.05),
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: BorderRadius.circular(12),
             border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                l10n.operationMatrix,
+                'OPERATIONS',
                 style: TextStyle(
                   color: theme.colorScheme.primary,
                   fontSize: 10,
-                  letterSpacing: 0.5,
+                  letterSpacing: 2,
                   fontFamily: 'monospace',
+                  fontWeight: FontWeight.bold,
                 ),
               ),
               const SizedBox(height: 16),
@@ -195,23 +196,31 @@ class _CustomMixScreenState extends ConsumerState<CustomMixScreen> {
                       HapticManager.instance.selectionClick();
                       ref.read(customMixArithmeticProvider.notifier).toggleOperation(op);
                     },
+                    borderRadius: BorderRadius.circular(20),
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      width: 60,
+                      height: 60,
                       decoration: BoxDecoration(
-                        color: isSelected ? Colors.blueAccent.withValues(alpha: 0.2) : Colors.white.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(20),
+                        color: isSelected
+                            ? theme.colorScheme.primary.withValues(alpha: 0.2)
+                            : Colors.transparent,
+                        borderRadius: BorderRadius.circular(16),
                         border: Border.all(
-                          color: isSelected ? Colors.blueAccent : Colors.white.withValues(alpha: 0.3),
-                          width: 1,
+                          color: isSelected
+                              ? theme.colorScheme.primary
+                              : Colors.white.withValues(alpha: 0.3),
+                          width: 2,
                         ),
                       ),
-                      child: Text(
-                        _getOperationSymbol(op),
-                        style: TextStyle(
-                          color: isSelected ? Colors.white : Colors.white70,
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          fontFamily: 'monospace',
+                      child: Center(
+                        child: Text(
+                          _getOperationSymbol(op),
+                          style: TextStyle(
+                            color: isSelected ? Colors.white : Colors.white70,
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                            fontFamily: 'monospace',
+                          ),
                         ),
                       ),
                     ),
@@ -226,54 +235,48 @@ class _CustomMixScreenState extends ConsumerState<CustomMixScreen> {
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
             color: Colors.white.withValues(alpha: 0.05),
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: BorderRadius.circular(12),
             border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                l10n.difficultyLevel,
+                'DIFFICULTY: ${state.selectedDifficulty}',
                 style: TextStyle(
                   color: theme.colorScheme.primary,
                   fontSize: 10,
                   letterSpacing: 2,
                   fontFamily: 'monospace',
+                  fontWeight: FontWeight.bold,
                 ),
               ),
-              const SizedBox(height: 16),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(8),
+              const SizedBox(height: 12),
+              SliderTheme(
+                data: SliderTheme.of(context).copyWith(
+                  activeTrackColor: theme.colorScheme.primary,
+                  inactiveTrackColor: Colors.white.withValues(alpha: 0.2),
+                  thumbColor: theme.colorScheme.primary,
+                  overlayColor: theme.colorScheme.primary.withValues(alpha: 0.2),
+                  valueIndicatorColor: theme.colorScheme.primary,
                 ),
-                child: DropdownButton<int>(
-                  value: state.selectedDifficulty,
-                  isExpanded: true,
-                  underline: const SizedBox(),
-                  icon: const Icon(Icons.arrow_drop_down, color: Colors.white70),
-                  items: List.generate(10, (i) => i + 1).map((diff) {
-                    return DropdownMenuItem(
-                      value: diff,
-                      child: Text(
-                        'Level $diff',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontFamily: 'monospace',
-                          fontSize: 14,
-                        ),
-                      ),
-                    );
-                  }).toList(),
+                child: Slider(
+                  value: state.selectedDifficulty.toDouble(),
+                  min: 1,
+                  max: 30,
+                  divisions: 29,
                   onChanged: (value) {
-                    if (value != null) {
-                      HapticManager.instance.selectionClick();
-                      ref.read(customMixArithmeticProvider.notifier).setDifficulty(value);
-                    }
+                    HapticManager.instance.lightImpact();
+                    ref.read(customMixArithmeticProvider.notifier).setDifficulty(value.round());
                   },
-                  dropdownColor: const Color(0xFF1A1A2E),
                 ),
+              ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text('Easy', style: TextStyle(color: Colors.white38, fontSize: 10, fontFamily: 'monospace')),
+                  Text('Hard', style: TextStyle(color: Colors.white38, fontSize: 10, fontFamily: 'monospace')),
+                ],
               ),
             ],
           ),
@@ -289,7 +292,7 @@ class _CustomMixScreenState extends ConsumerState<CustomMixScreen> {
                   )
                 : null,
             color: state.selectedOperations.isNotEmpty ? null : Colors.grey,
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: BorderRadius.circular(12),
           ),
           child: ElevatedButton(
             onPressed: state.selectedOperations.isNotEmpty
@@ -302,13 +305,13 @@ class _CustomMixScreenState extends ConsumerState<CustomMixScreen> {
               backgroundColor: Colors.transparent,
               shadowColor: Colors.transparent,
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(12),
               ),
             ),
             child: Text(
-              l10n.initiateMixSequence,
+              'START MIX',
               style: const TextStyle(
-                fontSize: 14,
+                fontSize: 16,
                 fontWeight: FontWeight.bold,
                 letterSpacing: 1,
                 fontFamily: 'monospace',
@@ -328,13 +331,14 @@ class _CustomMixScreenState extends ConsumerState<CustomMixScreen> {
 
     return Column(
       children: [
+        // Stats panel
         Container(
-          padding: const EdgeInsets.all(20),
+          padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
             color: theme.brightness == Brightness.light
                 ? theme.colorScheme.surface.withValues(alpha: 0.9)
                 : Colors.white.withValues(alpha: 0.05),
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: BorderRadius.circular(12),
             border: Border.all(
               color: theme.brightness == Brightness.light
                   ? theme.colorScheme.outline.withValues(alpha: 0.3)
@@ -344,12 +348,13 @@ class _CustomMixScreenState extends ConsumerState<CustomMixScreen> {
           child: Column(
             children: [
               Text(
-                'Session Metrics',
+                'SESSION METRICS',
                 style: TextStyle(
                   color: theme.colorScheme.primary,
                   fontSize: 10,
                   letterSpacing: 2,
                   fontFamily: 'monospace',
+                  fontWeight: FontWeight.bold,
                 ),
               ),
               const SizedBox(height: 16),
@@ -367,12 +372,13 @@ class _CustomMixScreenState extends ConsumerState<CustomMixScreen> {
         if (state.reactionMessage != null) ...[
           const SizedBox(height: 16),
           Container(
+            width: double.infinity,
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
             decoration: BoxDecoration(
               color: state.lastAnswerCorrect == true
                   ? Colors.greenAccent.withValues(alpha: 0.2)
                   : Colors.redAccent.withValues(alpha: 0.2),
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(12),
               border: Border.all(
                 color: state.lastAnswerCorrect == true
                     ? Colors.greenAccent
@@ -386,7 +392,7 @@ class _CustomMixScreenState extends ConsumerState<CustomMixScreen> {
                 color: state.lastAnswerCorrect == true
                     ? Colors.greenAccent
                     : Colors.redAccent,
-                fontSize: 14,
+                fontSize: 16,
                 fontWeight: FontWeight.bold,
                 fontFamily: 'monospace',
                 letterSpacing: 1,
@@ -395,19 +401,19 @@ class _CustomMixScreenState extends ConsumerState<CustomMixScreen> {
             ),
           ),
         ],
-        const SizedBox(height: 32),
+        const SizedBox(height: 24),
         if (state.currentQuestion != null) _buildQuestion(state.currentQuestion!, state),
         if (state.questionAnswered) ...[
-          const SizedBox(height: 16),
+          const SizedBox(height: 20),
           Container(
             width: double.infinity,
             decoration: BoxDecoration(
               gradient: LinearGradient(
-                colors: [theme.colorScheme.primary, theme.colorScheme.secondary],
+                colors: [theme.colorScheme.secondary, theme.colorScheme.tertiary],
               ),
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(12),
             ),
-            child: ElevatedButton(
+            child: ElevatedButton.icon(
               onPressed: () {
                 HapticManager.instance.lightImpact();
                 ref.read(customMixArithmeticProvider.notifier).nextQuestion();
@@ -417,10 +423,11 @@ class _CustomMixScreenState extends ConsumerState<CustomMixScreen> {
                 shadowColor: Colors.transparent,
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(12),
                 ),
               ),
-              child: Text(
+              icon: const Icon(Icons.arrow_forward, color: Colors.white),
+              label: Text(
                 l10n.nextQuestion,
                 style: TextStyle(
                   fontSize: 14,
@@ -432,7 +439,7 @@ class _CustomMixScreenState extends ConsumerState<CustomMixScreen> {
             ),
           ),
         ],
-        const SizedBox(height: 32),
+        const SizedBox(height: 24),
         // Action buttons row
         Row(
           children: [
@@ -442,9 +449,9 @@ class _CustomMixScreenState extends ConsumerState<CustomMixScreen> {
                   margin: const EdgeInsets.only(right: 8),
                   decoration: BoxDecoration(
                     color: Colors.orangeAccent.withValues(alpha: 0.8),
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(12),
                   ),
-                  child: ElevatedButton(
+                  child: ElevatedButton.icon(
                     onPressed: () {
                       HapticManager.instance.lightImpact();
                       ref.read(customMixArithmeticProvider.notifier).undoLastAnswer();
@@ -454,11 +461,12 @@ class _CustomMixScreenState extends ConsumerState<CustomMixScreen> {
                       shadowColor: Colors.transparent,
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(12),
                       ),
                     ),
-                    child: Text(
-                      l10n.undo,
+                    icon: const Icon(Icons.undo, size: 18, color: Colors.white),
+                    label: Text(
+                      'UNDO',
                       style: TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.bold,
@@ -476,21 +484,22 @@ class _CustomMixScreenState extends ConsumerState<CustomMixScreen> {
                   right: 8,
                 ),
                 decoration: BoxDecoration(
-                  color: Colors.amberAccent.withValues(alpha: 0.8),
-                  borderRadius: BorderRadius.circular(8),
+                  color: theme.colorScheme.secondary.withValues(alpha: 0.8),
+                  borderRadius: BorderRadius.circular(12),
                 ),
-                child: ElevatedButton(
+                child: ElevatedButton.icon(
                   onPressed: () => _showHint(),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.transparent,
                     shadowColor: Colors.transparent,
                     padding: const EdgeInsets.symmetric(vertical: 14),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(12),
                     ),
                   ),
-                  child: Text(
-                    l10n.hint,
+                  icon: const Icon(Icons.lightbulb, size: 18, color: Colors.white70),
+                  label: Text(
+                    'HINT',
                     style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.bold,
@@ -506,9 +515,9 @@ class _CustomMixScreenState extends ConsumerState<CustomMixScreen> {
                 margin: const EdgeInsets.only(left: 8),
                 decoration: BoxDecoration(
                   color: Colors.redAccent.withValues(alpha: 0.8),
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(12),
                 ),
-                child: ElevatedButton(
+                child: ElevatedButton.icon(
                   onPressed: () {
                     HapticManager.instance.mediumImpact();
                     ref.read(customMixArithmeticProvider.notifier).endMix();
@@ -518,11 +527,12 @@ class _CustomMixScreenState extends ConsumerState<CustomMixScreen> {
                     shadowColor: Colors.transparent,
                     padding: const EdgeInsets.symmetric(vertical: 14),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(12),
                     ),
                   ),
-                  child: Text(
-                    l10n.close,
+                  icon: const Icon(Icons.close, size: 18, color: Colors.white),
+                  label: Text(
+                    'END',
                     style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.bold,
@@ -565,34 +575,44 @@ class _CustomMixScreenState extends ConsumerState<CustomMixScreen> {
     );
   }
 
-  Widget _buildQuestion(MathRiddle question, CustomMixArithmeticState state) {
+Widget _buildQuestion(MathRiddle question, CustomMixArithmeticState state) {
     final theme = Theme.of(context);
     return Container(
       padding: const EdgeInsets.all(24),
-          decoration: BoxDecoration(
-            color: theme.brightness == Brightness.light
-                ? theme.colorScheme.surface.withValues(alpha: 0.9)
-                : Colors.white.withValues(alpha: 0.05),
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(
-              color: theme.brightness == Brightness.light
-                  ? theme.colorScheme.outline.withValues(alpha: 0.3)
-                  : Colors.white.withValues(alpha: 0.1),
-            ),
+      decoration: BoxDecoration(
+        color: theme.brightness == Brightness.light
+            ? theme.colorScheme.surface.withValues(alpha: 0.9)
+            : Colors.white.withValues(alpha: 0.05),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: theme.brightness == Brightness.light
+              ? theme.colorScheme.outline.withValues(alpha: 0.3)
+              : Colors.white.withValues(alpha: 0.1),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.1),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
           ),
+        ],
+      ),
       child: Column(
         children: [
           Container(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(8),
+              color: theme.colorScheme.primary.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: theme.colorScheme.primary.withValues(alpha: 0.3),
+              ),
             ),
             child: Text(
               question.question,
-              style: const TextStyle(
+              style: TextStyle(
                 color: Colors.white,
-                fontSize: 20,
+                fontSize: 22,
                 fontWeight: FontWeight.bold,
                 height: 1.4,
                 fontFamily: 'monospace',
@@ -602,8 +622,8 @@ class _CustomMixScreenState extends ConsumerState<CustomMixScreen> {
           ),
           const SizedBox(height: 24),
           Wrap(
-            spacing: 12,
-            runSpacing: 12,
+            spacing: 16,
+            runSpacing: 16,
             alignment: WrapAlignment.center,
             children: question.options.map((option) {
               final isAnswered = state.questionAnswered;
@@ -613,7 +633,7 @@ class _CustomMixScreenState extends ConsumerState<CustomMixScreen> {
               Color? buttonColor;
               if (isAnswered) {
                 if (isCorrectAnswer) {
-                  buttonColor = Colors.greenAccent.withValues(alpha: 0.3);
+                  buttonColor = theme.colorScheme.primary.withValues(alpha: 0.3);
                 } else if (wasSelected) {
                   buttonColor = Colors.redAccent.withValues(alpha: 0.3);
                 } else {
@@ -624,15 +644,24 @@ class _CustomMixScreenState extends ConsumerState<CustomMixScreen> {
               }
 
               return Container(
+                width: 100,
+                height: 50,
                 decoration: BoxDecoration(
                   color: buttonColor,
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(12),
                   border: Border.all(
                     color: isAnswered && isCorrectAnswer
-                        ? Colors.greenAccent
+                        ? theme.colorScheme.primary
                         : Colors.white.withValues(alpha: 0.2),
                     width: isAnswered && isCorrectAnswer ? 2 : 1,
                   ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.1),
+                      blurRadius: 4,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
                 ),
                 child: ElevatedButton(
                   onPressed: isAnswered ? null : () {
@@ -642,16 +671,16 @@ class _CustomMixScreenState extends ConsumerState<CustomMixScreen> {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.transparent,
                     shadowColor: Colors.transparent,
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                    padding: EdgeInsets.zero,
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(12),
                     ),
                   ),
                   child: Text(
                     option,
                     style: const TextStyle(
                       color: Colors.white,
-                      fontSize: 16,
+                      fontSize: 18,
                       fontWeight: FontWeight.bold,
                       fontFamily: 'monospace',
                     ),

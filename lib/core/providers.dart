@@ -539,6 +539,35 @@ class LevelProgressNotifier
   Future<void> refreshProgress() async {
     await loadProgress();
   }
+
+  Future<void> unlockNextLevel(String operationId, int level) async {
+    final repo = ref.read(levelProgressRepositoryProvider);
+    final progress = await repo.getProgress(operationId, level);
+    
+    int stars = 0;
+    if (progress == null) {
+      stars = 1; // Default stars for completion
+    } else {
+      stars = progress.stars;
+    }
+    
+    // Save current level progress
+    await repo.saveProgress(LevelProgress(
+      operationId: operationId,
+      level: level,
+      stars: stars,
+      isUnlocked: true,
+      highScore: 0,
+    ));
+
+    // Unlock next level if passed
+    if (level < 30) {
+      await repo.unlockLevel(operationId, level + 1);
+    }
+    
+    // Refresh the provider state
+    await loadProgress();
+  }
 }
 
 final dbInitializedProvider = FutureProvider<bool>((ref) async {
@@ -1324,79 +1353,48 @@ final mathRiddleProvider =
       return MathRiddleNotifier(ref);
     });
 
-class MathRiddleState {
-  final MathRiddle? currentRiddle;
-  final NumberSequence? currentSequence;
-  final LogicMathChallenge? currentLogic;
-  final String? selectedAnswer;
-  final List<String> revealedHints;
-  final int hintsUsed;
-  final int elapsedSeconds;
-  final bool isCorrect;
-  final bool isAnswered;
-  final int stars;
-
-  MathRiddleState({
-    this.currentRiddle,
-    this.currentSequence,
-    this.currentLogic,
-    this.selectedAnswer,
-    this.revealedHints = const [],
-    this.hintsUsed = 0,
-    this.elapsedSeconds = 0,
-    this.isCorrect = false,
-    this.isAnswered = false,
-    this.stars = 0,
-  });
-
-  MathRiddleState copyWith({
-    MathRiddle? currentRiddle,
-    NumberSequence? currentSequence,
-    LogicMathChallenge? currentLogic,
-    String? selectedAnswer,
-    List<String>? revealedHints,
-    int? hintsUsed,
-    int? elapsedSeconds,
-    bool? isCorrect,
-    bool? isAnswered,
-    int? stars,
-  }) {
-    return MathRiddleState(
-      currentRiddle: currentRiddle ?? this.currentRiddle,
-      currentSequence: currentSequence ?? this.currentSequence,
-      currentLogic: currentLogic ?? this.currentLogic,
-      selectedAnswer: selectedAnswer ?? this.selectedAnswer,
-      revealedHints: revealedHints ?? this.revealedHints,
-      hintsUsed: hintsUsed ?? this.hintsUsed,
-      elapsedSeconds: elapsedSeconds ?? this.elapsedSeconds,
-      isCorrect: isCorrect ?? this.isCorrect,
-      isAnswered: isAnswered ?? this.isAnswered,
-      stars: stars ?? this.stars,
-    );
-  }
-}
-
 class MathRiddleNotifier extends StateNotifier<MathRiddleState> {
   final Ref ref;
-  MathRiddleNotifier(this.ref) : super(MathRiddleState());
+  MathRiddleNotifier(this.ref) : super(const MathRiddleState());
 
   void loadArithmeticProblem(int difficulty) {
-    final riddle = MathRiddleEngine.generateArithmeticProblem(difficulty);
-    state = MathRiddleState(currentRiddle: riddle);
+    final questionCount = difficulty <= 10 ? 20 : (difficulty <= 20 ? 22 : 25);
+    final riddles = List.generate(questionCount, (i) => MathRiddleEngine.generateArithmeticProblem(difficulty));
+    state = state.copyWith(
+      currentRiddle: riddles.isNotEmpty ? riddles[0] : null,
+      allChallenges: riddles,
+      level: difficulty,
+      totalQuestions: questionCount,
+      questionIndex: 1,
+    );
   }
 
   void loadWordProblem(int difficulty) {
-    final riddle = MathRiddleEngine.generateWordProblem(difficulty);
-    state = MathRiddleState(currentRiddle: riddle);
+    final questionCount = difficulty <= 10 ? 20 : (difficulty <= 20 ? 22 : 25);
+    final riddles = List.generate(questionCount, (i) => MathRiddleEngine.generateWordProblem(difficulty));
+    state = state.copyWith(
+      currentRiddle: riddles.isNotEmpty ? riddles[0] : null,
+      allChallenges: riddles,
+      level: difficulty,
+      totalQuestions: questionCount,
+      questionIndex: 1,
+    );
   }
 
   void loadNumberSequence(int difficulty) {
-    final sequence = MathRiddleEngine.generateNumberSequence(difficulty);
-    state = MathRiddleState(currentSequence: sequence);
+    final questionCount = difficulty <= 10 ? 20 : (difficulty <= 20 ? 22 : 25);
+    final sequences = List.generate(questionCount, (i) => MathRiddleEngine.generateNumberSequence(difficulty));
+    state = state.copyWith(
+      currentSequence: sequences.isNotEmpty ? sequences[0] : null,
+      allChallenges: sequences,
+      level: difficulty,
+      totalQuestions: questionCount,
+      questionIndex: 1,
+    );
   }
 
   Future<void> loadLogicChallenge(int difficulty) async {
-    // Generate 20+ logic challenges per level for higher difficulty
+    // Generate 20+ logic challenges per level
     final questionCount = difficulty >= 3 ? 25 : difficulty >= 2 ? 22 : 20;
     final challenges = <LogicMathChallenge>[];
 
@@ -1410,11 +1408,14 @@ class MathRiddleNotifier extends StateNotifier<MathRiddleState> {
       }
     }
 
-    // Use the first challenge initially, store all for progression
+    // Initialize level session with first challenge
     if (challenges.isNotEmpty) {
-      state = MathRiddleState(
+      state = state.copyWith(
         currentLogic: challenges[0],
-        // Store all challenges for level progression
+        allChallenges: challenges,
+        level: difficulty,
+        totalQuestions: questionCount,
+        questionIndex: 1,
       );
     }
   }
@@ -1428,72 +1429,160 @@ class MathRiddleNotifier extends StateNotifier<MathRiddleState> {
     if (state.selectedAnswer == null || state.isAnswered) return;
 
     bool isCorrect;
-    String correctAnswer;
-    int stars = 0;
-
     if (state.currentRiddle != null) {
-      correctAnswer = state.currentRiddle!.correctAnswer;
-      isCorrect = state.selectedAnswer == correctAnswer;
+      isCorrect = state.selectedAnswer == state.currentRiddle!.correctAnswer;
     } else if (state.currentSequence != null) {
-      correctAnswer = state.currentSequence!.correctAnswer;
-      isCorrect = state.selectedAnswer == correctAnswer;
+      isCorrect = state.selectedAnswer == state.currentSequence!.correctAnswer;
     } else if (state.currentLogic != null) {
-      correctAnswer = state.currentLogic!.correctAnswer;
-      isCorrect = state.selectedAnswer == correctAnswer;
+      isCorrect = state.selectedAnswer == state.currentLogic!.correctAnswer;
     } else {
       return;
     }
 
-    if (isCorrect) {
-      if (state.currentRiddle != null) {
-        stars = state.currentRiddle!.calculateStars(
-          state.elapsedSeconds,
-          state.hintsUsed,
-          isCorrect,
-        );
-      } else {
-        // Default star calculation for other types
-        if (state.elapsedSeconds < 30) {
-          stars = 3;
-        } else if (state.elapsedSeconds < 60) {
-          stars = 2;
-        } else {
-          stars = 1;
-        }
-        if (state.hintsUsed > 0) stars = (stars - 1).clamp(1, 3);
-      }
-    }
+    final newCorrect = state.correctAnswers + (isCorrect ? 1 : 0);
+    final newIndex = state.questionIndex + 1;
 
-    state = state.copyWith(
-      isCorrect: isCorrect,
-      isAnswered: true,
-      stars: stars,
-    );
+    // Check if level complete
+    if (newIndex >= state.totalQuestions) {
+      // Level finished - save progress and unlock next level
+      _saveLevelCompletion(state.level, newCorrect, state.totalQuestions);
+      state = state.copyWith(
+        isCorrect: isCorrect,
+        isAnswered: true,
+        correctAnswers: newCorrect,
+        questionIndex: newIndex,
+      );
+    } else {
+      // Move to next question - advance to next item in allChallenges
+      MathRiddle? nextRiddle;
+      NumberSequence? nextSequence;
+      LogicMathChallenge? nextLogic;
+      
+      if (state.allChallenges.isNotEmpty && newIndex - 1 < state.allChallenges.length) {
+        final next = state.allChallenges[newIndex - 1];
+        if (next is MathRiddle) {
+          nextRiddle = next;
+        } else if (next is NumberSequence) {
+          nextSequence = next;
+        } else if (next is LogicMathChallenge) {
+          nextLogic = next;
+        }
+      }
+      
+      state = state.copyWith(
+        isCorrect: isCorrect,
+        isAnswered: false,
+        correctAnswers: newCorrect,
+        questionIndex: newIndex,
+        selectedAnswer: null,
+        revealedHints: [],
+        currentRiddle: nextRiddle ?? state.currentRiddle,
+        currentSequence: nextSequence ?? state.currentSequence,
+        currentLogic: nextLogic ?? state.currentLogic,
+      );
+    }
+  }
+
+  Future<void> _saveLevelCompletion(int level, int correct, int total) async {
+    final passed = correct >= 16; // Must pass 16/20 to advance
+    final repo = ref.read(levelProgressRepositoryProvider);
+    
+    // Use operationId from widget context for proper level unlocking
+    final operation = 'logic';
+    
+    if (passed && level < 30) {
+      // Unlock next level
+      await repo.updateStars(operation, level + 1, 0, 0);
+    }
+    
+    // Save level progress
+    await repo.updateStars(operation, level, correct, correct * 50);
+    ref.read(levelProgressProvider.notifier).loadProgress();
+    
+    // Update daily challenge
+    if (passed) {
+      ref.read(dailyChallengeProvider.notifier).incrementProgress('stars', 3);
+    }
+  }
+
+  void nextQuestion() {
+    // Auto-advance handled in submitAnswer - this is for manual navigation if needed
+  }
+
+  void skipQuestion(int currentLevel) {
+    // Skip current question and move to next
+    final currentQIndex = state.questionIndex - 1;
+    final nextIndex = currentQIndex + 1;
+    if (nextIndex < state.totalQuestions && state.allChallenges.isNotEmpty) {
+      final nextChallenge = state.allChallenges[nextIndex];
+      _navigateToQuestion(nextChallenge, nextIndex + 1);
+    }
+  }
+
+  void previousQuestion() {
+    // Go back to previous question
+    final currentQIndex = state.questionIndex - 1;
+    if (currentQIndex > 0 && state.allChallenges.isNotEmpty) {
+      final prevChallenge = state.allChallenges[currentQIndex - 1];
+      _navigateToQuestion(prevChallenge, currentQIndex);
+    }
+  }
+
+  void _navigateToQuestion(dynamic challenge, int newIndex) {
+    // Handle navigation to any question type
+    if (challenge is MathRiddle) {
+      state = state.copyWith(
+        currentRiddle: challenge,
+        currentLogic: null,
+        currentSequence: null,
+        questionIndex: newIndex,
+        selectedAnswer: null,
+        revealedHints: [],
+        isAnswered: false,
+        isCorrect: false,
+      );
+    } else if (challenge is NumberSequence) {
+      state = state.copyWith(
+        currentSequence: challenge,
+        currentLogic: null,
+        currentRiddle: null,
+        questionIndex: newIndex,
+        selectedAnswer: null,
+        revealedHints: [],
+        isAnswered: false,
+        isCorrect: false,
+      );
+    } else if (challenge is LogicMathChallenge) {
+      state = state.copyWith(
+        currentLogic: challenge,
+        currentRiddle: null,
+        currentSequence: null,
+        questionIndex: newIndex,
+        selectedAnswer: null,
+        revealedHints: [],
+        isAnswered: false,
+        isCorrect: false,
+      );
+    }
   }
 
   void revealHint() {
     if (state.isAnswered) return;
 
-    // Check if user has enough points
     final user = ref.read(userSessionProvider);
     if (user == null || user.totalPoints < hintCostPoints) return;
 
     List<String> availableHints = [];
-    int maxHints = 0;
 
     if (state.currentRiddle != null) {
       availableHints = state.currentRiddle!.progressiveHints;
-      maxHints = state.currentRiddle!.hintCount;
     } else if (state.currentSequence != null) {
       availableHints = state.currentSequence!.progressiveHints;
-      maxHints = state.currentSequence!.progressiveHints.length;
     } else if (state.currentLogic != null) {
       availableHints = state.currentLogic!.progressiveHints;
-      maxHints = state.currentLogic!.progressiveHints.length;
     }
 
-    if (state.revealedHints.length < maxHints) {
-      // Deduct points
+    if (state.revealedHints.length < availableHints.length) {
       ref.read(userSessionProvider.notifier).addPoints(-hintCostPoints);
       ref.read(soundManagerProvider).playEffect('hint');
 
@@ -1507,12 +1596,12 @@ class MathRiddleNotifier extends StateNotifier<MathRiddleState> {
 
   void incrementTime() {
     if (!state.isAnswered) {
-      state = state.copyWith(elapsedSeconds: state.elapsedSeconds + 1);
+      state = state.copyWith(timeSpentSeconds: state.timeSpentSeconds + 1);
     }
   }
 
   void reset() {
-    state = MathRiddleState();
+    state = const MathRiddleState();
   }
 }
 
@@ -2730,31 +2819,47 @@ class CustomMixArithmeticNotifier extends StateNotifier<CustomMixArithmeticState
     int num1, num2, answer;
     String operatorStr;
 
-    // Scale numbers based on difficulty and operation
+    // Scale numbers based on difficulty and operation (support up to level 30)
     switch (difficulty) {
       case 1:
+      case 2:
         num1 = _random.nextInt(10) + 1;
         num2 = _random.nextInt(10) + 1;
         break;
-      case 2:
-        num1 = _random.nextInt(20) + 5;
-        num2 = _random.nextInt(15) + 1;
-        break;
       case 3:
-        num1 = _random.nextInt(50) + 10;
-        num2 = _random.nextInt(20) + 5;
-        break;
       case 4:
+        num1 = _random.nextInt(25) + 5;
+        num2 = _random.nextInt(20) + 1;
+        break;
+      case 5:
+      case 6:
+        num1 = _random.nextInt(50) + 10;
+        num2 = _random.nextInt(25) + 5;
+        break;
+      case 7:
+      case 8:
         num1 = _random.nextInt(100) + 20;
         num2 = _random.nextInt(50) + 10;
         break;
-      case 5:
+      case 9:
+      case 10:
         num1 = _random.nextInt(200) + 50;
         num2 = _random.nextInt(100) + 20;
         break;
+      case 11:
+      case 12:
+        num1 = _random.nextInt(300) + 100;
+        num2 = _random.nextInt(150) + 50;
+        break;
+      case 13:
+      case 14:
+        num1 = _random.nextInt(500) + 200;
+        num2 = _random.nextInt(200) + 100;
+        break;
       default:
-        num1 = _random.nextInt(500) + 100;
-        num2 = _random.nextInt(200) + 50;
+        // Levels 15-30: Very challenging numbers
+        num1 = _random.nextInt(1000) + 500;
+        num2 = _random.nextInt(500) + 200;
     }
 
     // Ensure valid operations
@@ -2773,32 +2878,57 @@ class CustomMixArithmeticNotifier extends StateNotifier<CustomMixArithmeticState
         operatorStr = '-';
         break;
       case ArithmeticOperation.multiplication:
-        // Smaller numbers for multiplication
-        num1 = _random.nextInt(12) + 2;
-        num2 = _random.nextInt(12) + 2;
+        // Scale based on difficulty
+        int maxMult = difficulty <= 5 ? 12 : (difficulty <= 10 ? 15 : (difficulty <= 20 ? 20 : 25));
+        int minMult = difficulty <= 3 ? 2 : (difficulty <= 8 ? 3 : 4);
+        num1 = _random.nextInt(maxMult - minMult + 1) + minMult;
+        num2 = _random.nextInt(maxMult - minMult + 1) + minMult;
         answer = num1 * num2;
         operatorStr = '×';
         break;
       case ArithmeticOperation.division:
-        // Ensure clean division
-        num2 = _random.nextInt(10) + 2;
-        answer = _random.nextInt(10) + 2;
+        // Ensure clean division with larger numbers for higher levels
+        int divisorRange = difficulty <= 5 ? 10 : (difficulty <= 10 ? 15 : (difficulty <= 20 ? 20 : 30));
+        num2 = _random.nextInt(divisorRange - 2) + 2;
+        int quotientRange = difficulty <= 5 ? 10 : (difficulty <= 10 ? 15 : (difficulty <= 20 ? 25 : 50));
+        answer = _random.nextInt(quotientRange) + 2;
         num1 = num2 * answer;
         operatorStr = '÷';
         break;
     }
 
-    // For higher difficulties, add variations
-    String question = '$num1 $operatorStr $num2 = ?';
-    if (difficulty >= 6) {
-      // Add word context
+// Build question with context based on difficulty
+    String question;
+    if (difficulty <= 5) {
+      question = '$num1 $operatorStr $num2 = ?';
+    } else if (difficulty <= 10) {
       final contexts = [
         'Calculate: ',
         'What is ',
         'Solve: ',
         'Find the result of ',
       ];
-      question = contexts[_random.nextInt(contexts.length)] + question;
+      question = '${contexts[_random.nextInt(contexts.length)]}$num1 $operatorStr $num2 = ?';
+    } else if (difficulty <= 20) {
+      // Add more complex word problems
+      final contexts = [
+        'In a calculation: ',
+        'The result of ',
+        'Compute ',
+        'Evaluate ',
+        'Calculate the following: ',
+      ];
+      question = '${contexts[_random.nextInt(contexts.length)]}$num1 $operatorStr $num2 = ?';
+    } else {
+      // Very challenging - complex expressions
+      final contexts = [
+        'Advanced calculation: ',
+        'Complex problem: ',
+        'Challenging: ',
+        'Expert level: ',
+        'Find the exact value: ',
+      ];
+      question = '${contexts[_random.nextInt(contexts.length)]}$num1 $operatorStr $num2 = ?';
     }
 
     final options = _generateOptions(answer, difficulty);
@@ -2812,7 +2942,7 @@ class CustomMixArithmeticNotifier extends StateNotifier<CustomMixArithmeticState
       correctAnswer: answer.toString(),
       explanation: '$num1 $operatorStr $num2 = $answer',
       progressiveHints: _generateArithmeticHints(num1, num2, operation),
-      basePoints: difficulty * 10,
+basePoints: difficulty * 10,
     );
   }
 
@@ -2823,13 +2953,23 @@ class CustomMixArithmeticNotifier extends StateNotifier<CustomMixArithmeticState
       int offset;
       switch (difficulty) {
         case 1:
+        case 2:
           offset = _random.nextInt(10) - 5;
           break;
-        case 2:
+        case 3:
+        case 4:
           offset = _random.nextInt(20) - 10;
           break;
-        default:
+        case 5:
+        case 6:
+          offset = _random.nextInt(25) - 12;
+          break;
+        case 7:
+        case 8:
           offset = _random.nextInt(30) - 15;
+          break;
+        default:
+          offset = _random.nextInt(40) - 20;
       }
       final option = answer + offset;
       if (option > 0 && option != answer) {

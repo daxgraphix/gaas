@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../../data/content_library/achievement_system.dart';
+import '../../core/themes/app_themes.dart';
 
 class AchievementsScreen extends ConsumerWidget {
   const AchievementsScreen({super.key});
@@ -18,23 +19,17 @@ class AchievementsScreen extends ConsumerWidget {
       backgroundColor: theme.scaffoldBackgroundColor,
       body: Stack(
         children: [
-          // Background gradient
-          Container(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  theme.colorScheme.primary.withValues(alpha: 0.05),
-                  theme.scaffoldBackgroundColor,
-                  theme.colorScheme.secondary.withValues(alpha: 0.03),
-                ],
+          // Animated background
+          Positioned.fill(
+            child: RepaintBoundary(
+              child: CustomPaint(
+                painter: AchievementParticlesPainter(theme),
               ),
             ),
           ),
           CustomScrollView(
             slivers: [
-              _buildSliverAppBar(context, reward, theme),
+              _buildSliverAppBar(context, ref, reward, theme),
               SliverPadding(
                 padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
                 sliver: SliverList(
@@ -54,9 +49,13 @@ class AchievementsScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildSliverAppBar(BuildContext context, AchievementReward reward, ThemeData theme) {
+  Widget _buildSliverAppBar(BuildContext context, WidgetRef ref, AchievementReward reward, ThemeData theme) {
+    final unlockedAchievements = ref.read(achievementStateProvider).unlockedAchievements;
+    final totalAchievements = ref.read(achievementDatabaseProvider).length;
+    final progressPercent = unlockedAchievements.length / totalAchievements;
+
     return SliverAppBar(
-      expandedHeight: 280,
+      expandedHeight: 320,
       pinned: true,
       elevation: 0,
       backgroundColor: Colors.transparent,
@@ -82,64 +81,41 @@ class AchievementsScreen extends ConsumerWidget {
       flexibleSpace: FlexibleSpaceBar(
         background: Container(
           decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
+            gradient: RadialGradient(
+              center: Alignment.topCenter,
+              radius: 1.2,
               colors: [
-                theme.colorScheme.primary.withValues(alpha: 0.1),
-                theme.colorScheme.secondary.withValues(alpha: 0.05),
+                theme.colorScheme.primary.withValues(alpha: 0.15),
+                theme.colorScheme.secondary.withValues(alpha: 0.08),
                 theme.scaffoldBackgroundColor,
               ],
             ),
           ),
           child: Stack(
             children: [
-              // Animated background particles
-              ...List.generate(8, (index) {
-                return Positioned(
-                  left: (index * 45.0) % MediaQuery.of(context).size.width,
-                  top: (index * 80.0) % 200,
-                  child: Container(
-                    width: 4 + (index % 3) * 2.0,
-                    height: 4 + (index % 3) * 2.0,
-                    decoration: BoxDecoration(
-                      color: theme.colorScheme.primary.withValues(alpha: 0.3),
-                      shape: BoxShape.circle,
-                    ),
-                  ).animate(
-                    onPlay: (controller) => controller.repeat(reverse: true),
-                  ).moveY(
-                    begin: 0,
-                    end: 20,
-                    duration: Duration(seconds: 2 + index),
-                    curve: Curves.easeInOut,
-                  ),
-                );
-              }),
               Center(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    // Player rank with enhanced styling
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                      padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
                           colors: [
-                            theme.colorScheme.primary.withValues(alpha: 0.8),
-                            theme.colorScheme.secondary.withValues(alpha: 0.6),
+                            theme.colorScheme.primary.withValues(alpha: 0.9),
+                            theme.colorScheme.secondary.withValues(alpha: 0.7),
                           ],
                         ),
-                        borderRadius: BorderRadius.circular(20),
+                        borderRadius: BorderRadius.circular(24),
                         border: Border.all(
-                          color: theme.colorScheme.primary.withValues(alpha: 0.5),
+                          color: theme.colorScheme.primary.withValues(alpha: 0.6),
                           width: 2,
                         ),
                         boxShadow: [
                           BoxShadow(
-                            color: theme.colorScheme.primary.withValues(alpha: 0.3),
-                            blurRadius: 20,
-                            offset: const Offset(0, 8),
+                            color: theme.colorScheme.primary.withValues(alpha: 0.4),
+                            blurRadius: 24,
+                            offset: const Offset(0, 12),
                           ),
                         ],
                       ),
@@ -149,39 +125,32 @@ class AchievementsScreen extends ConsumerWidget {
                           Icon(
                             Icons.workspace_premium,
                             color: theme.colorScheme.onPrimary,
-                            size: 24,
+                            size: 28,
                           ),
-                          const SizedBox(width: 8),
+                          const SizedBox(width: 12),
                           Text(
-                            'LEVEL ${reward.level}',
+                            'ACHIEVER • LEVEL ${reward.level}',
                             style: TextStyle(
                               color: theme.colorScheme.onPrimary,
                               fontWeight: FontWeight.bold,
-                              fontSize: 16,
-                              letterSpacing: 1.5,
+                              fontSize: 18,
+                              letterSpacing: 2,
                             ),
                           ),
                         ],
                       ),
-                    ),
-                    const SizedBox(height: 24),
-                    // Total points with glow effect
+                    ).animate().scale(delay: 200.ms, duration: 600.ms, curve: Curves.easeOutBack),
+                    const SizedBox(height: 32),
                     Container(
-                      padding: const EdgeInsets.all(16),
+                      padding: const EdgeInsets.all(20),
+                      constraints: const BoxConstraints(maxWidth: 320),
                       decoration: BoxDecoration(
-                        color: theme.colorScheme.surface.withValues(alpha: 0.9),
-                        borderRadius: BorderRadius.circular(16),
+                        color: theme.colorScheme.surface.withValues(alpha: 0.85),
+                        borderRadius: BorderRadius.circular(20),
                         border: Border.all(
-                          color: theme.colorScheme.outline.withValues(alpha: 0.2),
+                          color: theme.colorScheme.outline.withValues(alpha: 0.25),
                           width: 1,
                         ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: theme.colorScheme.primary.withValues(alpha: 0.2),
-                            blurRadius: 24,
-                            offset: const Offset(0, 12),
-                          ),
-                        ],
                       ),
                       child: Column(
                         children: [
@@ -191,27 +160,69 @@ class AchievementsScreen extends ConsumerWidget {
                               fontSize: 12,
                               letterSpacing: 2,
                               color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
-                              fontWeight: FontWeight.w500,
+                              fontWeight: FontWeight.w600,
                             ),
                           ),
                           const SizedBox(height: 8),
                           Text(
                             '${reward.totalPoints}',
                             style: TextStyle(
-                              fontSize: 32,
+                              fontSize: 48,
                               fontWeight: FontWeight.bold,
                               color: theme.colorScheme.primary,
                               shadows: [
                                 Shadow(
                                   color: theme.colorScheme.primary.withValues(alpha: 0.5),
-                                  blurRadius: 8,
+                                  blurRadius: 12,
                                 ),
                               ],
                             ),
-                          ),
-                          const SizedBox(height: 8),
-                          if (reward.pointsToNextLevel > 0)
-                            _buildProgressBar(reward.totalPoints, theme),
+                          ).animate().scale(delay: 400.ms, duration: 500.ms, curve: Curves.easeOut),
+                          const SizedBox(height: 16),
+                          if (reward.pointsToNextLevel > 0) ...[
+                            Stack(
+                              children: [
+                                Container(
+                                  width: 280,
+                                  height: 10,
+                                  decoration: BoxDecoration(
+                                    color: theme.colorScheme.surface.withValues(alpha: 0.3),
+                                    borderRadius: BorderRadius.circular(5),
+                                  ),
+                                ),
+                                AnimatedContainer(
+                                  duration: const Duration(milliseconds: 800),
+                                  curve: Curves.easeOut,
+                                  width: 280 * (1 - progressPercent.clamp(0.0, 1.0)),
+                                  height: 10,
+                                  decoration: BoxDecoration(
+                                    gradient: LinearGradient(
+                                      colors: [
+                                        AppDesignTokens.neonGreen,
+                                        theme.colorScheme.primary,
+                                      ],
+                                    ),
+                                    borderRadius: BorderRadius.circular(5),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: theme.colorScheme.primary.withValues(alpha: 0.4),
+                                        blurRadius: 8,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              '${reward.pointsToNextLevel} XP to NEXT LEVEL',
+                              style: TextStyle(
+                                fontSize: 11,
+                                color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
                         ],
                       ),
                     ),
@@ -222,55 +233,6 @@ class AchievementsScreen extends ConsumerWidget {
           ),
         ),
       ),
-    );
-  }
-
-  Widget _buildProgressBar(int points, ThemeData theme) {
-    final double progress = (points % 100) / 100.0;
-    final nextLevelPoints = ((points ~/ 100) + 1) * 100;
-
-    return Column(
-      children: [
-        Container(
-          width: 200,
-          height: 8,
-          decoration: BoxDecoration(
-            color: theme.colorScheme.surface.withValues(alpha: 0.3),
-            borderRadius: BorderRadius.circular(4),
-          ),
-          child: Stack(
-            children: [
-              Container(
-                width: 200 * progress,
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      theme.colorScheme.primary,
-                      theme.colorScheme.secondary,
-                    ],
-                  ),
-                  borderRadius: BorderRadius.circular(4),
-                  boxShadow: [
-                    BoxShadow(
-                      color: theme.colorScheme.primary.withValues(alpha: 0.5),
-                      blurRadius: 8,
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          '${nextLevelPoints - points} XP to next level',
-          style: TextStyle(
-            fontSize: 12,
-            color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-      ],
     );
   }
 
@@ -507,7 +469,29 @@ class AchievementsScreen extends ConsumerWidget {
       case AchievementRarity.epic:
         return theme.colorScheme.tertiary;
       case AchievementRarity.legendary:
-        return theme.colorScheme.secondary; // Legendary color
+        return AppDesignTokens.neonYellow;
     }
   }
+}
+
+class AchievementParticlesPainter extends CustomPainter {
+  final ThemeData theme;
+  AchievementParticlesPainter(this.theme);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = theme.colorScheme.primary.withValues(alpha: 0.1)
+      ..style = PaintingStyle.fill;
+
+    for (int i = 0; i < 20; i++) {
+      final x = (i * 37.0) % size.width;
+      final y = (i * 73.0) % size.height;
+      final radius = 2 + (i % 3) * 1.5;
+      canvas.drawCircle(Offset(x, y), radius, paint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }

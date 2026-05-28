@@ -1,22 +1,34 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/providers.dart';
+import '../../../core/themes/app_themes.dart';
+import '../../../core/sound_manager.dart';
+import '../../../data/models/level_progress.dart';
 import '../../../data/models/math_riddle.dart';
-import '../math_riddle/math_riddle_screen.dart';
 import '../../../l10n/generated/app_localizations.dart';
+import 'math_riddle_screen.dart';
 
-class MathRiddleLevelSelectionScreen extends StatefulWidget {
+class MathRiddleLevelSelectionScreen extends ConsumerStatefulWidget {
   const MathRiddleLevelSelectionScreen({super.key});
 
   @override
-  State<MathRiddleLevelSelectionScreen> createState() => _MathRiddleLevelSelectionScreenState();
+  ConsumerState<MathRiddleLevelSelectionScreen> createState() => _MathRiddleLevelSelectionScreenState();
 }
 
-class _MathRiddleLevelSelectionScreenState extends State<MathRiddleLevelSelectionScreen> {
+class _MathRiddleLevelSelectionScreenState extends ConsumerState<MathRiddleLevelSelectionScreen> {
   MathRiddleType _selectedType = MathRiddleType.logicChallenge;
+
+  @override
+  void initState() {
+    super.initState();
+    ref.read(levelProgressProvider.notifier).loadProgress();
+  }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context)!;
+    final progressMap = ref.watch(levelProgressProvider);
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
@@ -63,12 +75,26 @@ class _MathRiddleLevelSelectionScreenState extends State<MathRiddleLevelSelectio
                     final difficulty = level <= 10 ? 'EASY' : level <= 20 ? 'MEDIUM' : 'HARD';
                     final color = level <= 10 ? Colors.green : level <= 20 ? Colors.orange : Colors.red;
 
+                    final progress = progressMap['logic']?.firstWhere(
+                      (p) => p.level == level,
+                      orElse: () => LevelProgress(
+                        operationId: 'logic',
+                        level: level,
+                        stars: 0,
+                        isUnlocked: level == 1,
+                        highScore: 0,
+                      ),
+                    );
+                    final isUnlocked = progress?.isUnlocked ?? (level == 1);
+                    final stars = progress?.stars ?? 0;
+
                     return _buildLevelCard(
-                      context,
                       level,
                       difficulty,
                       color,
                       theme,
+                      isUnlocked,
+                      stars,
                     );
                   }),
                 ),
@@ -81,7 +107,6 @@ class _MathRiddleLevelSelectionScreenState extends State<MathRiddleLevelSelectio
   }
 
   Widget _buildTypeSelection(ThemeData theme) {
-    // Only logic challenges are available now
     final types = [
       {'type': MathRiddleType.logicChallenge, 'name': 'PURE LOGIC', 'icon': Icons.psychology},
     ];
@@ -115,26 +140,30 @@ class _MathRiddleLevelSelectionScreenState extends State<MathRiddleLevelSelectio
     );
   }
 
-  Widget _buildLevelCard(BuildContext context, int level, String difficulty, Color color, ThemeData theme) {
+  Widget _buildLevelCard(int level, String difficulty, Color color, ThemeData theme, bool isUnlocked, int stars) {
+    final accentColor = isUnlocked ? theme.colorScheme.primary : theme.colorScheme.onSurface.withValues(alpha: 0.1);
+
     return GestureDetector(
-      onTap: () {
-        // Navigate to MathRiddleScreen with selected level and type
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (_) => MathRiddleScreen(
-              riddleType: _selectedType,
-              difficulty: level,
-              operationId: 'riddle',
-            ),
-          ),
-        );
-      },
+      onTap: isUnlocked
+          ? () {
+              HapticManager.instance.selectionClick();
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => MathRiddleScreen(
+                    riddleType: _selectedType,
+                    difficulty: level,
+                    operationId: 'logic',
+                  ),
+                ),
+              );
+            }
+          : null,
       child: Container(
         decoration: BoxDecoration(
-          color: theme.colorScheme.surface,
+          color: isUnlocked ? theme.colorScheme.surface : AppDesignTokens.techBlack,
           border: Border.all(
-            color: color.withValues(alpha: 0.3),
+            color: isUnlocked ? accentColor : theme.colorScheme.outline.withValues(alpha: 0.3),
             width: 2,
           ),
           borderRadius: BorderRadius.circular(12),
@@ -146,14 +175,14 @@ class _MathRiddleLevelSelectionScreenState extends State<MathRiddleLevelSelectio
               Text(
                 'LEVEL',
                 style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                  color: accentColor,
                   fontWeight: FontWeight.w600,
                 ),
               ),
               Text(
                 level.toString(),
                 style: theme.textTheme.headlineSmall?.copyWith(
-                  color: color,
+                  color: isUnlocked ? color : Colors.white10,
                   fontWeight: FontWeight.bold,
                 ),
               ),
@@ -167,12 +196,27 @@ class _MathRiddleLevelSelectionScreenState extends State<MathRiddleLevelSelectio
                 child: Text(
                   difficulty,
                   style: TextStyle(
-                    color: color,
+                    color: isUnlocked ? color : Colors.white10,
                     fontSize: 10,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
               ),
+              if (stars > 0)
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: List.generate(3, (i) => Icon(
+                    Icons.star,
+                    size: 10,
+                    color: i < stars ? AppDesignTokens.neonYellow : Colors.white10,
+                  )),
+                ),
+              if (!isUnlocked)
+                const Icon(
+                  Icons.lock,
+                  size: 16,
+                  color: Colors.white38,
+                ),
             ],
           ),
         ),

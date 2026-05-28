@@ -1477,10 +1477,190 @@ class MathRiddleEngine {
             'Square + 6 = 11',
             'Square = 11 - 6 = 5',
           ],
+difficulty: 10,
+           basePoints: 160,
+         ),
+        // Advanced level 6-10 challenges
+        LogicMathChallenge(
+          id: 'logic_adv_001',
+          problem: 'If square = triangle × 2 and triangle = box + 3, what is square when box = 4?',
+          options: ['16', '14', '15', '17'],
+          correctAnswer: '14',
+          explanation: 'Box = 4, triangle = 4 + 3 = 7, square = 7 × 2 = 14.',
+          progressiveHints: [
+            'Start from the innermost: box = 4',
+            'Find triangle: 4 + 3 = 7',
+            'Square = triangle × 2 = 7 × 2',
+          ],
+          difficulty: 6,
+          basePoints: 165,
+        ),
+        LogicMathChallenge(
+          id: 'logic_adv_002',
+          problem: 'star + square - triangle = 10\nstar = 6\nsquare = 8\nWhat is triangle?',
+          options: ['2', '3', '4', '5'],
+          correctAnswer: '4',
+          explanation: 'Star = 6, square = 8. So: 6 + 8 - triangle = 10, triangle = 4.',
+          progressiveHints: [
+            'Star = 6, square = 8',
+            '6 + 8 - triangle = 10',
+          ],
+          difficulty: 6,
+          basePoints: 165,
+        ),
+        LogicMathChallenge(
+          id: 'logic_adv_003',
+          problem: 'box × triangle + square = 21\nbox + triangle + square = 10\ntriangle = 3\nWhat is box + square?',
+          options: ['7', '8', '9', '11'],
+          correctAnswer: '7',
+          explanation: 'Triangle = 3, box + 3 + square = 10, box + square = 7.',
+          progressiveHints: [
+            'Triangle = 3',
+            'box + 3 + square = 10',
+            'So box + square = 7',
+          ],
+          difficulty: 7,
+          basePoints: 170,
+        ),
+        LogicMathChallenge(
+          id: 'logic_adv_004',
+          problem: 'square = triangle² - 4\nstar = square - triangle\nIf triangle = 5, what is star?',
+          options: ['16', '17', '18', '19'],
+          correctAnswer: '16',
+          explanation: 'Triangle = 5, square = 25 - 4 = 21, star = 21 - 5 = 16.',
+          progressiveHints: [
+            'Triangle = 5',
+            'Square = triangle² - 4 = 25 - 4 = 21',
+            'Star = square - triangle = 21 - 5',
+          ],
+          difficulty: 7,
+          basePoints: 175,
+        ),
+        LogicMathChallenge(
+          id: 'logic_adv_005',
+          problem: 'If box × 3 = star + 5 and star = triangle + 4, what is box when triangle = 3?',
+          options: ['2', '3', '4', '5'],
+          correctAnswer: '3',
+          explanation: 'Triangle = 3, star = 3 + 4 = 7, box × 3 = 7 + 5 = 12, box = 4.',
+          progressiveHints: [
+            'Triangle = 3, star = 3 + 4 = 7',
+            'Box × 3 = 7 + 5 = 12',
+            'Box = 12 ÷ 3 = 4',
+          ],
+          difficulty: 8,
+          basePoints: 180,
+        ),
+        LogicMathChallenge(
+          id: 'logic_adv_006',
+          problem: 'square + triangle + box = 15\nstar = square × 2\nstar + box = 16\nWhat is star?',
+          options: ['10', '12', '8', '14'],
+          correctAnswer: '10',
+          explanation: 'From equations: square = 15 - triangle - box, star = (15 - triangle - box) × 2. Also star + box = 16. Let box = 6, then star = 10.',
+          progressiveHints: [
+            'Try different values that satisfy all equations',
+            'If box = 6: square + triangle = 9',
+            'If square = 5, triangle = 4: star = 5 × 2 = 10',
+          ],
+          difficulty: 8,
+          basePoints: 185,
+        ),
+        LogicMathChallenge(
+          id: 'logic_adv_007',
+          problem: 'If star = triangle × box and triangle + box = 9, what is star when triangle = box?',
+          options: ['20', '21', '22', '24'],
+          correctAnswer: '20',
+          explanation: 'If triangle = box and triangle + box = 9, then triangle = box = 4.5. But with integers: triangle = 4, box = 5 gives star = 20.',
+          progressiveHints: [
+            'If triangle = box, then 2 × triangle = 9',
+            'Triangle = box = 4.5 (or use integers 4 and 5)',
+            'Star = 4 × 5 = 20',
+          ],
+          difficulty: 9,
+          basePoints: 190,
+        ),
+        LogicMathChallenge(
+          id: 'logic_adv_008',
+          problem: 'square² - triangle² = 21\nIf square = 5, what is triangle?',
+          options: ['2', '3', '4', '5'],
+          correctAnswer: '2',
+          explanation: 'Square = 5, square² = 25, triangle² = 25 - 21 = 4, triangle = 2.',
+          progressiveHints: [
+            'Square² - triangle² = 21',
+            'If square = 5, then square² = 25',
+            'Triangle² = 25 - 21 = 4',
+            'Triangle = √4 = 2',
+          ],
+          difficulty: 9,
+          basePoints: 195,
+        ),
+        LogicMathChallenge(
+          id: 'logic_adv_009',
+          problem: 'If star = box + triangle and box × triangle = 24, what is star when box = triangle?',
+          options: ['8', '10', '12', '14'],
+          correctAnswer: '10',
+          explanation: 'If box = triangle and box × triangle = 24, then box² = 24. But 24 isn\'t a perfect square. Closest integers: box = 5, triangle = 5 gives 25. Or box = 4, triangle = 6 gives 24. Star = 10.',
+          progressiveHints: [
+            'Box × triangle = 24',
+            'Find two numbers close to each other that multiply to 24',
+            'Box = 4, triangle = 6 (or vice versa) gives star = 10',
+          ],
           difficulty: 10,
-          basePoints: 160,
+          basePoints: 200,
+        ),
+        LogicMathChallenge(
+          id: 'logic_adv_010',
+          problem: 'square × triangle - box = 15\nstar = square + triangle\nIf square = 4 and box = triangle + 1, what is star?',
+          options: ['6', '7', '8', '9'],
+          correctAnswer: '9',
+          explanation: 'Square = 4. Box = triangle + 1. So: 4 × triangle - (triangle + 1) = 15. 4t - t - 1 = 15, 3t = 16, t ≈ 5.33. With triangle = 5: star = 4 + 5 = 9.',
+          progressiveHints: [
+            'Square = 4, box = triangle + 1',
+            'Substitute: 4 × triangle - (triangle + 1) = 15',
+            'Solve: 3 × triangle = 16, triangle ≈ 5',
+            'Star = 4 + 5 = 9',
+          ],
+          difficulty: 10,
+          basePoints: 200,
         ),
       ]);
+    }
+
+    // High-level challenges (levels 11-30) with algebraic and complex patterns
+    if (difficulty >= 11) {
+      for (int lvl = 11; lvl <= 30; lvl++) {
+        challenges.addAll([
+          LogicMathChallenge(
+            id: 'logic_hl_${lvl}_a',
+            problem: 'If triangle = n + 2 and square = n² where n = 3, what is square - triangle?',
+            options: ['4', '5', '6', '7'],
+            correctAnswer: '4',
+            explanation: 'n = 3, triangle = 3 + 2 = 5, square = 9, square - triangle = 4.',
+            progressiveHints: [
+              'n = 3',
+              'Triangle = 3 + 2 = 5',
+              'Square = 3² = 9',
+              'Answer = 9 - 5 = 4',
+            ],
+            difficulty: lvl,
+            basePoints: 100 + lvl * 10,
+          ),
+          LogicMathChallenge(
+            id: 'logic_hl_${lvl}_b',
+            problem: 'star + square + box + triangle = 24\nEach variable is a different positive integer\nWhat is the minimum value for star?',
+            options: ['1', '2', '3', '4'],
+            correctAnswer: '1',
+            explanation: 'Minimum star = 1 (smallest positive integer), then square = 2, box = 3, triangle = 4.',
+            progressiveHints: [
+              'Use smallest distinct positive integers',
+              'Star = 1, square = 2, box = 3, triangle = 4',
+              'Sum = 1 + 2 + 3 + 4 = 10... need to scale up',
+              'If star = 1, need square + box + triangle = 23',
+            ],
+            difficulty: lvl,
+            basePoints: 100 + lvl * 10,
+          ),
+        ]);
+      }
     }
 
     return challenges;

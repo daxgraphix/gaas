@@ -21,19 +21,15 @@ class GameScreen extends ConsumerStatefulWidget {
 class _GameScreenState extends ConsumerState<GameScreen>
     with TickerProviderStateMixin {
   String _currentInput = '';
-  bool _showErrorFlash = false;
-  bool _showCorrectFeedback = false;
-  bool _showWrongFeedback = false;
   late AnimationController _comboAnimationController;
   late AnimationController _shakeController;
   late Animation<double> _shakeAnimation;
-  late AnimationController _progressAnimationController;
-  late Animation<double> _progressAnimation;
-  late AnimationController _questionAnimationController;
-  late AnimationController _feedbackAnimationController;
+late AnimationController _progressAnimationController;
+    late Animation<double> _progressAnimation;
+    late AnimationController _questionAnimationController;
 
-  @override
-  void initState() {
+    @override
+    void initState() {
     super.initState();
     _comboAnimationController = AnimationController(
       vsync: this,
@@ -56,11 +52,6 @@ class _GameScreenState extends ConsumerState<GameScreen>
         parent: _progressAnimationController,
         curve: Curves.easeInOut,
       ),
-    );
-
-    _feedbackAnimationController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 500),
     );
 
     _questionAnimationController = AnimationController(
@@ -107,45 +98,33 @@ class _GameScreenState extends ConsumerState<GameScreen>
       );
     }
 
-    if (gameSession.currentQuestionIndex >= gameSession.totalQuestions ||
-        (gameSession.mode == GameMode.endless && gameSession.lives <= 0) ||
-        (gameSession.mode == GameMode.scoreAttack &&
-            gameSession.timeRemaining <= 0)) {
-      return _buildResultsScreen(context, gameSession, theme);
-    }
+if (gameSession.currentQuestionIndex >= gameSession.totalQuestions ||
+         (gameSession.mode == GameMode.endless && gameSession.lives <= 0) ||
+         (gameSession.mode == GameMode.scoreAttack &&
+             gameSession.timeRemaining <= 0)) {
+       return _buildResultsScreen(context, gameSession, theme);
+     }
 
-    ref.listen<GameSession?>(gameSessionProvider, (previous, next) {
-      if (previous != null && next != null) {
-        // Did they answer wrong?
-        if (next.currentQuestionIndex > previous.currentQuestionIndex &&
-            next.correctAnswers == previous.correctAnswers) {
-          setState(() => _showErrorFlash = true);
-          Future.delayed(const Duration(milliseconds: 300), () {
-            if (mounted) setState(() => _showErrorFlash = false);
-          });
-          _triggerShake();
-          // Wrong answer feedback
-          ref.read(soundManagerProvider).playWrongAnswer();
-          HapticManager.instance.wrongAnswerPattern();
-        }
+     ref.listen<GameSession?>(gameSessionProvider, (previous, next) {
+       if (previous != null && next != null) {
+         // Did they answer wrong?
+         if (next.currentQuestionIndex > previous.currentQuestionIndex &&
+             next.correctAnswers == previous.correctAnswers) {
+           HapticManager.instance.wrongAnswerPattern();
+         }
 
-        // Did they answer correctly?
-        if (next.currentQuestionIndex > previous.currentQuestionIndex &&
-            next.correctAnswers > previous.correctAnswers) {
-          // Trigger success animation
-          _comboAnimationController.forward(from: 0.0);
-          _questionAnimationController.forward(from: 0.0);
-          // Correct answer feedback
-          ref.read(soundManagerProvider).playCorrectAnswer();
-          HapticManager.instance.correctAnswerPattern();
-        }
+         // Did they answer correctly?
+         if (next.currentQuestionIndex > previous.currentQuestionIndex &&
+             next.correctAnswers > previous.correctAnswers) {
+           HapticManager.instance.correctAnswerPattern();
+         }
 
-        // Did combo increase?
-        if (next.comboMultiplier > previous.comboMultiplier) {
-          // Additional feedback for combo
-        }
-      }
-    });
+         // Did combo increase?
+         if (next.comboMultiplier > previous.comboMultiplier) {
+           // Additional feedback for combo
+         }
+       }
+     });
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
@@ -161,13 +140,11 @@ class _GameScreenState extends ConsumerState<GameScreen>
               ),
             ),
           ),
-          AnimatedContainer(
-            duration: const Duration(milliseconds: 300),
-            decoration: BoxDecoration(
-              color: _showErrorFlash
-                  ? Colors.red.withValues(alpha: 0.2)
-                  : Colors.transparent,
-            ),
+AnimatedContainer(
+             duration: const Duration(milliseconds: 300),
+             decoration: BoxDecoration(
+               color: Colors.transparent,
+             ),
             child: SafeArea(
               child: Column(
                 children: [
@@ -285,46 +262,12 @@ class _GameScreenState extends ConsumerState<GameScreen>
                 ),
               ),
             ),
-          if (gameSession.mode == GameMode.duel)
-            _buildDuelIndicator(gameSession, theme),
-
-          // Answer feedback overlay
-          if (_showCorrectFeedback || _showWrongFeedback)
-            AnimatedBuilder(
-              animation: _feedbackAnimationController,
-              builder: (context, child) {
-                return Container(
-                  color: _showCorrectFeedback
-                      ? Colors.green.withValues(alpha: 0.3 * _feedbackAnimationController.value)
-                      : Colors.red.withValues(alpha: 0.3 * _feedbackAnimationController.value),
-                  child: Center(
-                    child: Container(
-                      padding: const EdgeInsets.all(32),
-                      decoration: BoxDecoration(
-                        color: _showCorrectFeedback ? Colors.green : Colors.red,
-                        shape: BoxShape.circle,
-                        boxShadow: [
-                          BoxShadow(
-                            color: _showCorrectFeedback ? Colors.green : Colors.red,
-                            blurRadius: 40 * _feedbackAnimationController.value,
-                            spreadRadius: 20 * _feedbackAnimationController.value,
-                          ),
-                        ],
-                      ),
-                      child: Icon(
-                        _showCorrectFeedback ? Icons.check_circle : Icons.cancel,
-                        color: Colors.white,
-                        size: 80 * _feedbackAnimationController.value,
-                      ),
-                    ),
-                  ),
-                );
-              },
-            ),
-        ],
-      ),
-    );
-  }
+if (gameSession.mode == GameMode.duel)
+             _buildDuelIndicator(gameSession, theme),
+         ],
+       ),
+     );
+   }
 
   Widget _buildDuelIndicator(GameSession session, ThemeData theme) {
     final playerAhead = (session.aiScore ?? 0) < session.score;
@@ -683,35 +626,6 @@ class _GameScreenState extends ConsumerState<GameScreen>
 
     final gameSession = ref.read(gameSessionProvider);
     if (gameSession == null) return;
-
-    // Check if answer is correct before submitting
-    final isCorrect = gameSession.isVisualCounting
-        ? (answer == gameSession.currentVisualData?.targetCount)
-        : (answer == gameSession.currentQuestion?.correctAnswer);
-
-    // Show visual feedback
-    setState(() {
-      if (isCorrect) {
-        _showCorrectFeedback = true;
-        _showWrongFeedback = false;
-      } else {
-        _showCorrectFeedback = false;
-        _showWrongFeedback = true;
-      }
-      _showErrorFlash = !isCorrect;
-    });
-
-    // Animate feedback
-    _feedbackAnimationController.forward(from: 0.0).then((_) {
-      Future.delayed(const Duration(milliseconds: 800), () {
-        if (mounted) {
-          setState(() {
-            _showCorrectFeedback = false;
-            _showWrongFeedback = false;
-          });
-        }
-      });
-    });
 
     // Submit answer
     if (gameSession.isVisualCounting) {

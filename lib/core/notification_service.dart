@@ -56,7 +56,7 @@ class NotificationService {
     }
   }
 
-  Future<void> showAchievementNotification(String title, String body) async {
+  Future<void> showAchievementNotification(String title, String body, {String icon = '🏆'}) async {
     if (!_notificationsEnabled) return;
 
     const AndroidNotificationDetails androidDetails = AndroidNotificationDetails(

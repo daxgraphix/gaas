@@ -336,6 +336,17 @@ class _EnhancedChallengeScreenState
                           fontWeight: FontWeight.bold,
                         ),
                       ),
+                      const SizedBox(width: 8),
+                      ElevatedButton(
+                        onPressed: () => _claimReward(challenge.id),
+                        style: ElevatedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 6,
+                        ),
+                        ),
+                        child: Text('Claim', style: TextStyle(fontSize: 12)),
+                      ),
                     ],
                   )
                 else
@@ -373,6 +384,13 @@ class _EnhancedChallengeScreenState
     Navigator.push(
       context,
       MaterialPageRoute(builder: (_) => const GameScreen()),
+    );
+  }
+
+  void _claimReward(String challengeId) {
+    ref.read(dailyChallengeProvider.notifier).claimReward(challengeId, ref);
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Reward claimed!')),
     );
   }
 

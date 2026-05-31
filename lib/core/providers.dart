@@ -15,11 +15,13 @@ import '../core/math_engine/crossword_engine.dart';
 import '../core/math_engine/math_riddle_engine.dart';
 import '../core/math_engine/math_visual_engine.dart';
 import '../core/sound_manager.dart';
+import '../core/notification_service.dart';
 
+final notificationProvider = Provider((ref) => NotificationService());
 final userRepositoryProvider = Provider((ref) => UserRepository());
 final levelProgressRepositoryProvider = Provider((ref) => LevelProgressRepository());
 final statisticsRepositoryProvider = Provider((ref) => StatisticsRepository());
-const int hintCostPoints = 0;
+const int hintCostPoints = 50;
 
 final soundManagerProvider = Provider((ref) => SoundManager.instance);
 final hapticManagerProvider = Provider((ref) => HapticManager.instance);
@@ -1125,16 +1127,23 @@ class DailyChallengeNotifier extends StateNotifier<List<DailyChallenge>> {
     }
   }
 
-  bool claimReward(String id) {
+  Future<void> claimReward(String id, WidgetRef ref) async {
     final challenge = state.firstWhere(
       (c) => c.id == id,
       orElse: () => throw Exception('Challenge not found'),
     );
     if (challenge.isCompleted) {
       state = state.where((c) => c.id != id).toList();
-      return true;
+      
+      // Award bonus points
+      ref.read(userSessionProvider.notifier).addPoints(challenge.rewardPoints);
+      
+      // Show achievement notification
+      NotificationService().showAchievementNotification(
+        'Daily Challenge Complete!',
+        'Rewarded ${challenge.rewardPoints} bonus points',
+      );
     }
-    return false;
   }
 }
 

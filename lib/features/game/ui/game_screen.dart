@@ -105,26 +105,33 @@ if (gameSession.currentQuestionIndex >= gameSession.totalQuestions ||
        return _buildResultsScreen(context, gameSession, theme);
      }
 
-     ref.listen<GameSession?>(gameSessionProvider, (previous, next) {
-       if (previous != null && next != null) {
-         // Did they answer wrong?
-         if (next.currentQuestionIndex > previous.currentQuestionIndex &&
-             next.correctAnswers == previous.correctAnswers) {
-           HapticManager.instance.wrongAnswerPattern();
-         }
+ref.listen<GameSession?>(gameSessionProvider, (previous, next) {
+        if (previous != null && next != null) {
+          // Did they answer wrong?
+          if (next.currentQuestionIndex > previous.currentQuestionIndex &&
+              next.correctAnswers == previous.correctAnswers) {
+            HapticManager.instance.wrongAnswerPattern();
+          }
 
-         // Did they answer correctly?
-         if (next.currentQuestionIndex > previous.currentQuestionIndex &&
-             next.correctAnswers > previous.correctAnswers) {
-           HapticManager.instance.correctAnswerPattern();
-         }
+          // Did they answer correctly?
+          if (next.currentQuestionIndex > previous.currentQuestionIndex &&
+              next.correctAnswers > previous.correctAnswers) {
+            HapticManager.instance.correctAnswerPatternWithIntensity();
+            
+            // Check for streak milestones
+            if (next.comboMultiplier == 5) {
+              HapticManager.instance.streakPattern();
+            } else if (next.comboMultiplier == 10) {
+              HapticManager.instance.milestonePattern();
+            }
+          }
 
-         // Did combo increase?
-         if (next.comboMultiplier > previous.comboMultiplier) {
-           // Additional feedback for combo
-         }
-       }
-     });
+          // Did combo increase?
+          if (next.comboMultiplier > previous.comboMultiplier) {
+            // Additional feedback for combo
+          }
+        }
+      });
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
@@ -337,7 +344,7 @@ if (gameSession.mode == GameMode.duel)
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              _buildMinimalStat('STREAK', '${gameSession.comboMultiplier}x'),
+              _buildStreakStat(gameSession.comboMultiplier, theme),
               _buildMinimalStat('LEVEL', '${gameSession.level}'),
               _buildMinimalStat('TIME', '${gameSession.timeRemaining}s'),
             ],
@@ -372,6 +379,56 @@ if (gameSession.mode == GameMode.duel)
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildStreakStat(int streak, ThemeData theme) {
+    final isMilestone = streak == 5 || streak == 10 || streak == 15;
+    return Column(
+      children: [
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.local_fire_department,
+              color: isMilestone 
+                  ? (streak == 5 ? Colors.orange : streak == 10 ? Colors.red : Colors.purple)
+                  : AppDesignTokens.neonCyan,
+              size: 16,
+            ),
+            if (isMilestone) ...[
+              const SizedBox(width: 4),
+              Icon(
+                Icons.star,
+                color: streak == 10 ? Colors.yellow : Colors.white,
+                size: 12,
+              ),
+            ],
+            const SizedBox(width: 4),
+            Text(
+              '$streak',
+              style: TextStyle(
+                color: isMilestone 
+                    ? (streak == 5 ? Colors.orange : streak == 10 ? Colors.red : Colors.purple)
+                    : AppDesignTokens.neonCyan,
+                fontSize: 20,
+                fontWeight: isMilestone ? FontWeight.bold : FontWeight.w900,
+                fontFamily: 'monospace',
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 4),
+        Text(
+          'STREAK',
+          style: TextStyle(
+            color: AppDesignTokens.neonCyan.withValues(alpha: 0.5),
+            fontSize: 10,
+            letterSpacing: 2,
+            fontWeight: FontWeight.w900,
+          ),
+        ),
+      ],
     );
   }
 

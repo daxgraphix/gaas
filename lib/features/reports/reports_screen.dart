@@ -327,6 +327,96 @@ class ReportsScreen extends ConsumerWidget {
     }
   }
 
+  Future<void> _shareAsPdf(BuildContext context, WidgetRef ref, AppLocalizations l10n) async {
+    try {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Preparing PDF...'),
+          duration: const Duration(seconds: 2),
+        ),
+      );
+
+      final user = ref.read(userSessionProvider);
+      final accuracy = ref.read(overallAccuracyProvider);
+      final totalStars = ref.read(totalStarsProvider);
+      final completedLevels = ref.read(completedLevelsProvider);
+      final bestStreak = ref.watch(bestStreakProvider);
+
+      final pdf = pw.Document();
+      pdf.addPage(
+        pw.Page(
+          build: (pw.Context context) {
+            return pw.Column(
+              crossAxisAlignment: pw.CrossAxisAlignment.start,
+              children: [
+                pw.Text(
+                  'GAAS Performance Report',
+                  style: pw.TextStyle(fontSize: 20, fontWeight: pw.FontWeight.bold),
+                ),
+                pw.SizedBox(height: 20),
+                pw.Text('Generated on ${DateTime.now().toString().split('.')[0]}'),
+                if (user != null) pw.Text('${l10n.playerLabel}: ${user.name}'),
+                pw.SizedBox(height: 24),
+                pw.Text('Overview', style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold)),
+                pw.SizedBox(height: 12),
+                pw.Row(
+                  mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                  children: [
+                    _pdfStatColumn('Stars', '${totalStars.value ?? 0}'),
+                    _pdfStatColumn('Levels', '${completedLevels.value ?? 0}'),
+                    _pdfStatColumn('Streak', '${bestStreak.value ?? 0}'),
+                    _pdfStatColumn('Accuracy', '${accuracy.value?.toStringAsFixed(0) ?? '0'}%'),
+                  ],
+                ),
+              ],
+            );
+          },
+        ),
+      );
+
+      final bytes = await pdf.save();
+      final tempDir = await getTemporaryDirectory();
+      final file = File('${tempDir.path}/gaas_report_${DateTime.now().millisecondsSinceEpoch}.pdf');
+      await file.writeAsBytes(bytes);
+
+      await Share.shareXFiles(
+        [XFile(file.path)],
+        text: 'My GAAS Math Progress Report',
+        subject: 'GAAS Performance Report',
+      );
+
+      Future.delayed(const Duration(seconds: 10), () {
+        if (file.existsSync()) file.deleteSync();
+      });
+
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('PDF shared successfully!'),
+          backgroundColor: Colors.green,
+        ),
+      );
+    } catch (e) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Share failed: $e'),
+          backgroundColor: Theme.of(context).colorScheme.error,
+        ),
+      );
+    }
+  }
+
+  pw.Widget _pdfStatColumn(String label, String value) {
+    return pw.Column(
+      children: [
+        pw.Text(value, style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold)),
+        pw.Text(label, style: pw.TextStyle(fontSize: 10)),
+      ],
+    );
+  }
+
   PreferredSizeWidget _buildAppBar(BuildContext context, ThemeData theme, AppLocalizations l10n, WidgetRef ref) {
     return AppBar(
       title: Text(l10n.reports),
@@ -1068,6 +1158,14 @@ class ReportsScreen extends ConsumerWidget {
               title: 'Save to Device',
               subtitle: 'Save PDF to device storage',
               onTap: () => _saveToDevice(context, ref, l10n),
+              theme: theme,
+            ),
+            _buildExportOption(
+              context: context,
+              icon: Icons.share,
+              title: 'Share as PDF',
+              subtitle: 'Quick share PDF via messaging apps',
+              onTap: () => _shareAsPdf(context, ref, l10n),
               theme: theme,
             ),
             const SizedBox(height: 20),

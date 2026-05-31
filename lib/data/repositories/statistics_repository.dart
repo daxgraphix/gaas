@@ -51,6 +51,25 @@ class StatisticsRepository {
       }
     }
 
+    // Track time per question
+    stats.timePerQuestion.add({
+      'operationId': operationId,
+      'timeSpent': timeSpent,
+      'isCorrect': isCorrect,
+      'timestamp': DateTime.now().toIso8601String(),
+    });
+
+    // Update accuracy by operation
+    final opKey = operationId ?? 'unknown';
+    final totalOpQuestions = stats.timePerQuestion.where((q) => q['operationId'] == opKey).length;
+    final correctOpQuestions = stats.timePerQuestion.where((q) => q['operationId'] == opKey && q['isCorrect'] == true).length;
+    stats.accuracyByOperation[opKey] = totalOpQuestions > 0 ? correctOpQuestions / totalOpQuestions * 100 : 0.0;
+
+    // Keep only last 100 entries
+    if (stats.timePerQuestion.length > 100) {
+      stats.timePerQuestion.removeAt(0);
+    }
+
     final database = await db;
     await database.saveStatistics(stats);
   }

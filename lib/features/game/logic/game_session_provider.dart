@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/math_engine/math_engine.dart';
 import '../../../core/providers.dart';
 import '../../../core/sound_manager.dart';
+import '../../../core/notification_service.dart';
 
 enum GameMode {
   campaign,
@@ -355,10 +356,31 @@ class GameSessionNotifier extends StateNotifier<GameSession?> {
     }
 
     if (isCorrect) {
-      HapticManager.instance.successPattern();
+      HapticManager.instance.correctAnswerPatternWithIntensity();
       final baseScore = _getScoreForMode();
       newScore += (hintUsed ? (baseScore ~/ 2) : baseScore) * newCombo;
       newCorrect++;
+
+      // Streak milestone haptic feedback
+      if (newCombo == 5) {
+        HapticManager.instance.streakPattern();
+        NotificationService().showStreakNotification(
+          '5-Question Streak!',
+          'Keep going! You\'ve answered 5 in a row.',
+        );
+      } else if (newCombo == 10) {
+        HapticManager.instance.milestonePattern();
+        NotificationService().showAchievementNotification(
+          '10-Question Streak!',
+          'Incredible! Double-digit streak achieved.',
+        );
+      } else if (newCombo == 15) {
+        HapticManager.instance.heavyImpact();
+        NotificationService().showAchievementNotification(
+          '15-Question Streak!',
+          'Unstoppable! You\'re on fire!',
+        );
+      }
 
       // Update Daily Challenges - increment question count for all modes
       final challengeNotifier = ref.read(dailyChallengeProvider.notifier);
@@ -392,8 +414,13 @@ class GameSessionNotifier extends StateNotifier<GameSession?> {
         ? 0
         : now.difference(state!.lastAnswerTime!).inSeconds.clamp(1, 120);
 
+    final questionScore = isCorrect 
+        ? (_getScoreForMode() * newCombo) 
+        : 0;
+
     newPendingStats.add({
       'operationId': state!.operation,
+      'score': hintUsed ? (questionScore ~/ 2) : questionScore,
       'isCorrect': isCorrect,
       'timeSpent': timeSpent,
     });

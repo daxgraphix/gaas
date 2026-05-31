@@ -11,6 +11,8 @@ class Statistics {
   int currentStreak;
   DateTime lastUpdated;
   bool isSynced;
+  final List<Map<String, dynamic>> timePerQuestion;
+  final Map<String, double> accuracyByOperation;
 
   Statistics({
     this.id,
@@ -25,7 +27,11 @@ class Statistics {
     this.currentStreak = 0,
     DateTime? lastUpdated,
     this.isSynced = false,
-  }) : lastUpdated = lastUpdated ?? DateTime.now();
+    List<Map<String, dynamic>>? timePerQuestion,
+    Map<String, double>? accuracyByOperation,
+  })  : lastUpdated = lastUpdated ?? DateTime.now(),
+        timePerQuestion = timePerQuestion ?? [],
+        accuracyByOperation = accuracyByOperation ?? {};
 
   Map<String, dynamic> toJson() {
     return {
@@ -41,6 +47,8 @@ class Statistics {
       'currentStreak': currentStreak,
       'lastUpdated': lastUpdated.toIso8601String(),
       'isSynced': isSynced,
+      'timePerQuestion': timePerQuestion,
+      'accuracyByOperation': accuracyByOperation,
     };
   }
 
@@ -60,6 +68,8 @@ class Statistics {
           ? DateTime.parse(json['lastUpdated']) 
           : DateTime.now(),
       isSynced: json['isSynced'] ?? false,
+      timePerQuestion: (json['timePerQuestion'] as List?)?.cast<Map<String, dynamic>>() ?? [],
+      accuracyByOperation: (json['accuracyByOperation'] as Map?)?.cast<String, double>() ?? {},
     );
   }
 }

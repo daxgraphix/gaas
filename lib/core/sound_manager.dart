@@ -73,10 +73,13 @@ class HapticManager {
   Future<void> correctAnswerPattern() async {
     if (!isEnabled) return;
     await HapticFeedback.lightImpact();
-    await Future.delayed(const Duration(milliseconds: 100));
-    await HapticFeedback.mediumImpact();
-    await Future.delayed(const Duration(milliseconds: 100));
+  }
+
+  Future<void> correctAnswerPatternWithIntensity() async {
+    if (!isEnabled) return;
     await HapticFeedback.lightImpact();
+    await Future.delayed(const Duration(milliseconds: 50));
+    await HapticFeedback.mediumImpact();
   }
 
   Future<void> wrongAnswerPattern() async {

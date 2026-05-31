@@ -9,6 +9,7 @@ import '../../reports/reports_screen.dart';
 import '../../profile/presentation/profile_screen.dart';
 import '../../campaign/presentation/campaign_screen.dart';
 import '../../arcade/presentation/arcade_screen.dart';
+import '../../arcade/enhanced_challenge_screen.dart';
 import '../../practice/presentation/practice_screen.dart';
 import '../../calculator/calculator_screen.dart';
 import '../../custom_mix/presentation/custom_mix_screen.dart';
@@ -59,9 +60,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
 
     _cardAnimationController.forward();
     
-    // Load level progress
+    // Load level progress and check daily challenges
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(levelProgressProvider.notifier).loadProgress();
+      ref.read(dailyChallengeProvider.notifier).checkAndResetChallenges();
     });
   }
 
@@ -796,95 +798,163 @@ _buildQuickActions(theme, l10n),
   }
 
   Widget _buildDailyChallenge(ThemeData theme, AppLocalizations l10n) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            theme.colorScheme.tertiaryContainer.withValues(alpha: 0.8),
-            theme.colorScheme.surface.withValues(alpha: 0.9),
-          ],
-        ),
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: theme.colorScheme.tertiary.withValues(alpha: 0.2),
-            blurRadius: 16,
-            offset: const Offset(0, 6),
-          ),
-        ],
-        border: Border.all(
-          color: theme.colorScheme.tertiary.withValues(alpha: 0.3),
-          width: 1,
-        ),
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Icon(
-                      Icons.calendar_today,
-                      color: theme.colorScheme.tertiary,
-                      size: 20,
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      l10n.dailyChallenge,
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: theme.colorScheme.onTertiaryContainer,
-                      ),
-                    ),
-                  ],
+    return Consumer(
+      builder: (context, ref, child) {
+        final dailyChallenges = ref.watch(dailyChallengeProvider);
+        final challenge = dailyChallenges.isNotEmpty 
+            ? dailyChallenges.first 
+            : null;
+        
+        if (challenge == null) {
+          return const SizedBox.shrink();
+        }
+        
+        final hoursLeft = challenge.expiresAt.difference(DateTime.now()).inHours;
+        final minutesLeft = challenge.expiresAt.difference(DateTime.now()).inMinutes % 60;
+
+        return GestureDetector(
+          onTap: () {
+            HapticManager.instance.selectionClick();
+            ref.read(soundManagerProvider).playEffect('click');
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const EnhancedChallengeScreen()),
+            );
+          },
+          child: Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  theme.colorScheme.tertiaryContainer.withValues(alpha: 0.8),
+                  theme.colorScheme.surface.withValues(alpha: 0.9),
+                ],
+              ),
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: [
+                BoxShadow(
+                  color: theme.colorScheme.tertiary.withValues(alpha: 0.2),
+                  blurRadius: 16,
+                  offset: const Offset(0, 6),
                 ),
-                const SizedBox(height: 8),
-                Text(
-                  l10n.completeTodaysChallenge,
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    color: theme.colorScheme.onTertiaryContainer.withValues(alpha: 0.8),
+              ],
+              border: Border.all(
+                color: theme.colorScheme.tertiary.withValues(alpha: 0.3),
+                width: 1,
+              ),
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.calendar_today,
+                            color: theme.colorScheme.tertiary,
+                            size: 20,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            l10n.dailyChallenge,
+                            style: theme.textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: theme.colorScheme.onTertiaryContainer,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        challenge.title,
+                        style: theme.textTheme.bodyLarge?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: theme.colorScheme.onTertiaryContainer,
+                        ),
+                      ),
+                      Text(
+                        challenge.description,
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: theme.colorScheme.onTertiaryContainer.withValues(alpha: 0.8),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: theme.colorScheme.tertiary.withValues(alpha: 0.2),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(
+                                  Icons.star,
+                                  size: 14,
+                                  color: Colors.amber,
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  '+${challenge.rewardPoints}',
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                    color: theme.colorScheme.onTertiaryContainer,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            '${hoursLeft}h ${minutesLeft}m left',
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: theme.colorScheme.onTertiaryContainer.withValues(alpha: 0.7),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      LinearProgressIndicator(
+                        value: challenge.progress,
+                        backgroundColor: theme.colorScheme.tertiary.withValues(alpha: 0.3),
+                        valueColor: AlwaysStoppedAnimation(theme.colorScheme.tertiary),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        '${challenge.currentValue}/${challenge.targetValue}',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.onTertiaryContainer.withValues(alpha: 0.7),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-                const SizedBox(height: 12),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
                     color: theme.colorScheme.tertiary.withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(16),
                   ),
-                  child: Text(
-                    l10n.challengeReward,
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      fontWeight: FontWeight.w600,
-                      color: theme.colorScheme.onTertiaryContainer,
-                    ),
+                  child: Icon(
+                    Icons.play_arrow,
+                    color: theme.colorScheme.tertiary,
+                    size: 28,
                   ),
                 ),
               ],
             ),
           ),
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: theme.colorScheme.tertiary.withValues(alpha: 0.2),
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Icon(
-              Icons.play_arrow,
-              color: theme.colorScheme.tertiary,
-              size: 32,
-            ),
-          ),
-        ],
-      ),
-    ).animate()
-        .fadeIn(duration: 700.ms)
-        .slideX(begin: 0.2, end: 0);
+        ).animate()
+            .fadeIn(duration: 700.ms)
+            .slideX(begin: 0.2, end: 0);
+      },
+    );
   }
 
   Widget _buildGameModesGrid(ThemeData theme, AppLocalizations l10n) {

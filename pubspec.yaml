@@ -37,7 +37,7 @@ dependencies:
   uuid: ^4.5.1
 
   # Audio
-  # audioplayers: ^6.1.0 # Temporarily disabled for Windows build testing
+  audioplayers: ^6.7.1
 
   # Notifications
   flutter_local_notifications: ^17.2.3

@@ -61,7 +61,7 @@ late AnimationController _progressAnimationController;
   }
 
   void _triggerShake() {
-    HapticManager.instance.errorPattern();
+    ref.read(soundManagerProvider).playEffect('incorrect');
     _shakeController.forward(from: 0);
   }
 
@@ -107,28 +107,22 @@ if (gameSession.currentQuestionIndex >= gameSession.totalQuestions ||
 
 ref.listen<GameSession?>(gameSessionProvider, (previous, next) {
         if (previous != null && next != null) {
-          // Did they answer wrong?
           if (next.currentQuestionIndex > previous.currentQuestionIndex &&
               next.correctAnswers == previous.correctAnswers) {
-            HapticManager.instance.wrongAnswerPattern();
+            ref.read(soundManagerProvider).playEffect('incorrect');
           }
 
-          // Did they answer correctly?
           if (next.currentQuestionIndex > previous.currentQuestionIndex &&
               next.correctAnswers > previous.correctAnswers) {
-            HapticManager.instance.correctAnswerPatternWithIntensity();
-            
-            // Check for streak milestones
+            ref.read(soundManagerProvider).playEffect('correct');
             if (next.comboMultiplier == 5) {
-              HapticManager.instance.streakPattern();
+              ref.read(soundManagerProvider).playEffect('level_up');
             } else if (next.comboMultiplier == 10) {
-              HapticManager.instance.milestonePattern();
+              ref.read(soundManagerProvider).playEffect('level_up');
             }
           }
 
-          // Did combo increase?
           if (next.comboMultiplier > previous.comboMultiplier) {
-            // Additional feedback for combo
           }
         }
       });

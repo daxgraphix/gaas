@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:io' show Platform;
 import '../themes/app_themes.dart';
+import 'package:flutter/cupertino.dart';
 
 class ResponsiveUtils {
   static const double mobileBreakpoint = 600;
@@ -137,7 +138,7 @@ class AdaptiveTheme {
         ),
       ),
 
-      pageTransitionsTheme: const PageTransitionsTheme(
+      pageTransitionsTheme: PageTransitionsTheme(
         builders: {
           TargetPlatform.android: CupertinoPageTransitionsBuilder(),
           TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
@@ -156,7 +157,6 @@ class AdaptiveTheme {
   }) {
     return ListView(
       scrollDirection: scrollDirection,
-      cacheExtent: 1000,
       addAutomaticKeepAlives: addAutomaticKeepAlives,
       children: children,
     );
@@ -170,7 +170,6 @@ class AdaptiveTheme {
     double mainAxisSpacing = 16.0,
   }) {
     return GridView(
-      cacheExtent: 1000,
       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: crossAxisCount,
         crossAxisSpacing: crossAxisSpacing,

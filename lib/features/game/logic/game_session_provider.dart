@@ -356,36 +356,33 @@ class GameSessionNotifier extends StateNotifier<GameSession?> {
     }
 
     if (isCorrect) {
-      HapticManager.instance.correctAnswerPatternWithIntensity();
+      ref.read(soundManagerProvider).playEffect('correct');
       final baseScore = _getScoreForMode();
       newScore += (hintUsed ? (baseScore ~/ 2) : baseScore) * newCombo;
       newCorrect++;
 
-      // Streak milestone haptic feedback
       if (newCombo == 5) {
-        HapticManager.instance.streakPattern();
+        ref.read(soundManagerProvider).playEffect('level_up');
         NotificationService().showStreakNotification(
           '5-Question Streak!',
           'Keep going! You\'ve answered 5 in a row.',
         );
       } else if (newCombo == 10) {
-        HapticManager.instance.milestonePattern();
+        ref.read(soundManagerProvider).playEffect('level_up');
         NotificationService().showAchievementNotification(
           '10-Question Streak!',
           'Incredible! Double-digit streak achieved.',
         );
       } else if (newCombo == 15) {
-        HapticManager.instance.heavyImpact();
+        ref.read(soundManagerProvider).playEffect('achievement');
         NotificationService().showAchievementNotification(
           '15-Question Streak!',
           'Unstoppable! You\'re on fire!',
         );
       }
 
-      // Update Daily Challenges - increment question count for all modes
       final challengeNotifier = ref.read(dailyChallengeProvider.notifier);
       challengeNotifier.incrementProgress('questions', 1);
-      // Check actual question operation for division tracking
       if (state!.currentQuestion?.operation == 'division') {
         challengeNotifier.incrementProgress('division', 1);
       }
@@ -394,15 +391,14 @@ class GameSessionNotifier extends StateNotifier<GameSession?> {
       }
       challengeNotifier.incrementProgress('streak', 1);
     } else {
-      HapticManager.instance.errorPattern();
-      newCombo = 1; // Reset combo on wrong answer
+      ref.read(soundManagerProvider).playEffect('incorrect');
+      newCombo = 1;
       if (state!.mode == GameMode.endless) {
         newLives--;
       }
       if (state!.isBossLevel) {
-        newLives--; // Boss levels penalize mistakes heavily
+        newLives--;
       }
-      // Reset streak
       ref.read(dailyChallengeProvider.notifier).updateProgressMax('streak', 0);
     }
 

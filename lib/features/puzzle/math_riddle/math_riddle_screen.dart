@@ -570,7 +570,7 @@ class _MathRiddleScreenState extends ConsumerState<MathRiddleScreen> with Single
             ),
             const SizedBox(height: 16),
             Text(
-              passed ? 'Next level unlocked!' : 'Need 16+ correct to pass',
+              passed ? 'Next level unlocked!' : 'Need 35+ correct to pass',
               style: TextStyle(
                 color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
                 fontSize: 12,

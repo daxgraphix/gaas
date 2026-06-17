@@ -1,3 +1,5 @@
+import '../../core/security/security_service.dart';
+
 class UserSession {
   String? id;
   String name;
@@ -29,15 +31,15 @@ class UserSession {
   Map<String, dynamic> toJson() {
     return {
       'id': id,
-      'name': name,
+      'name': SecurityService.instance.sanitizeInput(name, maxLength: 30),
       'avatarShape': avatarShape,
       'avatarColor': avatarColor,
       'theme': theme,
       'language': language,
-      'totalPoints': totalPoints,
+      'totalPoints': SecurityService.instance.validateAndSanitizeScore(totalPoints, 999999),
       'createdAt': createdAt.toIso8601String(),
       'lastPlayedAt': lastPlayedAt.toIso8601String(),
-      'loginStreak': loginStreak,
+      'loginStreak': SecurityService.instance.validateAndSanitizeScore(loginStreak, 365),
       'unlockedAvatars': unlockedAvatars,
     };
   }
@@ -45,19 +47,19 @@ class UserSession {
   factory UserSession.fromJson(Map<String, dynamic> json) {
     return UserSession(
       id: json['id'],
-      name: json['name'] ?? '',
+      name: SecurityService.instance.sanitizeInput(json['name'] ?? ''),
       avatarShape: json['avatarShape'] ?? 'circle',
       avatarColor: json['avatarColor'] ?? '#00BCD4',
       theme: json['theme'] ?? 'light',
       language: json['language'] ?? 'en',
-      totalPoints: json['totalPoints'] ?? 0,
+      totalPoints: SecurityService.instance.validateAndSanitizeScore(json['totalPoints'] ?? 0, 999999),
       createdAt: json['createdAt'] != null
           ? DateTime.parse(json['createdAt'])
           : DateTime.now(),
       lastPlayedAt: json['lastPlayedAt'] != null
           ? DateTime.parse(json['lastPlayedAt'])
           : DateTime.now(),
-      loginStreak: json['loginStreak'] ?? 0,
+      loginStreak: SecurityService.instance.validateAndSanitizeScore(json['loginStreak'] ?? 0, 365),
       unlockedAvatars: (json['unlockedAvatars'] as List<dynamic>?)?.cast<String>(),
     );
   }

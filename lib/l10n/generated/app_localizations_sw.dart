@@ -15,7 +15,7 @@ class AppLocalizationsSw extends AppLocalizations {
   String get home => 'Nyumbani';
 
   @override
-  String get campaign => 'Msafara';
+  String get campaign => 'Kampeni';
 
   @override
   String get arcade => 'Ukumbi wa Michezo';
@@ -54,7 +54,7 @@ class AppLocalizationsSw extends AppLocalizations {
   String get timePlayed => 'Muda wa Kucheza';
 
   @override
-  String get addition => 'Kuongeza';
+  String get addition => 'Kujumlisha';
 
   @override
   String get subtraction => 'Kutoa';
@@ -333,7 +333,7 @@ class AppLocalizationsSw extends AppLocalizations {
   String get reports => 'Ripoti';
 
   @override
-  String get avatarShop => 'Duka la Picha za Mtumiaji';
+  String get avatarShop => 'Duka la Mtumiaji';
 
   @override
   String get visualTheme => 'Mandhari ya Kuona';
@@ -345,7 +345,7 @@ class AppLocalizationsSw extends AppLocalizations {
   String get hapticFeedback => 'Mrejesho wa Kugusa';
 
   @override
-  String get notifications => 'Arifa';
+  String get notifications => 'Taarifa';
 
   @override
   String get arithmeticMixGenerator => 'Kizalishaji cha Mchanganyiko wa Hesabu';

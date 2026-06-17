@@ -201,13 +201,12 @@ class CrosswordEngine {
   static CrosswordPuzzle generatePuzzle({
     required String theme,
     required int difficulty,
-    int questionCount = 35,
+    int questionCount = 45,
   }) {
-    final gridSize = 15;
-    final wordCount = questionCount.clamp(10, 25);
+    final gridSize = 20; // Larger grid for 45 words
+    final wordCount = questionCount;
     // Advanced difficulty scaling
-    int effectiveWordCount = wordCount + (difficulty > 10 ? 2 : (difficulty > 5 ? 1 : 0));
-    final entries = _generateMathWords(effectiveWordCount, difficulty);
+    final entries = _generateMathWords(wordCount, difficulty);
     final clues = <CrosswordClue>[];
 
     int clueNumber = 1;

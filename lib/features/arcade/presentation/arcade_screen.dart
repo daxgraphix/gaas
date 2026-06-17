@@ -24,11 +24,45 @@ class ArcadeScreen extends ConsumerWidget {
       body: Stack(
         children: [
           Positioned.fill(
-            child: Opacity(
-              opacity: 0.05,
-              child: Image.network(
-                'https://www.transparenttextures.com/patterns/carbon-fibre.png',
-                repeat: ImageRepeat.repeat,
+            child: Container(
+              color: AppDesignTokens.background,
+              child: Stack(
+                children: [
+                  Positioned(
+                    top: -50,
+                    left: -50,
+                    child: Container(
+                      width: 300,
+                      height: 300,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        gradient: RadialGradient(
+                          colors: [
+                            theme.colorScheme.primary.withValues(alpha: 0.1),
+                            theme.colorScheme.primary.withValues(alpha: 0),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                  Positioned(
+                    bottom: 100,
+                    right: -100,
+                    child: Container(
+                      width: 400,
+                      height: 400,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        gradient: RadialGradient(
+                          colors: [
+                            theme.colorScheme.secondary.withValues(alpha: 0.05),
+                            theme.colorScheme.secondary.withValues(alpha: 0),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
@@ -123,10 +157,23 @@ class ArcadeScreen extends ConsumerWidget {
       child: PremiumCard(
         onTap: onTap,
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-        borderRadius: AppDesignTokens.radiusSmall,
+        borderRadius: 16,
         borderColor: color.withValues(alpha: 0.3),
         child: Row(
           children: [
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(
+                _getIconForTitle(title),
+                color: color,
+                size: 20,
+              ),
+            ),
+            const SizedBox(width: 16),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -134,30 +181,41 @@ class ArcadeScreen extends ConsumerWidget {
                   Text(
                     title,
                     style: theme.textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: 2,
-                      color: color,
+                      fontWeight: FontWeight.bold,
+                      color: AppDesignTokens.textPrimary,
                     ),
                   ),
                   const SizedBox(height: 4),
                   Text(
                     subtitle,
                     style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                      color: AppDesignTokens.textSecondary,
                     ),
                   ),
                 ],
               ),
             ),
             Icon(
-              Icons.arrow_forward_ios,
-              size: 14,
-              color: color.withValues(alpha: 0.5),
+              Icons.chevron_right,
+              size: 20,
+              color: AppDesignTokens.textMuted,
             ),
           ],
         ),
       ),
     );
+  }
+
+  IconData _getIconForTitle(String title) {
+    // Simple heuristic for icons based on title or passing it in
+    if (title.contains('Attack')) return Icons.bolt;
+    if (title.contains('Endless')) return Icons.all_inclusive;
+    if (title.contains('Duel')) return Icons.sports_kabaddi;
+    if (title.contains('Flash')) return Icons.visibility;
+    if (title.contains('Demon')) return Icons.speed;
+    if (title.contains('Master')) return Icons.psychology;
+    if (title.contains('Marathon')) return Icons.directions_run;
+    return Icons.games;
   }
 
   void _showOperationDialog(

@@ -3,6 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/level_progress.dart';
 import '../models/statistics.dart';
 import '../models/user_session.dart';
+import '../../core/security/security_service.dart';
 
 class DatabaseService {
   static DatabaseService? _instance;
@@ -27,20 +28,22 @@ class DatabaseService {
 
   Future<void> saveUserSession(UserSession userSession) async {
     final json = userSession.toJson();
-    await _prefs?.setString('user_session', jsonEncode(json));
+    final encryptedJson = SecurityService.instance.encryptData(jsonEncode(json));
+    await _prefs?.setString('user_session', encryptedJson);
   }
 
   Future<UserSession?> getUserSession() async {
-    final jsonString = _prefs?.getString('user_session');
-    if (jsonString == null) return null;
-    final json = jsonDecode(jsonString) as Map<String, dynamic>;
+    final encryptedString = _prefs?.getString('user_session');
+    if (encryptedString == null) return null;
+    final json = jsonDecode(SecurityService.instance.decryptData(encryptedString)) as Map<String, dynamic>;
     return UserSession.fromJson(json);
   }
 
   Future<void> saveLevelProgress(LevelProgress progress) async {
     final key = 'level_progress_${progress.operationId}_${progress.level}';
     final json = progress.toJson();
-    await _prefs?.setString(key, jsonEncode(json));
+    final sanitizedJson = SecurityService.instance.sanitizeInput(jsonEncode(json), maxLength: 2000);
+    await _prefs?.setString(key, sanitizedJson);
   }
 
   Future<LevelProgress?> getLevelProgress(String operationId, int level) async {

@@ -14,8 +14,36 @@ import '../data/repositories/database_service.dart';
 import '../core/math_engine/crossword_engine.dart';
 import '../core/math_engine/math_riddle_engine.dart';
 import '../core/math_engine/math_visual_engine.dart';
+import '../core/math_engine/math_equation_engine.dart';
 import '../core/sound_manager.dart';
 import '../core/notification_service.dart';
+
+final dbProvider = FutureProvider<DatabaseService>((ref) async {
+  return await DatabaseService.instance;
+});
+
+final appStartupProvider = FutureProvider<void>((ref) async {
+  // Ensure DB is ready first
+  await ref.watch(dbProvider.future);
+  
+  // Parallel initialization of other services
+  await Future.wait([
+    ref.read(userSessionProvider.notifier).initializeUser(),
+    ref.read(levelProgressRepositoryProvider).initializeLevels(),
+    ref.read(themeProvider.notifier).loadTheme(),
+    ref.read(localeProvider.notifier).loadLocale(),
+    ref.read(settingsProvider.notifier).loadSettings(),
+    ref.read(levelProgressProvider.notifier).loadProgress(),
+    ref.read(soundManagerProvider).initialize(),
+    ref.read(hapticManagerProvider).initialize(),
+  ]);
+
+  final settings = ref.read(settingsProvider);
+  ref.read(soundManagerProvider).setMuted(!settings.soundEnabled);
+  ref.read(soundManagerProvider).setVolume(settings.soundVolume);
+  
+  NotificationService().initialize();
+});
 
 final notificationProvider = Provider((ref) => NotificationService());
 final userRepositoryProvider = Provider((ref) => UserRepository());
@@ -34,23 +62,13 @@ class ThemeNotifier extends StateNotifier<AppThemeType> {
   ThemeNotifier() : super(AppThemeType.midnight);
 
   Future<void> loadTheme() async {
-    final prefs = await SharedPreferences.getInstance();
-    final themeName = prefs.getString('app_theme');
-    if (themeName != null) {
-      state = AppThemeType.values.firstWhere(
-        (t) => t.name == themeName,
-        orElse: () => AppThemeType.midnight,
-      );
-    } else {
-      // First time users get midnight theme as default
-      state = AppThemeType.midnight;
-    }
+    // Force midnight (dark mode)
+    state = AppThemeType.midnight;
   }
 
   Future<void> setTheme(AppThemeType theme) async {
-    state = theme;
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('app_theme', theme.name);
+    // Only allow midnight
+    state = AppThemeType.midnight;
   }
 }
 
@@ -760,6 +778,7 @@ class PerformanceTrends {
        lastUpdated = lastUpdated ?? DateTime.now();
 
   double get averageAccuracy => accuracyHistory.isEmpty ? 0.0 : accuracyHistory.reduce((a, b) => a + b) / accuracyHistory.length;
+  double get peakAccuracy => accuracyHistory.isEmpty ? 0.0 : accuracyHistory.reduce((a, b) => a > b ? a : b);
   double get averageTime => timeHistory.isEmpty ? 0.0 : timeHistory.reduce((a, b) => a + b) / timeHistory.length;
   int get bestStreak => streakHistory.isEmpty ? 0 : streakHistory.reduce((a, b) => a > b ? a : b);
 
@@ -1235,13 +1254,13 @@ class CrosswordPuzzleNotifier extends StateNotifier<CrosswordPuzzleState> {
 
   void loadPuzzle({
     String theme = 'animals',
-    int gridSize = 11,
+    int gridSize = 20,
     int difficulty = 1,
   }) {
     final puzzle = CrosswordEngine.generatePuzzle(
       theme: theme,
       difficulty: difficulty,
-      questionCount: 5 + (difficulty ~/ 5),
+      questionCount: 45,
     );
 
     final grid = List.generate(
@@ -1339,9 +1358,34 @@ class CrosswordPuzzleNotifier extends StateNotifier<CrosswordPuzzleState> {
       final stars = state.puzzle!.calculateStars(
         state.elapsedSeconds,
         state.hintsUsed,
+        _countCorrectCells(),
       );
       state = state.copyWith(isComplete: true, stars: stars);
     }
+  }
+
+  int _countCorrectCells() {
+    if (state.puzzle == null) return 0;
+    int correctWords = 0;
+    for (final clue in state.puzzle!.clues) {
+      bool wordCorrect = true;
+      for (int i = 0; i < clue.length; i++) {
+        final r = clue.direction == 'across' ? clue.startRow - 1 : clue.startCol - 1 + i;
+        final c = clue.direction == 'across' ? clue.startCol - 1 + i : clue.startRow - 1;
+        
+        if (r >= 0 && r < state.grid.length && c >= 0 && c < state.grid[r].length) {
+          if (!state.grid[r][c].isCorrect) {
+            wordCorrect = false;
+            break;
+          }
+        } else {
+          wordCorrect = false;
+          break;
+        }
+      }
+      if (wordCorrect) correctWords++;
+    }
+    return correctWords;
   }
 
   void incrementTime() {
@@ -1352,7 +1396,7 @@ class CrosswordPuzzleNotifier extends StateNotifier<CrosswordPuzzleState> {
 
   void reset() {
     if (state.puzzle != null) {
-      loadPuzzle(theme: state.puzzle!.theme, gridSize: state.puzzle!.gridSize);
+      loadPuzzle(theme: state.puzzle!.theme, gridSize: state.grid.length, difficulty: state.puzzle!.difficulty);
     }
   }
 }
@@ -1367,7 +1411,7 @@ class MathRiddleNotifier extends StateNotifier<MathRiddleState> {
   MathRiddleNotifier(this.ref) : super(const MathRiddleState());
 
   void loadArithmeticProblem(int difficulty) {
-    final questionCount = difficulty <= 10 ? 20 : (difficulty <= 20 ? 22 : 25);
+    const questionCount = 45;
     final riddles = List.generate(questionCount, (i) => MathRiddleEngine.generateArithmeticProblem(difficulty));
     state = state.copyWith(
       currentRiddle: riddles.isNotEmpty ? riddles[0] : null,
@@ -1379,7 +1423,7 @@ class MathRiddleNotifier extends StateNotifier<MathRiddleState> {
   }
 
   void loadWordProblem(int difficulty) {
-    final questionCount = difficulty <= 10 ? 20 : (difficulty <= 20 ? 22 : 25);
+    const questionCount = 45;
     final riddles = List.generate(questionCount, (i) => MathRiddleEngine.generateWordProblem(difficulty));
     state = state.copyWith(
       currentRiddle: riddles.isNotEmpty ? riddles[0] : null,
@@ -1391,7 +1435,7 @@ class MathRiddleNotifier extends StateNotifier<MathRiddleState> {
   }
 
   void loadNumberSequence(int difficulty) {
-    final questionCount = difficulty <= 10 ? 20 : (difficulty <= 20 ? 22 : 25);
+    const questionCount = 45;
     final sequences = List.generate(questionCount, (i) => MathRiddleEngine.generateNumberSequence(difficulty));
     state = state.copyWith(
       currentSequence: sequences.isNotEmpty ? sequences[0] : null,
@@ -1403,8 +1447,8 @@ class MathRiddleNotifier extends StateNotifier<MathRiddleState> {
   }
 
   Future<void> loadLogicChallenge(int difficulty) async {
-    // Generate 20+ logic challenges per level
-    final questionCount = difficulty >= 3 ? 25 : difficulty >= 2 ? 22 : 20;
+    // Generate 45 logic challenges per level
+    const questionCount = 45;
     final challenges = <LogicMathChallenge>[];
 
     for (int i = 0; i < questionCount; i++) {
@@ -1493,7 +1537,7 @@ class MathRiddleNotifier extends StateNotifier<MathRiddleState> {
   }
 
   Future<void> _saveLevelCompletion(int level, int correct, int total) async {
-    final passed = correct >= 16; // Must pass 16/20 to advance
+    final passed = correct >= 35; // Must pass 35/45 to advance
     final repo = ref.read(levelProgressRepositoryProvider);
     
     // Use operationId from widget context for proper level unlocking
@@ -1505,12 +1549,13 @@ class MathRiddleNotifier extends StateNotifier<MathRiddleState> {
     }
     
     // Save level progress
-    await repo.updateStars(operation, level, correct, correct * 50);
+    final stars = state.stars;
+    await repo.updateStars(operation, level, stars, correct * 50);
     ref.read(levelProgressProvider.notifier).loadProgress();
     
     // Update daily challenge
-    if (passed) {
-      ref.read(dailyChallengeProvider.notifier).incrementProgress('stars', 3);
+    if (stars > 0) {
+      ref.read(dailyChallengeProvider.notifier).incrementProgress('stars', stars);
     }
   }
 
@@ -1767,21 +1812,9 @@ class MathEquationPuzzleNotifier extends StateNotifier<MathEquationPuzzleState> 
   }) async {
     state = state.copyWith(isLoading: true);
 
-    // Simulate loading (replace with actual engine call)
-    await Future.delayed(const Duration(milliseconds: 500));
-
-    // For now, create a simple puzzle
-    final puzzle = MathEquationPuzzle(
+    final puzzle = MathEquationEngine.generatePuzzle(
       theme: theme,
       difficulty: difficulty,
-      equations: [
-        MathEquation(
-          equation: '5 + 3 = 8',
-          correctAnswer: 5,
-          hints: ['First number', '5 + 3 = 8'],
-          missingIndex: 0,
-        ),
-      ],
     );
 
     state = state.copyWith(puzzle: puzzle, isLoading: false);
@@ -2695,11 +2728,17 @@ class CustomMixArithmeticNotifier extends StateNotifier<CustomMixArithmeticState
     state = state.copyWith(selectedDifficulty: difficulty);
   }
 
-  void startMix() {
+  void startMix({List<MathRiddle>? preloadedQuestions}) {
     if (state.selectedOperations.isEmpty) return;
+    
+    // If we have preloaded questions, use the first one
+    final firstQuestion = (preloadedQuestions != null && preloadedQuestions.isNotEmpty) 
+        ? preloadedQuestions.first 
+        : _generateMixedQuestion();
+
     state = state.copyWith(
       isActive: true,
-      currentQuestion: _generateMixedQuestion(),
+      currentQuestion: firstQuestion,
       questionsCompleted: 0,
       correctAnswers: 0,
       currentStreak: 0,
@@ -2807,10 +2846,10 @@ class CustomMixArithmeticNotifier extends StateNotifier<CustomMixArithmeticState
     state = state.copyWith(reactionMessage: null);
   }
 
-  void nextQuestion() {
+  void nextQuestion({MathRiddle? preloadedQuestion}) {
     if (!state.isActive) return;
     state = state.copyWith(
-      currentQuestion: _generateMixedQuestion(),
+      currentQuestion: preloadedQuestion ?? _generateMixedQuestion(),
       lastAnswerCorrect: null,
       canUndo: false,
       reactionMessage: null,

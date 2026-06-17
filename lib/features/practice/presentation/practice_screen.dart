@@ -9,6 +9,7 @@ import '../../../core/responsive_design.dart';
 import '../../../l10n/generated/app_localizations.dart';
 import '../../game/logic/game_session_provider.dart';
 import '../../game/ui/game_screen.dart';
+import '../../../core/utils/game_flow_optimizer.dart';
 
 class PracticeScreen extends ConsumerStatefulWidget {
   const PracticeScreen({super.key});
@@ -93,7 +94,7 @@ class _PracticeScreenState extends ConsumerState<PracticeScreen> {
       children: [
         _buildSectionHeader(l10n.selectOperation),
         const SizedBox(height: 16),
-        ..._operations.map((op) => _buildOperationTile(op, l10n)),
+        ..._operations.map((op) => RepaintBoundary(child: _buildOperationTile(op, l10n))),
         const SizedBox(height: 32),
         _buildSectionHeader(l10n.numberRange),
         const SizedBox(height: 24),
@@ -121,11 +122,11 @@ class _PracticeScreenState extends ConsumerState<PracticeScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          l10n.timeLimit,
+          l10n.timeLimit.toUpperCase(),
           style: theme.textTheme.labelSmall?.copyWith(
-            color: theme.colorScheme.primary.withValues(alpha: 0.7),
+            color: AppDesignTokens.textSecondary,
             letterSpacing: 2,
-            fontWeight: FontWeight.w600,
+            fontWeight: FontWeight.w700,
           ),
         ),
         const SizedBox(height: 12),
@@ -139,11 +140,11 @@ class _PracticeScreenState extends ConsumerState<PracticeScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          l10n.questionsCount,
+          l10n.questionsCount.toUpperCase(),
           style: theme.textTheme.labelSmall?.copyWith(
-            color: theme.colorScheme.primary.withValues(alpha: 0.7),
+            color: AppDesignTokens.textSecondary,
             letterSpacing: 2,
-            fontWeight: FontWeight.w600,
+            fontWeight: FontWeight.w700,
           ),
         ),
         const SizedBox(height: 12),
@@ -184,93 +185,64 @@ class _PracticeScreenState extends ConsumerState<PracticeScreen> {
       _ => 'Practice this operation',
     };
 
-    return GestureDetector(
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: PremiumCard(
         onTap: () {
           HapticManager.instance.selectionClick();
           setState(() => _selectedOperation = op['id']);
         },
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          width: double.infinity,
-          padding: EdgeInsets.all(isDesktop ? 20 : 16),
-          decoration: BoxDecoration(
-            color: isSelected
-                ? color.withValues(alpha: 0.15)
-                : theme.colorScheme.surface.withValues(alpha: 0.5),
-            border: Border.all(
-              color: isSelected
-                  ? color
-                  : theme.colorScheme.outline.withValues(alpha: 0.3),
-              width: isSelected ? 2 : 1,
-            ),
-            borderRadius: BorderRadius.circular(12),
-            boxShadow: isSelected ? [
-              BoxShadow(
-                color: color.withValues(alpha: 0.2),
-                blurRadius: 8,
-                spreadRadius: 1,
-                offset: const Offset(0, 2),
-              ),
-            ] : null,
-          ),
-          child: Row(
-            children: [
-              Container(
-                width: isDesktop ? 50 : 40,
-                height: isDesktop ? 50 : 40,
-                padding: EdgeInsets.all(isDesktop ? 12 : 8),
-                decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.2),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(
-                  op['icon'],
-                  color: color,
-                  size: ResponsiveDesign.getIconSize(context, 20),
-                ),
-              ),
-              SizedBox(width: isDesktop ? 16 : 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      title,
-                      style: TextStyle(
-                        color: theme.colorScheme.onSurface,
-                        fontSize: ResponsiveDesign.getFontSize(context, 14),
-                        fontWeight: FontWeight.w600,
-                      ),
-                      overflow: TextOverflow.ellipsis,
-                      maxLines: 1,
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      subtitle,
-                      style: TextStyle(
-                        color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
-                        fontSize: ResponsiveDesign.getFontSize(context, 11),
-                      ),
-                      overflow: TextOverflow.ellipsis,
-                      maxLines: 1,
-                    ),
-                  ],
-                ),
-              ),
-            AnimatedContainer(
-              duration: const Duration(milliseconds: 200),
-              padding: const EdgeInsets.all(8),
+        padding: EdgeInsets.all(isDesktop ? 20 : 16),
+        borderColor: isSelected ? color : null,
+        child: Row(
+          children: [
+            Container(
+              width: isDesktop ? 50 : 40,
+              height: isDesktop ? 50 : 40,
+              padding: EdgeInsets.all(isDesktop ? 12 : 8),
               decoration: BoxDecoration(
-                color: isSelected ? color.withValues(alpha: 0.2) : Colors.transparent,
+                color: color.withValues(alpha: 0.15),
                 shape: BoxShape.circle,
               ),
-              child: isSelected ? Icon(
+              child: Icon(
+                op['icon'],
+                color: color,
+                size: ResponsiveDesign.getIconSize(context, 20),
+              ),
+            ),
+            SizedBox(width: isDesktop ? 16 : 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    title,
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w700,
+                      color: isSelected ? color : null,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                    maxLines: 1,
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    subtitle,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: AppDesignTokens.textSecondary,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                    maxLines: 1,
+                  ),
+                ],
+              ),
+            ),
+            if (isSelected)
+              Icon(
                 Icons.check_circle,
                 color: color,
                 size: 20,
-              ) : null,
-            ),
+              ).animate().scale(duration: 200.ms, curve: Curves.easeOutBack),
           ],
         ),
       ),
@@ -360,45 +332,18 @@ class _PracticeScreenState extends ConsumerState<PracticeScreen> {
   }
 
   Widget _buildStartButton(AppLocalizations l10n) {
-    return GestureDetector(
-      onTap: () {
-        HapticManager.instance.heavyImpact();
-        _startPractice();
-      },
-      child: Container(
-        width: double.infinity,
-        height: 60,
-        decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.05),
-          border: Border.all(color: Colors.white10, width: 0.5),
-        ),
-        child: Center(
-          child: Text(
-            l10n.startPractice,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 14,
-              fontWeight: FontWeight.w200,
-              letterSpacing: 4,
-            ),
-          ),
-        ),
-      ),
+    return PremiumPrimaryButton(
+      text: l10n.startPractice.toUpperCase(),
+      onPressed: _startPractice,
+      icon: Icons.play_arrow_rounded,
     );
   }
 
   Widget _buildTimeLimitSelector(ThemeData theme) {
     final timeOptions = [30, 60, 120, 300, 0]; // 0 = unlimited
 
-    return Container(
+    return PremiumCard(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surface.withValues(alpha: 0.5),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: theme.colorScheme.outline.withValues(alpha: 0.3),
-        ),
-      ),
       child: Column(
         children: [
           Row(
@@ -406,32 +351,36 @@ class _PracticeScreenState extends ConsumerState<PracticeScreen> {
             children: timeOptions.map((time) {
               final isSelected = _timeLimit == time;
               return GestureDetector(
-                onTap: () => setState(() => _timeLimit = time),
-                child: Container(
+                onTap: () {
+                  HapticManager.instance.selectionClick();
+                  setState(() => _timeLimit = time);
+                },
+                child: AnimatedContainer(
+                  duration: 200.ms,
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                   decoration: BoxDecoration(
                     color: isSelected ? theme.colorScheme.primary.withValues(alpha: 0.2) : Colors.transparent,
                     borderRadius: BorderRadius.circular(8),
                     border: Border.all(
-                      color: isSelected ? theme.colorScheme.primary : theme.colorScheme.outline.withValues(alpha: 0.3),
+                      color: isSelected ? theme.colorScheme.primary : theme.colorScheme.outline.withValues(alpha: 0.1),
                     ),
                   ),
                   child: Text(
                     time == 0 ? '∞' : '${time}s',
                     style: TextStyle(
                       color: isSelected ? theme.colorScheme.primary : theme.colorScheme.onSurface,
-                      fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+                      fontWeight: isSelected ? FontWeight.w700 : FontWeight.w400,
                     ),
                   ),
                 ),
               );
             }).toList(),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 12),
           Text(
             _timeLimit == 0 ? 'No time limit' : '$_timeLimit seconds per question',
             style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+              color: AppDesignTokens.textSecondary,
             ),
           ),
         ],
@@ -442,15 +391,8 @@ class _PracticeScreenState extends ConsumerState<PracticeScreen> {
   Widget _buildQuestionCountSelector(ThemeData theme) {
     final countOptions = [20, 40, 60, 80, 100, 120];
 
-    return Container(
+    return PremiumCard(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surface.withValues(alpha: 0.5),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: theme.colorScheme.outline.withValues(alpha: 0.3),
-        ),
-      ),
       child: Column(
         children: [
           Row(
@@ -458,21 +400,25 @@ class _PracticeScreenState extends ConsumerState<PracticeScreen> {
             children: countOptions.map((count) {
               final isSelected = _questionCount == count;
               return GestureDetector(
-                onTap: () => setState(() => _questionCount = count),
-                child: Container(
+                onTap: () {
+                  HapticManager.instance.selectionClick();
+                  setState(() => _questionCount = count);
+                },
+                child: AnimatedContainer(
+                  duration: 200.ms,
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
                   decoration: BoxDecoration(
                     color: isSelected ? theme.colorScheme.primary.withValues(alpha: 0.2) : Colors.transparent,
                     borderRadius: BorderRadius.circular(6),
                     border: Border.all(
-                      color: isSelected ? theme.colorScheme.primary : theme.colorScheme.outline.withValues(alpha: 0.3),
+                      color: isSelected ? theme.colorScheme.primary : theme.colorScheme.outline.withValues(alpha: 0.1),
                     ),
                   ),
                   child: Text(
                     count.toString(),
                     style: TextStyle(
                       color: isSelected ? theme.colorScheme.primary : theme.colorScheme.onSurface,
-                      fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+                      fontWeight: isSelected ? FontWeight.w700 : FontWeight.w400,
                       fontSize: 14,
                     ),
                   ),
@@ -480,11 +426,11 @@ class _PracticeScreenState extends ConsumerState<PracticeScreen> {
               );
             }).toList(),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 12),
           Text(
             '$_questionCount questions per session',
             style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+              color: AppDesignTokens.textSecondary,
             ),
           ),
         ],
@@ -492,7 +438,7 @@ class _PracticeScreenState extends ConsumerState<PracticeScreen> {
     );
   }
 
-  void _startPractice() {
+  Future<void> _startPractice() async {
     int effectiveMin = _minNumber;
     int effectiveMax = _maxNumber;
 
@@ -512,22 +458,40 @@ class _PracticeScreenState extends ConsumerState<PracticeScreen> {
       }
     }
 
+    final effectiveLevel = ((effectiveMin + effectiveMax) / 2).toInt();
+
+    // Pre-calculate questions to eliminate micro-stutter
+    await GameFlowOptimizer.preloadQuestions(
+      operation: _selectedOperation,
+      level: effectiveLevel,
+      count: _questionCount,
+    );
+
+    final preloaded = GameFlowOptimizer.getPreloadedQuestions(
+      operation: _selectedOperation,
+      level: effectiveLevel,
+      count: _questionCount,
+    );
+
     ref
         .read(gameSessionProvider.notifier)
         .startGame(
           mode: GameMode.practice,
           operation: _selectedOperation,
-          level: ((effectiveMin + effectiveMax) / 2).toInt(),
+          level: effectiveLevel,
           totalQuestions: _questionCount,
           isVisualCounting: _visualCounting,
           minNumber: effectiveMin,
           maxNumber: effectiveMax,
           timeLimit: _useTimer ? (_timeLimit == 0 ? null : _timeLimit) : null,
+          preloadedQuestions: preloaded,
         );
 
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (_) => const GameScreen()),
-    );
+    if (mounted) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => const GameScreen()),
+      );
+    }
   }
 }

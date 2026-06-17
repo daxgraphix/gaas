@@ -27,18 +27,18 @@ class MathRiddle {
 
   int get hintCount => progressiveHints.length;
 
-  int calculateStars(int timeSeconds, int hintsUsed, bool isCorrect) {
-    if (!isCorrect) return 0;
-    double timeScore = (timeSeconds < 30)
-        ? 3
-        : (timeSeconds < 60)
-            ? 2
-            : 1;
-    double hintPenalty = hintsUsed * 0.3;
-    double score = timeScore - hintPenalty;
-    if (score >= 2.5) return 3;
-    if (score >= 1.5) return 2;
-    return 1;
+  int calculateStars(int timeSeconds, int hintsUsed, bool isCorrect, {int correctCount = 0}) {
+    if (!isCorrect || correctCount < 35) return 0;
+    
+    // For 45 questions:
+    // 3 stars: 43+ correct (95%)
+    // 2 stars: 39+ correct (86%)
+    // 1 star: 35+ correct (78%)
+    
+    if (correctCount >= 43) return 3;
+    if (correctCount >= 39) return 2;
+    if (correctCount >= 35) return 1;
+    return 0;
   }
 }
 
@@ -70,7 +70,7 @@ class MathRiddleState {
     this.level = 1,
     this.questionIndex = 0,
     this.correctAnswers = 0,
-    this.totalQuestions = 20,
+    this.totalQuestions = 45,
     this.hintsUsed = 0,
     this.allChallenges = const [],
   });
@@ -110,8 +110,14 @@ class MathRiddleState {
   }
 
   double get levelProgress => totalQuestions > 0 ? questionIndex / totalQuestions : 0;
-  bool get levelPassed => correctAnswers >= 16;
-  int get stars => levelPassed ? 3 : 0;
+  bool get levelPassed => correctAnswers >= 35;
+  int get stars {
+    if (correctAnswers < 35) return 0;
+    if (correctAnswers >= 43) return 3;
+    if (correctAnswers >= 39) return 2;
+    if (correctAnswers >= 35) return 1;
+    return 0;
+  }
 }
 
 class NumberSequence {

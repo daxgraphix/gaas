@@ -8,7 +8,7 @@ class MathEquationEngine {
     required String theme,
     required int difficulty,
   }) {
-    final equationCount = difficulty <= 2 ? 40 : difficulty <= 4 ? 50 : 60;
+    const equationCount = 45;
     final equations = _generateEquations(difficulty, equationCount);
     return MathEquationPuzzle(
       theme: theme,

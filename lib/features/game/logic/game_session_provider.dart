@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:math';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/utils/game_flow_optimizer.dart';
 import '../../../core/math_engine/math_engine.dart';
 import '../../../core/providers.dart';
 import '../../../core/sound_manager.dart';
@@ -38,7 +39,7 @@ class GameSession {
   final int? aiScore;
   final int? aiCorrectAnswers;
   final bool? playerWon;
-  final Map<int, int?> userAnswers;
+  final Map<int, dynamic> userAnswers;
   final Map<int, bool> hintsUsed;
   final int comboMultiplier;
   final DateTime? lastAnswerTime;
@@ -59,7 +60,7 @@ class GameSession {
     this.correctAnswers = 0,
     this.lives = 3,
     this.timeRemaining = 60,
-    this.totalQuestions = 30,
+    this.totalQuestions = 45,
     this.isVisualCounting = false,
     this.aiScore,
     this.aiCorrectAnswers,
@@ -98,7 +99,7 @@ class GameSession {
     int? aiScore,
     int? aiCorrectAnswers,
     bool? playerWon,
-    Map<int, int?>? userAnswers,
+    Map<int, dynamic>? userAnswers,
     Map<int, bool>? hintsUsed,
     int? comboMultiplier,
     DateTime? lastAnswerTime,
@@ -162,7 +163,7 @@ final gameSessionProvider =
     });
 
 class GameSessionNotifier extends StateNotifier<GameSession?> {
-  static const int campaignPassThreshold = 25;
+  static const int campaignPassThreshold = 15;
   final Ref ref;
   Timer? _timer;
   Timer? _duelTimer;
@@ -178,8 +179,9 @@ class GameSessionNotifier extends StateNotifier<GameSession?> {
     int minNumber = 1,
     int maxNumber = 10,
     bool isVisualCounting = false,
-    int totalQuestions = 30,
+    int totalQuestions = 20,
     int? timeLimit,
+    List<MathQuestion>? preloadedQuestions,
   }) {
     _timer?.cancel();
     _duelTimer?.cancel();
@@ -208,43 +210,46 @@ class GameSessionNotifier extends StateNotifier<GameSession?> {
       lives = 999; // effectively infinite
     }
 
-    final questions = <MathQuestion>[];
-    final generatedQuestions = <String>{};
-    final isArcade =
-        mode == GameMode.scoreAttack ||
-        mode == GameMode.endless ||
-        mode == GameMode.duel ||
-        mode == GameMode.flash ||
-        mode == GameMode.speedDemon ||
-        mode == GameMode.mathMaster ||
-        mode == GameMode.marathon;
+    final questions = preloadedQuestions ?? <MathQuestion>[];
+    
+    if (questions.isEmpty) {
+      final generatedQuestions = <String>{};
+      final isArcade =
+          mode == GameMode.scoreAttack ||
+          mode == GameMode.endless ||
+          mode == GameMode.duel ||
+          mode == GameMode.flash ||
+          mode == GameMode.speedDemon ||
+          mode == GameMode.mathMaster ||
+          mode == GameMode.marathon;
 
-    for (int i = 0; i < totalQuestions; i++) {
-      MathQuestion q;
-      if (mode == GameMode.mathMaster) {
-        // Randomly pick an operation for each question
-        final ops = ['addition', 'subtraction', 'multiplication', 'division'];
-        final randomOp = ops[_random.nextInt(ops.length)];
-        q = MathEngine.generateQuestion(
-          randomOp,
-          level,
-          isArcade: isArcade,
-          excludeQuestions: generatedQuestions,
-        );
-      } else {
-        q = MathEngine.generateQuestion(
-          operation,
-          level,
-          isArcade: isArcade,
-          excludeQuestions: generatedQuestions,
-        );
+      for (int i = 0; i < totalQuestions; i++) {
+        MathQuestion q;
+        if (mode == GameMode.mathMaster) {
+          // Randomly pick an operation for each question
+          final ops = ['addition', 'subtraction', 'multiplication', 'division'];
+          final randomOp = ops[_random.nextInt(ops.length)];
+          q = MathEngine.generateQuestion(
+            randomOp,
+            level,
+            isArcade: isArcade,
+            excludeQuestions: generatedQuestions,
+          );
+        } else {
+          q = MathEngine.generateQuestion(
+            operation,
+            level,
+            isArcade: isArcade,
+            excludeQuestions: generatedQuestions,
+          );
+        }
+        generatedQuestions.add(q.displayString);
+        questions.add(q);
       }
-      generatedQuestions.add(q.displayString);
-      questions.add(q);
+      
+      // Shuffle questions for random order
+      questions.shuffle();
     }
-
-    // Shuffle questions for random order
-    questions.shuffle();
 
     int? aiScore;
     int? aiCorrectAnswers;
@@ -329,7 +334,7 @@ class GameSessionNotifier extends StateNotifier<GameSession?> {
     return (baseAccuracy + levelBonus).clamp(0.5, 0.95);
   }
 
-  void answerQuestion(int answer) {
+  void answerQuestion(dynamic answer) {
     if (state == null || state!.currentQuestion == null) return;
 
     // If question already answered, do not count again (for next/prev feature)
@@ -338,7 +343,7 @@ class GameSessionNotifier extends StateNotifier<GameSession?> {
       return;
     }
 
-    final isCorrect = answer == state!.currentQuestion!.correctAnswer;
+    final isCorrect = answer.toString() == state!.currentQuestion!.correctAnswer.toString();
     int newScore = state!.score;
     int newCorrect = state!.correctAnswers;
     int newLives = state!.lives;
@@ -402,7 +407,7 @@ class GameSessionNotifier extends StateNotifier<GameSession?> {
       ref.read(dailyChallengeProvider.notifier).updateProgressMax('streak', 0);
     }
 
-    final newUserAnswers = Map<int, int?>.from(state!.userAnswers);
+    final newUserAnswers = Map<int, dynamic>.from(state!.userAnswers);
     newUserAnswers[state!.currentQuestionIndex] = answer;
 
     final newPendingStats = List<Map<String, dynamic>>.from(state!.pendingStats);
@@ -443,7 +448,7 @@ class GameSessionNotifier extends StateNotifier<GameSession?> {
     if (state == null || state!.currentQuestion == null) return;
 
     if (!state!.userAnswers.containsKey(state!.currentQuestionIndex)) {
-      final newUserAnswers = Map<int, int?>.from(state!.userAnswers);
+      final newUserAnswers = Map<int, dynamic>.from(state!.userAnswers);
       newUserAnswers[state!.currentQuestionIndex] = null; // null means skipped
       state = state!.copyWith(userAnswers: newUserAnswers);
       ref.read(dailyChallengeProvider.notifier).updateProgressMax('streak', 0);
@@ -653,12 +658,16 @@ class GameSessionNotifier extends StateNotifier<GameSession?> {
     return shapes;
   }
 
-  static const int questionsPerLevel = 15;
+  static const int questionsPerLevel = 45;
   static const int correctToPass = 35;
 
   void _endGame() {
     _timer?.cancel();
     _duelTimer?.cancel();
+    
+    // Clear preload cache when game ends
+    GameFlowOptimizer.clearPreloadCache();
+
     if (state == null) return;
 
     // Batch update stats
@@ -675,7 +684,7 @@ class GameSessionNotifier extends StateNotifier<GameSession?> {
     }
 
     final isCampaign = state!.mode == GameMode.campaign;
-    final passed = state!.correctAnswers >= correctToPass;
+    final passed = state!.correctAnswers >= campaignPassThreshold;
 
     if (isCampaign) {
       final stars = _calculateStarsForCampaign(
@@ -755,11 +764,11 @@ class GameSessionNotifier extends StateNotifier<GameSession?> {
   }
 
   int _calculateStarsForCampaign(int correct, int total) {
-    if (total == 0) return 0;
-    final percentage = (correct / total) * 100;
-    if (percentage >= 90) return 3;
-    if (percentage >= 70) return 2;
-    if (percentage >= 60) return 1;
+    if (correct < 15) return 0;
+    
+    if (correct >= 18) return 3;
+    if (correct >= 16) return 2;
+    if (correct >= 15) return 1;
     return 0;
   }
 

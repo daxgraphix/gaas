@@ -63,7 +63,17 @@ class _MathEquationScreenState extends ConsumerState<MathEquationScreen> with Ti
 
   void _startTimer() {
     _timerController.forward().whenComplete(() {
-      _endGame();
+      int correctCount = 0;
+      for (int i = 0; i < _puzzle.equations.length; i++) {
+        final userAnswerStr = _userAnswers[i];
+        if (userAnswerStr != null && userAnswerStr.isNotEmpty) {
+          final userAnswer = int.tryParse(userAnswerStr);
+          if (userAnswer != null && _puzzle.equations[i].isCorrectWithAnswer(userAnswer)) {
+            correctCount++;
+          }
+        }
+      }
+      _endGame(correctCount);
     });
 
     _timerController.addListener(() {
@@ -104,37 +114,39 @@ class _MathEquationScreenState extends ConsumerState<MathEquationScreen> with Ti
   void _checkCompletion() {
     final answeredCount = _userAnswers.values.where((answer) => answer.isNotEmpty).length;
     if (answeredCount == _puzzle.equations.length) {
-      bool allCorrect = true;
+      int correctCount = 0;
       for (int i = 0; i < _puzzle.equations.length; i++) {
         final userAnswerStr = _userAnswers[i];
-        if (userAnswerStr == null || userAnswerStr.isEmpty) {
-          allCorrect = false;
-          break;
-        }
+        if (userAnswerStr == null || userAnswerStr.isEmpty) continue;
+        
         final userAnswer = int.tryParse(userAnswerStr);
-        if (userAnswer == null || !_puzzle.equations[i].isCorrectWithAnswer(userAnswer)) {
-          allCorrect = false;
-          break;
+        if (userAnswer != null && _puzzle.equations[i].isCorrectWithAnswer(userAnswer)) {
+          correctCount++;
         }
       }
 
-      if (allCorrect) {
-        _endGame();
+      if (correctCount >= 35) {
+        _endGame(correctCount);
       } else {
         _shakeController.forward(from: 0);
         HapticManager.instance.errorPattern();
+        // Even if not all are correct, if they finished 45 we end? 
+        // No, standard is 35/45 to pass.
+        if (answeredCount == 45) {
+           _endGame(correctCount);
+        }
       }
     }
   }
 
-  void _endGame() {
-    final stars = _puzzle.calculateStars(_elapsedSeconds, _hintsUsed);
+  void _endGame(int correctCount) {
+    final stars = _puzzle.calculateStars(_elapsedSeconds, _hintsUsed, correctCount);
 
     Navigator.of(context).pop({
       'stars': stars,
       'time': _elapsedSeconds,
       'hints': _hintsUsed,
-      'completed': _puzzle.isComplete,
+      'completed': correctCount >= 35,
     });
   }
 

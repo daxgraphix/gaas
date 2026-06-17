@@ -1,3 +1,5 @@
+import '../../core/security/security_service.dart';
+
 class LevelProgress {
   String? id;
   String? operationId;
@@ -19,10 +21,10 @@ class LevelProgress {
     return {
       'id': id,
       'operationId': operationId,
-      'level': level,
-      'stars': stars,
+      'level': SecurityService.instance.validateAndSanitizeScore(level, 30),
+      'stars': SecurityService.instance.validateAndSanitizeScore(stars, 3),
       'isUnlocked': isUnlocked,
-      'highScore': highScore,
+      'highScore': SecurityService.instance.validateAndSanitizeScore(highScore, 20),
     };
   }
 
@@ -30,10 +32,10 @@ class LevelProgress {
     return LevelProgress(
       id: json['id'],
       operationId: json['operationId'],
-      level: json['level'] ?? 0,
-      stars: json['stars'] ?? 0,
+      level: SecurityService.instance.validateAndSanitizeScore(json['level'] ?? 0, 30),
+      stars: SecurityService.instance.validateAndSanitizeScore(json['stars'] ?? 0, 3),
       isUnlocked: json['isUnlocked'] ?? false,
-      highScore: json['highScore'] ?? 0,
+      highScore: SecurityService.instance.validateAndSanitizeScore(json['highScore'] ?? 0, 20),
     );
   }
 }

@@ -1,15 +1,19 @@
 import 'dart:math';
 import '../constants/app_constants.dart';
 import 'advanced_topics_engine.dart';
+import 'math_riddle_engine.dart';
+import '../../data/models/math_riddle.dart';
 
 class MathQuestion {
   final int operand1;
   final int operand2;
   final int? operand3;
   final String operation;
-  final int correctAnswer;
+  final dynamic correctAnswer;
   final String difficulty;
   final String? hint;
+  final String? customQuestion;
+  final List<String>? options;
 
   MathQuestion({
     required this.operand1,
@@ -19,9 +23,12 @@ class MathQuestion {
     required this.correctAnswer,
     this.difficulty = 'medium',
     this.hint,
+    this.customQuestion,
+    this.options,
   });
 
   String get displayString {
+    if (customQuestion != null) return customQuestion!;
     final symbol = AppConstants.operationSymbols[operation] ?? '+';
     if (operand3 != null) {
       return '$operand1 $symbol $operand2 $symbol $operand3 = ?';
@@ -85,7 +92,7 @@ class MathEngine {
     Set<String>? excludeQuestions,
   }) {
     // Handle advanced topics
-    if (['fractions', 'decimals', 'geometry', 'word_problems'].contains(operation)) {
+    if (['fractions', 'decimals', 'geometry', 'word_problems', 'sequences', 'logic'].contains(operation)) {
       return _generateAdvancedQuestion(operation, level);
     }
 
@@ -435,23 +442,128 @@ class MathEngine {
   }
 
   static MathQuestion _generateAdvancedQuestion(String operation, int level) {
-    // Generate advanced topic questions using the AdvancedTopicsEngine
-    final riddle = switch (operation) {
+    final dynamic riddle = switch (operation) {
       'fractions' => AdvancedTopicsEngine.generateFractionsProblem(level),
       'decimals' => AdvancedTopicsEngine.generateDecimalsProblem(level),
       'geometry' => AdvancedTopicsEngine.generateGeometryProblem(level),
       'word_problems' => AdvancedTopicsEngine.generateWordProblem(level),
+      'sequences' => MathRiddleEngine.generateNumberSequence(level),
+      'logic' => _generateMixedLogicChallenge(level),
       _ => AdvancedTopicsEngine.generateFractionsProblem(level),
     };
 
-    // Convert MathRiddle to MathQuestion format
+    final List<String> hints = (riddle is MathRiddle) 
+        ? riddle.progressiveHints 
+        : (riddle is NumberSequence) 
+            ? riddle.progressiveHints 
+            : (riddle is LogicMathChallenge)
+                ? riddle.progressiveHints
+                : [];
+
+    final String questionText = (riddle is MathRiddle) 
+        ? riddle.question 
+        : (riddle is NumberSequence) 
+            ? riddle.displaySequence 
+            : (riddle is LogicMathChallenge)
+                ? riddle.problem
+                : '';
+
     return MathQuestion(
-      operand1: 0, // Not used for advanced topics
-      operand2: 0, // Not used for advanced topics
+      operand1: 0,
+      operand2: 0,
       operation: operation,
-      correctAnswer: int.tryParse(riddle.correctAnswer) ?? 0,
+      correctAnswer: riddle.correctAnswer,
       difficulty: level <= 3 ? 'easy' : level <= 6 ? 'medium' : 'hard',
-      hint: riddle.progressiveHints.isNotEmpty ? riddle.progressiveHints.first : null,
+      hint: hints.isNotEmpty ? hints.first : null,
+      customQuestion: questionText,
+      options: riddle.options,
+    );
+  }
+
+  static LogicMathChallenge _generateMixedLogicChallenge(int level) {
+    if (level <= 3) {
+      return _generateBasicLogic(level);
+    } else if (level <= 6) {
+      return _generateIntermediateLogic(level);
+    } else {
+      return _generateAdvancedLogic(level);
+    }
+  }
+
+  static LogicMathChallenge _generateBasicLogic(int level) {
+    final random = Random();
+    final symbols = ['square', 'triangle', 'star', 'box', 'circle', 'diamond'];
+    final a = symbols[random.nextInt(symbols.length)];
+    final b = symbols[(random.nextInt(symbols.length))];
+    final answer = random.nextInt(10) + 1;
+    final operand = random.nextBool() ? '+' : '-';
+    
+    return LogicMathChallenge(
+      id: 'logic_basic_${level}_${DateTime.now().millisecondsSinceEpoch}',
+      problem: '$a $operand $b = $answer\n$a = 5\n$b = 3\nWhat is the result?',
+      options: ['$answer', '${answer + 1}', '${answer - 1}', '${answer + 2}'],
+      correctAnswer: '$answer',
+      explanation: '$a = 5, $b = 3, so $a $operand $b = 5 $operand 3 = $answer.',
+      progressiveHints: [
+        'Substitute the values',
+        '5 $operand 3 = $answer',
+      ],
+      difficulty: level,
+      basePoints: 50 + level * 10,
+    );
+  }
+
+  static LogicMathChallenge _generateIntermediateLogic(int level) {
+    final random = Random();
+    final symbols = ['square', 'triangle', 'star', 'box'];
+    final a = symbols[random.nextInt(symbols.length)];
+    final b = symbols[(random.nextInt(symbols.length))];
+    final c = symbols[(random.nextInt(symbols.length))];
+    
+    final val1 = random.nextInt(5) + 2;
+    final val2 = random.nextInt(5) + 2;
+    final answer = val1 * val2;
+    
+    return LogicMathChallenge(
+      id: 'logic_inter_${level}_${DateTime.now().millisecondsSinceEpoch}',
+      problem: '$a × $b = $answer\n$a = $val1\n$b = $val2\nWhat is $c if $c = $a + $b?',
+      options: ['${val1 + val2}', '${val1 + val2 + 1}', '${val1 + val2 - 1}', '${val1 * val2}'],
+      correctAnswer: '${val1 + val2}',
+      explanation: '$a = $val1, $b = $val2, so $c = $val1 + $val2 = ${val1 + val2}.',
+      progressiveHints: [
+        'Find $a and $b',
+        '$a = $val1, $b = $val2',
+        '$c = $a + $b = $val1 + $val2',
+      ],
+      difficulty: level,
+      basePoints: 70 + level * 15,
+    );
+  }
+
+  static LogicMathChallenge _generateAdvancedLogic(int level) {
+    final random = Random();
+    final symbols = ['square', 'triangle', 'star', 'box'];
+    final a = symbols[random.nextInt(symbols.length)];
+    final b = symbols[(random.nextInt(symbols.length))];
+    final c = symbols[(random.nextInt(symbols.length))];
+    
+    final val1 = random.nextInt(5) + 3;
+    final val2 = random.nextInt(4) + 2;
+    final val3 = random.nextInt(4) + 2;
+    final answer = val1 * val2 + val3;
+    
+    return LogicMathChallenge(
+      id: 'logic_adv_${level}_${DateTime.now().millisecondsSinceEpoch}',
+      problem: '$a × $b + $c = $answer\n$a = $val1\n$b = $val2\n$c = $val3\nWhat is $a + $b + $c?',
+      options: ['${val1 + val2 + val3}', '${val1 + val2 + val3 + 1}', '${val1 + val2 + val3 - 1}', '${val1 * val2 * val3}'],
+      correctAnswer: '${val1 + val2 + val3}',
+      explanation: '$a = $val1, $b = $val2, $c = $val3, so $a + $b + $c = $val1 + $val2 + $val3 = ${val1 + val2 + val3}.',
+      progressiveHints: [
+        'Add the three values',
+        '$val1 + $val2 + $val3 = ${val1 + val2 + val3}',
+      ],
+      difficulty: level,
+      basePoints: 100 + level * 20,
     );
   }
 }

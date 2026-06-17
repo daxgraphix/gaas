@@ -85,6 +85,17 @@ final theme = Theme.of(context);
       );
     }
 
+    if (puzzleState.isComplete) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        Navigator.of(context).pop({
+          'stars': puzzleState.stars,
+          'time': puzzleState.elapsedSeconds,
+          'hints': puzzleState.hintsUsed,
+          'completed': puzzleState.stars > 0,
+        });
+      });
+    }
+
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(

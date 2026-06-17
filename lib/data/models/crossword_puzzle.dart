@@ -26,13 +26,12 @@ class MathEquationPuzzle {
     return true;
   }
 
-  int calculateStars(int timeSeconds, int hintsUsed) {
-    if (!isCorrect) return 0;
-
-    int timeScore = timeSeconds < 60 ? 3 : (timeSeconds < 120 ? 2 : 1);
-    double hintPenalty = hintsUsed * 0.3;
-    double rawScore = timeScore - hintPenalty;
-    return rawScore.clamp(1, 3).toInt();
+  int calculateStars(int timeSeconds, int hintsUsed, int correctCount) {
+    if (correctCount < 35) return 0;
+    if (correctCount >= 43) return 3;
+    if (correctCount >= 39) return 2;
+    if (correctCount >= 35) return 1;
+    return 0;
   }
 }
 
@@ -87,12 +86,12 @@ class CrosswordPuzzle {
     required this.difficulty,
   });
 
-  int calculateStars(int timeSeconds, int hintsUsed) {
-    int timeScore = timeSeconds < 30 ? 3 : (timeSeconds < 60 ? 2 : 1);
-    double hintPenalty = hintsUsed * 0.3;
-    double accuracyBonus = 0.0; // Could be added later
-    double rawScore = timeScore - hintPenalty + accuracyBonus;
-    return rawScore.clamp(1, 3).toInt();
+  int calculateStars(int timeSeconds, int hintsUsed, int correctCount) {
+    if (correctCount < 35) return 0;
+    if (correctCount >= 43) return 3;
+    if (correctCount >= 39) return 2;
+    if (correctCount >= 35) return 1;
+    return 0;
   }
 }
 

@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import '../../../core/providers.dart';
 import '../../../core/sound_manager.dart';
+import '../../../core/themes/app_themes.dart';
 import '../../../data/models/math_riddle.dart';
 import '../../../l10n/generated/app_localizations.dart';
 
@@ -12,8 +14,30 @@ class CustomMixScreen extends ConsumerStatefulWidget {
   ConsumerState<CustomMixScreen> createState() => _CustomMixScreenState();
 }
 
-class _CustomMixScreenState extends ConsumerState<CustomMixScreen> {
+class _CustomMixScreenState extends ConsumerState<CustomMixScreen>
+    with TickerProviderStateMixin {
+  late AnimationController _reactionController;
+  late Animation<double> _scaleAnimation;
+
   AppLocalizations get l10n => AppLocalizations.of(context)!;
+
+  @override
+  void initState() {
+    super.initState();
+    _reactionController = AnimationController(
+      duration: const Duration(milliseconds: 500),
+      vsync: this,
+    );
+    _scaleAnimation = Tween<double>(begin: 1.0, end: 1.1).animate(
+      CurvedAnimation(parent: _reactionController, curve: Curves.easeOut),
+    );
+  }
+
+  @override
+  void dispose() {
+    _reactionController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -85,52 +109,46 @@ class _CustomMixScreenState extends ConsumerState<CustomMixScreen> {
 
   Widget _buildHeaderPanel() {
     final theme = Theme.of(context);
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: theme.brightness == Brightness.light
-            ? theme.colorScheme.surface.withValues(alpha: 0.8)
-            : Colors.white.withValues(alpha: 0.03),
-        borderRadius: BorderRadius.circular(2),
-        border: Border.all(
-          color: theme.brightness == Brightness.light
-              ? theme.colorScheme.outline.withValues(alpha: 0.3)
-              : Colors.white10,
-        ),
-      ),
-      child: Column(
-        children: [
-              Text(
-                l10n.operationMatrix,
-                style: TextStyle(
-                  color: theme.colorScheme.primary,
-                  fontSize: 10,
-                  letterSpacing: 0.5,
-                  fontFamily: 'monospace',
-            ),
-          ),
-          const SizedBox(height: 16),
-          Text(
-            l10n.custom.toUpperCase(),
-            style: TextStyle(
-              fontSize: 48,
-              fontWeight: FontWeight.w200,
-              color: Colors.white,
-              fontFamily: 'monospace',
-              letterSpacing: 8,
-            ),
-          ),
-          Container(
-            height: 2,
-            width: 100,
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [Colors.transparent, theme.colorScheme.primary, Colors.transparent],
+    return RepaintBoundary(
+      child: GlassmorphicContainer(
+        width: double.infinity,
+        padding: const EdgeInsets.all(24),
+        borderRadius: 12,
+        child: Column(
+          children: [
+            Text(
+              l10n.operationMatrix.toUpperCase(),
+              style: TextStyle(
+                color: theme.colorScheme.primary,
+                fontSize: 10,
+                letterSpacing: 2,
+                fontFamily: 'monospace',
+                fontWeight: FontWeight.w700,
               ),
             ),
-          ),
-        ],
+            const SizedBox(height: 16),
+            Text(
+              l10n.custom.toUpperCase(),
+              style: TextStyle(
+                fontSize: 48,
+                fontWeight: FontWeight.w200,
+                color: AppDesignTokens.textPrimary,
+                fontFamily: 'monospace',
+                letterSpacing: 8,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Container(
+              height: 2,
+              width: 100,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [Colors.transparent, theme.colorScheme.primary, Colors.transparent],
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -159,18 +177,13 @@ class _CustomMixScreenState extends ConsumerState<CustomMixScreen> {
     );
   }
 
-Widget _buildSetupMode(CustomMixArithmeticState state) {
+  Widget _buildSetupMode(CustomMixArithmeticState state) {
     final theme = Theme.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Container(
+        PremiumCard(
           padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.05),
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
-          ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -191,35 +204,47 @@ Widget _buildSetupMode(CustomMixArithmeticState state) {
                 alignment: WrapAlignment.center,
                 children: ArithmeticOperation.values.map((op) {
                   final isSelected = state.selectedOperations.contains(op);
-                  return InkWell(
-                    onTap: () {
-                      HapticManager.instance.selectionClick();
-                      ref.read(customMixArithmeticProvider.notifier).toggleOperation(op);
-                    },
-                    borderRadius: BorderRadius.circular(20),
-                    child: Container(
-                      width: 60,
-                      height: 60,
-                      decoration: BoxDecoration(
-                        color: isSelected
-                            ? theme.colorScheme.primary.withValues(alpha: 0.2)
-                            : Colors.transparent,
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(
+                  return Hero(
+                    tag: 'op_${op.name}',
+                    child: InkWell(
+                      onTap: () {
+                        HapticManager.instance.selectionClick();
+                        ref.read(customMixArithmeticProvider.notifier).toggleOperation(op);
+                      },
+                      borderRadius: BorderRadius.circular(16),
+                      child: AnimatedContainer(
+                        duration: 200.ms,
+                        width: 60,
+                        height: 60,
+                        decoration: BoxDecoration(
                           color: isSelected
-                              ? theme.colorScheme.primary
-                              : Colors.white.withValues(alpha: 0.3),
-                          width: 2,
+                              ? theme.colorScheme.primary.withValues(alpha: 0.2)
+                              : Colors.transparent,
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color: isSelected
+                                ? theme.colorScheme.primary
+                                : AppDesignTokens.textMuted.withValues(alpha: 0.3),
+                            width: 2,
+                          ),
+                          boxShadow: isSelected
+                              ? [
+                                  BoxShadow(
+                                    color: theme.colorScheme.primary.withValues(alpha: 0.3),
+                                    blurRadius: 12,
+                                  ),
+                                ]
+                              : null,
                         ),
-                      ),
-                      child: Center(
-                        child: Text(
-                          _getOperationSymbol(op),
-                          style: TextStyle(
-                            color: isSelected ? Colors.white : Colors.white70,
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold,
-                            fontFamily: 'monospace',
+                        child: Center(
+                          child: Text(
+                            _getOperationSymbol(op),
+                            style: TextStyle(
+                              color: isSelected ? AppDesignTokens.textPrimary : AppDesignTokens.textSecondary,
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
+                              fontFamily: 'monospace',
+                            ),
                           ),
                         ),
                       ),
@@ -231,31 +256,39 @@ Widget _buildSetupMode(CustomMixArithmeticState state) {
           ),
         ),
         const SizedBox(height: 24),
-        Container(
+        PremiumCard(
           padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.05),
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
-          ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                'DIFFICULTY: ${state.selectedDifficulty}',
-                style: TextStyle(
-                  color: theme.colorScheme.primary,
-                  fontSize: 10,
-                  letterSpacing: 2,
-                  fontFamily: 'monospace',
-                  fontWeight: FontWeight.bold,
-                ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'DIFFICULTY',
+                    style: TextStyle(
+                      color: theme.colorScheme.primary,
+                      fontSize: 10,
+                      letterSpacing: 2,
+                      fontFamily: 'monospace',
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  Text(
+                    'Level ${state.selectedDifficulty}',
+                    style: TextStyle(
+                      color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+                      fontSize: 10,
+                      fontFamily: 'monospace',
+                    ),
+                  ),
+                ],
               ),
               const SizedBox(height: 12),
               SliderTheme(
                 data: SliderTheme.of(context).copyWith(
                   activeTrackColor: theme.colorScheme.primary,
-                  inactiveTrackColor: Colors.white.withValues(alpha: 0.2),
+                  inactiveTrackColor: AppDesignTokens.surfaceLighter,
                   thumbColor: theme.colorScheme.primary,
                   overlayColor: theme.colorScheme.primary.withValues(alpha: 0.2),
                   valueIndicatorColor: theme.colorScheme.primary,
@@ -274,50 +307,23 @@ Widget _buildSetupMode(CustomMixArithmeticState state) {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text('Easy', style: TextStyle(color: Colors.white38, fontSize: 10, fontFamily: 'monospace')),
-                  Text('Hard', style: TextStyle(color: Colors.white38, fontSize: 10, fontFamily: 'monospace')),
+                  Text('EASY', style: TextStyle(color: AppDesignTokens.textMuted, fontSize: 10, fontFamily: 'monospace', fontWeight: FontWeight.bold)),
+                  Text('HARD', style: TextStyle(color: AppDesignTokens.textMuted, fontSize: 10, fontFamily: 'monospace', fontWeight: FontWeight.bold)),
                 ],
               ),
             ],
           ),
         ),
         const SizedBox(height: 32),
-        Container(
-          width: double.infinity,
-          height: 60,
-          decoration: BoxDecoration(
-            gradient: state.selectedOperations.isNotEmpty
-                ? LinearGradient(
-                    colors: [theme.colorScheme.primary, theme.colorScheme.secondary],
-                  )
-                : null,
-            color: state.selectedOperations.isNotEmpty ? null : Colors.grey,
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: ElevatedButton(
-            onPressed: state.selectedOperations.isNotEmpty
-                ? () {
-                    HapticManager.instance.mediumImpact();
-                    ref.read(customMixArithmeticProvider.notifier).startMix();
-                  }
-                : null,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.transparent,
-              shadowColor: Colors.transparent,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-            ),
-            child: Text(
-              'START MIX',
-              style: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                letterSpacing: 1,
-                fontFamily: 'monospace',
-              ),
-            ),
-          ),
+        PremiumPrimaryButton(
+          text: 'START MIX',
+          onPressed: state.selectedOperations.isNotEmpty
+              ? () {
+                  HapticManager.instance.mediumImpact();
+                  ref.read(customMixArithmeticProvider.notifier).startMix();
+                }
+              : () {},
+          icon: Icons.play_arrow_rounded,
         ),
       ],
     );
@@ -325,13 +331,12 @@ Widget _buildSetupMode(CustomMixArithmeticState state) {
 
   Widget _buildGameMode(CustomMixArithmeticState state) {
     final theme = Theme.of(context);
-    final accuracy = state.questionsCompleted > 0
-        ? (state.correctAnswers / state.questionsCompleted * 100).toStringAsFixed(1)
-        : '0.0';
+    final progress = state.questionsCompleted > 0
+        ? (state.correctAnswers / state.questionsCompleted).clamp(0.0, 1.0)
+        : 0.0;
 
     return Column(
       children: [
-        // Stats panel
         Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
@@ -347,62 +352,63 @@ Widget _buildSetupMode(CustomMixArithmeticState state) {
           ),
           child: Column(
             children: [
-              Text(
-                'SESSION METRICS',
-                style: TextStyle(
-                  color: theme.colorScheme.primary,
-                  fontSize: 10,
-                  letterSpacing: 2,
-                  fontFamily: 'monospace',
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 16),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
                   _buildStatItem(l10n.score, '${state.correctAnswers}/${state.questionsCompleted}'),
-                  _buildStatItem(l10n.accuracy, '$accuracy%'),
-                  _buildStatItem(l10n.streak, '${state.currentStreak} (${state.bestStreak})'),
+                  _buildStatItem(l10n.accuracy, '${(progress * 100).toStringAsFixed(1)}%'),
+                  _buildStatItem(l10n.streak, '${state.currentStreak}'),
                 ],
+              ),
+              const SizedBox(height: 12),
+              LinearProgressIndicator(
+                value: progress,
+                backgroundColor: Colors.white.withValues(alpha: 0.1),
+                valueColor: AlwaysStoppedAnimation(theme.colorScheme.primary),
+                minHeight: 4,
               ),
             ],
           ),
         ),
         if (state.reactionMessage != null) ...[
           const SizedBox(height: 16),
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-            decoration: BoxDecoration(
-              color: state.lastAnswerCorrect == true
-                  ? Colors.greenAccent.withValues(alpha: 0.2)
-                  : Colors.redAccent.withValues(alpha: 0.2),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: state.lastAnswerCorrect == true
-                    ? Colors.greenAccent
-                    : Colors.redAccent,
-                width: 1,
-              ),
-            ),
-            child: Text(
-              state.reactionMessage!,
-              style: TextStyle(
-                color: state.lastAnswerCorrect == true
-                    ? Colors.greenAccent
-                    : Colors.redAccent,
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                fontFamily: 'monospace',
-                letterSpacing: 1,
-              ),
-              textAlign: TextAlign.center,
-            ),
-          ),
+          AnimatedBuilder(
+            animation: _scaleAnimation,
+            builder: (context, child) {
+              return Transform.scale(
+                scale: _scaleAnimation.value,
+                child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                  decoration: BoxDecoration(
+                    color: state.lastAnswerCorrect == true
+                        ? Colors.greenAccent.withValues(alpha: 0.2)
+                        : Colors.redAccent.withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: state.lastAnswerCorrect == true ? Colors.greenAccent : Colors.redAccent,
+                      width: 1,
+                    ),
+                  ),
+                  child: Text(
+                    state.reactionMessage!,
+                    style: TextStyle(
+                      color: state.lastAnswerCorrect == true ? Colors.greenAccent : Colors.redAccent,
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      fontFamily: 'monospace',
+                      letterSpacing: 1,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              );
+            },
+          ).animate().fadeIn(duration: 300.ms).shake(),
         ],
         const SizedBox(height: 24),
-        if (state.currentQuestion != null) _buildQuestion(state.currentQuestion!, state),
+        if (state.currentQuestion != null)
+          _buildQuestion(state.currentQuestion!, state, theme),
         if (state.questionAnswered) ...[
           const SizedBox(height: 20),
           Container(
@@ -440,7 +446,6 @@ Widget _buildSetupMode(CustomMixArithmeticState state) {
           ),
         ],
         const SizedBox(height: 24),
-        // Action buttons row
         Row(
           children: [
             if (state.canUndo)
@@ -479,10 +484,7 @@ Widget _buildSetupMode(CustomMixArithmeticState state) {
               ),
             Expanded(
               child: Container(
-                margin: EdgeInsets.only(
-                  left: state.canUndo ? 0 : 8,
-                  right: 8,
-                ),
+                margin: EdgeInsets.only(left: state.canUndo ? 0 : 8, right: 8),
                 decoration: BoxDecoration(
                   color: theme.colorScheme.secondary.withValues(alpha: 0.8),
                   borderRadius: BorderRadius.circular(12),
@@ -575,8 +577,7 @@ Widget _buildSetupMode(CustomMixArithmeticState state) {
     );
   }
 
-Widget _buildQuestion(MathRiddle question, CustomMixArithmeticState state) {
-    final theme = Theme.of(context);
+  Widget _buildQuestion(MathRiddle question, CustomMixArithmeticState state, ThemeData theme) {
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
@@ -612,7 +613,7 @@ Widget _buildQuestion(MathRiddle question, CustomMixArithmeticState state) {
               question.question,
               style: TextStyle(
                 color: Colors.white,
-                fontSize: 22,
+                fontSize: 24,
                 fontWeight: FontWeight.bold,
                 height: 1.4,
                 fontFamily: 'monospace',
@@ -628,7 +629,9 @@ Widget _buildQuestion(MathRiddle question, CustomMixArithmeticState state) {
             children: question.options.map((option) {
               final isAnswered = state.questionAnswered;
               final isCorrectAnswer = option == question.correctAnswer;
-              final wasSelected = isAnswered && state.questionHistory.isNotEmpty && option == state.questionHistory.last['userAnswer'];
+              final wasSelected = isAnswered &&
+                  state.questionHistory.isNotEmpty &&
+                  option == state.questionHistory.last['userAnswer'];
 
               Color? buttonColor;
               if (isAnswered) {
@@ -643,46 +646,53 @@ Widget _buildQuestion(MathRiddle question, CustomMixArithmeticState state) {
                 buttonColor = Colors.white.withValues(alpha: 0.05);
               }
 
-              return Container(
-                width: 100,
-                height: 50,
-                decoration: BoxDecoration(
-                  color: buttonColor,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: isAnswered && isCorrectAnswer
-                        ? theme.colorScheme.primary
-                        : Colors.white.withValues(alpha: 0.2),
-                    width: isAnswered && isCorrectAnswer ? 2 : 1,
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.1),
-                      blurRadius: 4,
-                      offset: const Offset(0, 2),
+              return Hero(
+                tag: 'answer_$option',
+                child: Container(
+                  width: 100,
+                  height: 50,
+                  decoration: BoxDecoration(
+                    color: buttonColor,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: isAnswered && isCorrectAnswer
+                          ? theme.colorScheme.primary
+                          : Colors.white.withValues(alpha: 0.2),
+                      width: isAnswered && isCorrectAnswer ? 2 : 1,
                     ),
-                  ],
-                ),
-                child: ElevatedButton(
-                  onPressed: isAnswered ? null : () {
-                    HapticManager.instance.lightImpact();
-                    ref.read(customMixArithmeticProvider.notifier).answerQuestion(option);
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.transparent,
-                    shadowColor: Colors.transparent,
-                    padding: EdgeInsets.zero,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.1),
+                        blurRadius: 4,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
                   ),
-                  child: Text(
-                    option,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      fontFamily: 'monospace',
+                  child: ElevatedButton(
+                    onPressed: isAnswered
+                        ? null
+                        : () {
+                            HapticManager.instance.lightImpact();
+                            ref.read(customMixArithmeticProvider.notifier).answerQuestion(option);
+                            if (!mounted) return;
+                            _reactionController.forward(from: 0);
+                          },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.transparent,
+                      shadowColor: Colors.transparent,
+                      padding: EdgeInsets.zero,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: Text(
+                      option,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        fontFamily: 'monospace',
+                      ),
                     ),
                   ),
                 ),
@@ -795,7 +805,7 @@ Widget _buildQuestion(MathRiddle question, CustomMixArithmeticState state) {
           child: Text(
             'CUSTOM MIX ARITHMETIC allows you to create personalized arithmetic challenges.\n\n'
             '1. Select one or more operations (+, -, ×, ÷)\n'
-            '2. Choose difficulty level (1-10)\n'
+            '2. Choose difficulty level (1-30)\n'
             '3. Questions will be generated using only your selected operations\n'
             '4. Answer correctly to build your score\n'
             '5. Use hints if needed (reveals the answer)\n\n'

@@ -5,10 +5,10 @@ import 'package:flutter_animate/flutter_animate.dart';
 enum AppThemeType { midnight }
 
 class AppDesignTokens {
-  static const double radiusSmall = 4.0;
-  static const double radiusMedium = 8.0;
-  static const double radiusLarge = 12.0;
-  static const double radiusXLarge = 20.0;
+  static const double radiusSmall = 8.0;
+  static const double radiusMedium = 16.0;
+  static const double radiusLarge = 24.0;
+  static const double radiusXLarge = 32.0;
   static const double radiusCircle = 100.0;
 
   static const double spacingXSmall = 4.0;
@@ -22,207 +22,174 @@ class AppDesignTokens {
   static const double iconLarge = 32.0;
   static const double iconXLarge = 48.0;
 
-  static const Duration animationFast = Duration(milliseconds: 150);
-  static const Duration animationNormal = Duration(milliseconds: 300);
-  static const Duration animationSlow = Duration(milliseconds: 500);
+  static const Duration animationFast = Duration(milliseconds: 200);
+  static const Duration animationNormal = Duration(milliseconds: 400);
+  static const Duration animationSlow = Duration(milliseconds: 600);
 
-  static const double elevationLow = 2.0;
-  static const double elevationMedium = 4.0;
-  static const double elevationHigh = 8.0;
+  // Modern Professional Dark Palette (Onyx & Slate)
+  static const Color primary = Color(0xFF6366F1); // Indigo 500
+  static const Color secondary = Color(0xFF38BDF8); // Sky 400
+  static const Color accent = Color(0xFFF43F5E); // Rose 500
+  static const Color background = Color(0xFF030712); // Gray 950 (Deep Obsidian)
+  static const Color surface = Color(0xFF111827); // Gray 900
+  static const Color surfaceLighter = Color(0xFF1F2937); // Gray 800
+  
+  static const Color textPrimary = Color(0xFFF8FAFC); // Gray 50
+  static const Color textSecondary = Color(0xFF94A3B8); // Gray 400
+  static const Color textMuted = Color(0xFF475569); // Gray 600
 
-  // Enhanced Gaming Tech Color Palette
-  static const Color neonCyan = Color(0xFF00F5FF);
-  static const Color neonPink = Color(0xFFFF006E);
-  static const Color neonYellow = Color(0xFFF7FF00);
-  static const Color neonGreen = Color(0xFF00FF88);
-  static const Color neonPurple = Color(0xFF9D4EDD);
-  static const Color neonOrange = Color(0xFFFF6B35);
-  static const Color brightBlue = Color(0xFF4A90E2);
-  static const Color brightRed = Color(0xFFE74C3C);
-  static const Color electricBlue = Color(0xFF00BFFF);
-  static const Color hotPink = Color(0xFFFF1493);
-  static const Color limeGreen = Color(0xFF32CD32);
-  static const Color gold = Color(0xFFFFD700);
-  static const Color techBlack = Color(0xFF0A0A0B);
-  static const Color techGrey = Color(0xFF1A1A1C);
-  static const Color darkGrey = Color(0xFF2A2A2A);
-  static const Color mediumGrey = Color(0xFF404040);
-  static const Color lightGrey = Color(0xFF606060);
+  static const Color success = Color(0xFF10B981);
+  static const Color warning = Color(0xFFF59E0B);
+  static const Color error = Color(0xFFEF4444);
+
+  // Legacy compatibility for refactoring
+  static const Color techBlack = Color(0xFF030712);
+  static const Color neonYellow = Color(0xFFF59E0B);
+  static const Color neonPink = Color(0xFFF43F5E);
+  static const Color neonGreen = Color(0xFF10B981);
+  static const Color brightBlue = Color(0xFF38BDF8);
+  static const Color neonOrange = Color(0xFFF59E0B);
+  static const Color neonPurple = Color(0xFF6366F1);
+  static const Color neonCyan = Color(0xFF06B6D4);
+  static const Color techGrey = Color(0xFF1E293B);
+
+  static const Color surfaceVariant = Color(0xFF334155);
+  static const Color outlineVariant = Color(0xFF475569);
+  static const Color shadowColor = Color(0xFF000000);
+  static const Color successLight = Color(0xFFBBF7D0);
+  static const Color warningLight = Color(0xFFFEF3C7);
+  static const Color errorLight = Color(0xFFFECACA);
 }
 
 class Material3Tokens {
-  static const double frostedBlur = 10.0;
-  static const double frostedOpacity = 0.7;
-  static const double springDamping = 0.6;
-  static const double springStiffness = 500.0;
+  static const double frostedBlur = 12.0;
+  static const double frostedOpacity = 0.6;
+  static const double springDamping = 0.7;
+  static const double springStiffness = 400.0;
 }
 
 class AppThemes {
   static ThemeData getTheme(AppThemeType type) {
     switch (type) {
       case AppThemeType.midnight:
-        return _midnightTheme;
+        return _darkOnyxTheme;
     }
   }
 
-
-
-
-
-
-
-
-
-
-   static final ThemeData _midnightTheme = ThemeData(
-     useMaterial3: true,
-     brightness: Brightness.dark,
-     colorScheme: ColorScheme.fromSeed(
-       seedColor: AppDesignTokens.neonCyan,
-       brightness: Brightness.dark,
-       primary: AppDesignTokens.neonCyan,
-       onPrimary: const Color(0xFF121212),
-       secondary: AppDesignTokens.neonPink,
-       onSecondary: const Color(0xFF121212),
-       surface: const Color(0xFF121212),
-       onSurface: AppDesignTokens.neonCyan,
-       outline: AppDesignTokens.neonCyan.withValues(alpha: 0.3),
-       surfaceContainerHighest: const Color(0xFF1E1E1E),
-     ),
-     scaffoldBackgroundColor: const Color(0xFF121212),
+  static final ThemeData _darkOnyxTheme = ThemeData(
+    useMaterial3: true,
+    brightness: Brightness.dark,
+    colorScheme: ColorScheme.fromSeed(
+      seedColor: AppDesignTokens.primary,
+      brightness: Brightness.dark,
+      primary: AppDesignTokens.primary,
+      onPrimary: Colors.white,
+      secondary: AppDesignTokens.secondary,
+      onSecondary: Colors.white,
+      surface: AppDesignTokens.surface,
+      onSurface: AppDesignTokens.textPrimary,
+      surfaceContainerHighest: AppDesignTokens.surfaceLighter,
+      error: AppDesignTokens.error,
+      outline: AppDesignTokens.textMuted.withValues(alpha: 0.2),
+    ),
+    scaffoldBackgroundColor: AppDesignTokens.background,
     cardTheme: CardThemeData(
       elevation: 0,
-      color: AppDesignTokens.techGrey,
+      color: AppDesignTokens.surface,
+      clipBehavior: Clip.antiAlias,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(AppDesignTokens.radiusMedium),
-        side: BorderSide(color: AppDesignTokens.neonCyan.withValues(alpha: 0.1)),
+        side: BorderSide(color: Colors.white.withValues(alpha: 0.05)),
       ),
     ),
     appBarTheme: const AppBarTheme(
       elevation: 0,
       centerTitle: true,
       backgroundColor: Colors.transparent,
-      foregroundColor: AppDesignTokens.neonCyan,
+      foregroundColor: AppDesignTokens.textPrimary,
       titleTextStyle: TextStyle(
-        fontSize: 16,
-        fontWeight: FontWeight.w900,
-        letterSpacing: 4,
-        color: AppDesignTokens.neonCyan,
+        fontSize: 18,
+        fontWeight: FontWeight.w700,
+        letterSpacing: 1.2,
+        color: AppDesignTokens.textPrimary,
       ),
     ),
     elevatedButtonTheme: ElevatedButtonThemeData(
       style: ElevatedButton.styleFrom(
-        backgroundColor: AppDesignTokens.neonCyan,
-        foregroundColor: AppDesignTokens.techBlack,
+        backgroundColor: AppDesignTokens.primary,
+        foregroundColor: Colors.white,
         elevation: 0,
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-        minimumSize: const Size(0, 52),
-        shape: BeveledRectangleBorder(
-          borderRadius: BorderRadius.circular(AppDesignTokens.radiusSmall),
+        padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 16),
+        minimumSize: const Size(0, 56),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppDesignTokens.radiusMedium),
         ),
         textStyle: const TextStyle(
-          fontSize: 14,
-          fontWeight: FontWeight.w900,
-          letterSpacing: 2,
+          fontSize: 16,
+          fontWeight: FontWeight.w600,
+          letterSpacing: 0.5,
         ),
       ),
     ),
     outlinedButtonTheme: OutlinedButtonThemeData(
       style: OutlinedButton.styleFrom(
-        foregroundColor: AppDesignTokens.neonPink,
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-        minimumSize: const Size(0, 52),
-        shape: BeveledRectangleBorder(
-          borderRadius: BorderRadius.circular(AppDesignTokens.radiusSmall),
+        foregroundColor: AppDesignTokens.textPrimary,
+        padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 16),
+        minimumSize: const Size(0, 56),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppDesignTokens.radiusMedium),
         ),
-        side: const BorderSide(color: AppDesignTokens.neonPink, width: 1.5),
+        side: BorderSide(color: AppDesignTokens.primary.withValues(alpha: 0.5), width: 1.5),
         textStyle: const TextStyle(
-          fontSize: 14,
-          fontWeight: FontWeight.w900,
-          letterSpacing: 2,
-        ),
-      ),
-    ),
-    textButtonTheme: TextButtonThemeData(
-      style: TextButton.styleFrom(
-        foregroundColor: AppDesignTokens.neonCyan,
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        textStyle: const TextStyle(
-          fontSize: 12,
-          fontWeight: FontWeight.w700,
-          letterSpacing: 1.5,
+          fontSize: 16,
+          fontWeight: FontWeight.w600,
         ),
       ),
     ),
     inputDecorationTheme: InputDecorationTheme(
       filled: true,
-      fillColor: AppDesignTokens.neonCyan.withValues(alpha: 0.05),
-      contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+      fillColor: AppDesignTokens.surfaceLighter.withValues(alpha: 0.5),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
       border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(AppDesignTokens.radiusSmall),
-        borderSide: BorderSide(
-          color: AppDesignTokens.neonCyan.withValues(alpha: 0.2),
-        ),
+        borderRadius: BorderRadius.circular(AppDesignTokens.radiusMedium),
+        borderSide: BorderSide.none,
       ),
       enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(AppDesignTokens.radiusSmall),
-        borderSide: BorderSide(
-          color: AppDesignTokens.neonCyan.withValues(alpha: 0.2),
-        ),
+        borderRadius: BorderRadius.circular(AppDesignTokens.radiusMedium),
+        borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.05)),
       ),
       focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(AppDesignTokens.radiusSmall),
-        borderSide: const BorderSide(color: AppDesignTokens.neonCyan, width: 2),
+        borderRadius: BorderRadius.circular(AppDesignTokens.radiusMedium),
+        borderSide: const BorderSide(color: AppDesignTokens.primary, width: 2),
       ),
-      errorBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(AppDesignTokens.radiusSmall),
-        borderSide: const BorderSide(color: Colors.redAccent),
-      ),
-      hintStyle: TextStyle(
-        color: AppDesignTokens.neonCyan.withValues(alpha: 0.3),
-        letterSpacing: 1,
-      ),
+      hintStyle: const TextStyle(color: AppDesignTokens.textMuted),
     ),
     navigationBarTheme: NavigationBarThemeData(
       elevation: 0,
-      backgroundColor: AppDesignTokens.techBlack,
-      indicatorColor: AppDesignTokens.neonCyan.withValues(alpha: 0.1),
+      backgroundColor: AppDesignTokens.surface,
+      indicatorColor: AppDesignTokens.primary.withValues(alpha: 0.15),
       labelTextStyle: WidgetStateProperty.resolveWith((states) {
-        if (states.contains(WidgetState.selected)) {
-          return const TextStyle(
-            fontSize: 10,
-            fontWeight: FontWeight.w900,
-            color: AppDesignTokens.neonCyan,
-            letterSpacing: 1,
-          );
-        }
+        final isSelected = states.contains(WidgetState.selected);
         return TextStyle(
-          fontSize: 10,
-          fontWeight: FontWeight.w500,
-          color: AppDesignTokens.neonCyan.withValues(alpha: 0.5),
-          letterSpacing: 1,
+          fontSize: 12,
+          fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+          color: isSelected ? AppDesignTokens.primary : AppDesignTokens.textSecondary,
         );
       }),
       iconTheme: WidgetStateProperty.resolveWith((states) {
-        if (states.contains(WidgetState.selected)) {
-          return const IconThemeData(color: AppDesignTokens.neonCyan, size: 24);
-        }
+        final isSelected = states.contains(WidgetState.selected);
         return IconThemeData(
-          color: AppDesignTokens.neonCyan.withValues(alpha: 0.5),
+          color: isSelected ? AppDesignTokens.primary : AppDesignTokens.textSecondary,
           size: 24,
         );
       }),
     ),
     textTheme: _buildTextTheme(
-      AppDesignTokens.neonCyan,
-      AppDesignTokens.neonCyan.withValues(alpha: 0.7),
-    ),
-    dividerTheme: DividerThemeData(
-      color: AppDesignTokens.neonCyan.withValues(alpha: 0.1),
-      thickness: 1,
-      space: 1,
+      AppDesignTokens.textPrimary,
+      AppDesignTokens.textSecondary,
     ),
   );
+
 
 
 
@@ -533,13 +500,10 @@ class GradientButton extends StatelessWidget {
           borderRadius: BorderRadius.circular(AppDesignTokens.radiusLarge),
           child: Center(
             child: isLoading
-                ? const SizedBox(
-                    width: 24,
-                    height: 24,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                    ),
+                ? const GlowRingProgress(
+                    size: 24,
+                    strokeWidth: 2,
+                    color: Colors.white,
                   )
                 : Row(
                     mainAxisSize: MainAxisSize.min,
@@ -684,15 +648,10 @@ class PremiumPrimaryButton extends StatelessWidget {
       borderRadius: 16,
       child: Center(
         child: isLoading
-            ? SizedBox(
-                width: 24,
-                height: 24,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2.5,
-                  valueColor: AlwaysStoppedAnimation<Color>(
-                    theme.colorScheme.onPrimary,
-                  ),
-                ),
+            ? const GlowRingProgress(
+                size: 24,
+                strokeWidth: 2.5,
+                color: Colors.white,
               )
             : Row(
                 mainAxisSize: MainAxisSize.min,
@@ -822,6 +781,66 @@ class ConstrainedWidthBox extends StatelessWidget {
         maxWidth: MediaQuery.of(context).size.width,
       ),
       child: child,
+    );
+  }
+}
+
+class GlowRingProgress extends StatelessWidget {
+  final double? value;
+  final Color? color;
+  final double strokeWidth;
+  final double size;
+
+  const GlowRingProgress({
+    super.key,
+    this.value,
+    this.color,
+    this.strokeWidth = 3.0,
+    this.size = 40.0,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final ringColor = color ?? theme.colorScheme.primary;
+
+    return SizedBox(
+      width: size,
+      height: size,
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          // Background ring
+          CircularProgressIndicator(
+            value: 1.0,
+            strokeWidth: strokeWidth,
+            color: ringColor.withValues(alpha: 0.1),
+          ),
+          // Glow effect
+          if (value == null)
+            CircularProgressIndicator(
+              strokeWidth: strokeWidth + 2,
+              color: ringColor.withValues(alpha: 0.2),
+            ).animate(onPlay: (c) => c.repeat()).rotate(duration: 2.seconds)
+          else
+            TweenAnimationBuilder<double>(
+              tween: Tween(begin: 0, end: value),
+              duration: 500.ms,
+              builder: (context, val, _) => CircularProgressIndicator(
+                value: val,
+                strokeWidth: strokeWidth + 1,
+                color: ringColor.withValues(alpha: 0.3),
+              ),
+            ),
+          // Primary ring
+          CircularProgressIndicator(
+            value: value,
+            strokeWidth: strokeWidth,
+            color: ringColor,
+            strokeCap: StrokeCap.round,
+          ),
+        ],
+      ),
     );
   }
 }

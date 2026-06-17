@@ -173,13 +173,14 @@ AnimatedContainer(
                             ),
                           ),
                           if (gameSession.level == 1 &&
-                              gameSession.currentQuestionIndex == 0)
+                              gameSession.currentQuestionIndex == 0 &&
+                              gameSession.currentQuestion?.options == null)
                             _buildGhostOnboarding('SOLVE_TO_INIT'),
                         ],
                       ),
                     ),
                   ),
-                  RepaintBoundary(child: _buildInputArea(context, theme)),
+                  RepaintBoundary(child: _buildInputArea(context, theme, gameSession)),
                 ],
               ),
             ),
@@ -387,7 +388,7 @@ if (gameSession.mode == GameMode.duel)
               Icons.local_fire_department,
               color: isMilestone 
                   ? (streak == 5 ? Colors.orange : streak == 10 ? Colors.red : Colors.purple)
-                  : AppDesignTokens.neonCyan,
+                  : AppDesignTokens.secondary,
               size: 16,
             ),
             if (isMilestone) ...[
@@ -404,7 +405,7 @@ if (gameSession.mode == GameMode.duel)
               style: TextStyle(
                 color: isMilestone 
                     ? (streak == 5 ? Colors.orange : streak == 10 ? Colors.red : Colors.purple)
-                    : AppDesignTokens.neonCyan,
+                    : AppDesignTokens.secondary,
                 fontSize: 20,
                 fontWeight: isMilestone ? FontWeight.bold : FontWeight.w900,
                 fontFamily: 'monospace',
@@ -416,7 +417,7 @@ if (gameSession.mode == GameMode.duel)
         Text(
           'STREAK',
           style: TextStyle(
-            color: AppDesignTokens.neonCyan.withValues(alpha: 0.5),
+            color: AppDesignTokens.secondary.withValues(alpha: 0.5),
             fontSize: 10,
             letterSpacing: 2,
             fontWeight: FontWeight.w900,
@@ -453,7 +454,7 @@ if (gameSession.mode == GameMode.duel)
         Text(
           label,
           style: TextStyle(
-            color: AppDesignTokens.neonCyan.withValues(alpha: 0.5),
+            color: AppDesignTokens.primary.withValues(alpha: 0.5),
             fontSize: 10,
             letterSpacing: 2,
             fontWeight: FontWeight.w900,
@@ -463,7 +464,7 @@ if (gameSession.mode == GameMode.duel)
         Text(
           value,
           style: const TextStyle(
-            color: AppDesignTokens.neonCyan,
+            color: AppDesignTokens.primary,
             fontSize: 20,
             fontWeight: FontWeight.w900,
             fontFamily: 'monospace',
@@ -476,6 +477,8 @@ if (gameSession.mode == GameMode.duel)
   Widget _buildMathQuestion(GameSession session, ThemeData theme) {
     final question = session.currentQuestion;
     if (question == null) return const SizedBox();
+
+    final isRiddle = question.customQuestion != null;
 
     return Center(
       child: SingleChildScrollView(
@@ -495,20 +498,23 @@ if (gameSession.mode == GameMode.duel)
                 ),
               );
             },
-            child: Text(
-              '${question.operand1} ${_getOperationSymbol(session.operation)} ${question.operand2}',
-              style: TextStyle(
-                fontSize: _getResponsiveFontSize(context, 84), // Make font size responsive
-                fontWeight: FontWeight.w900,
-                color: AppDesignTokens.neonCyan,
-                letterSpacing: -2,
-                fontFamily: 'monospace',
-                shadows: [
-                  Shadow(color: AppDesignTokens.neonCyan, blurRadius: 20),
-                ],
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: Text(
+                isRiddle ? question.customQuestion! : '${question.operand1} ${_getOperationSymbol(session.operation)} ${question.operand2}',
+                style: TextStyle(
+                  fontSize: _getResponsiveFontSize(context, isRiddle ? 32 : 84), // Make font size responsive
+                  fontWeight: isRiddle ? FontWeight.w600 : FontWeight.w900,
+                  color: AppDesignTokens.textPrimary,
+                  letterSpacing: isRiddle ? 0 : -2,
+                  fontFamily: isRiddle ? null : 'monospace',
+                  shadows: [
+                    Shadow(color: AppDesignTokens.primary.withValues(alpha: 0.3), blurRadius: 20),
+                  ],
+                ),
+                textAlign: TextAlign.center,
+                softWrap: true,
               ),
-              textAlign: TextAlign.center,
-              softWrap: true,
             ),
           ),
           SizedBox(height: MediaQuery.of(context).size.height < 600 ? 12 : 24),
@@ -518,7 +524,7 @@ if (gameSession.mode == GameMode.duel)
               child: Text(
                 'HINT: ${question.hint?.toUpperCase() ?? 'NOT AVAILABLE'}',
                 style: TextStyle(
-                  color: AppDesignTokens.neonPink.withValues(alpha: 0.7),
+                  color: AppDesignTokens.accent.withValues(alpha: 0.7),
                   fontSize: _getResponsiveFontSize(context, 14),
                   letterSpacing: 2,
                   fontWeight: FontWeight.w900,
@@ -579,7 +585,10 @@ if (gameSession.mode == GameMode.duel)
     );
   }
 
-  Widget _buildInputArea(BuildContext context, ThemeData theme) {
+  Widget _buildInputArea(BuildContext context, ThemeData theme, GameSession session) {
+    final question = session.currentQuestion;
+    final useOptions = question != null && question.options != null && question.options!.isNotEmpty;
+
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -618,21 +627,61 @@ if (gameSession.mode == GameMode.duel)
             ],
           ),
         ),
-        CustomKeypad(
-          currentInput: _currentInput,
-          onKeyPressed: (key) {
-            if (_currentInput.length < 6) {
-              setState(() {
-                _currentInput += key;
-              });
-            }
-          },
-          onClear: () => setState(() {
-            _currentInput = '';
-          }),
-          onSubmit: _submitAnswer,
-        ),
+        if (useOptions)
+          _buildOptionsGrid(question.options!)
+        else
+          CustomKeypad(
+            currentInput: _currentInput,
+            onKeyPressed: (key) {
+              if (_currentInput.length < 10) { // Increased for more flexible input
+                setState(() {
+                  _currentInput += key;
+                });
+              }
+            },
+            onClear: () => setState(() {
+              _currentInput = '';
+            }),
+            onSubmit: _submitAnswer,
+          ),
       ],
+    );
+  }
+
+  Widget _buildOptionsGrid(List<String> options) {
+    return Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: GridView.builder(
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 2,
+          childAspectRatio: 2.5,
+          crossAxisSpacing: 12,
+          mainAxisSpacing: 12,
+        ),
+        itemCount: options.length,
+        itemBuilder: (context, index) {
+          final option = options[index];
+          return ElevatedButton(
+            onPressed: () {
+              HapticManager.instance.lightImpact();
+              _submitAnswer(option);
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.white.withValues(alpha: 0.05),
+              foregroundColor: Colors.white,
+              side: BorderSide(color: Colors.white10, width: 1),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+            child: Text(
+              option,
+              textAlign: TextAlign.center,
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+          );
+        },
+      ),
     );
   }
 
@@ -669,20 +718,21 @@ if (gameSession.mode == GameMode.duel)
     );
   }
 
-  void _submitAnswer() {
-    if (_currentInput.isEmpty) return;
-
-    final answer = int.tryParse(_currentInput);
-    if (answer == null) return;
+  void _submitAnswer([String? directAnswer]) {
+    final answer = directAnswer ?? _currentInput;
+    if (answer.isEmpty) return;
 
     final gameSession = ref.read(gameSessionProvider);
     if (gameSession == null) return;
 
     // Submit answer
     if (gameSession.isVisualCounting) {
-      ref
-          .read(gameSessionProvider.notifier)
-          .answerVisualCounting(answer);
+      final numericAnswer = int.tryParse(answer);
+      if (numericAnswer != null) {
+        ref
+            .read(gameSessionProvider.notifier)
+            .answerVisualCounting(numericAnswer);
+      }
     } else {
       ref.read(gameSessionProvider.notifier).answerQuestion(answer);
     }
@@ -778,12 +828,7 @@ if (gameSession.mode == GameMode.duel)
                                   mode: GameMode.campaign,
                                   operation: session.operation,
                                   level: passed ? session.level + 1 : session.level,
-                                  totalQuestions:
-                                      (passed ? session.level + 1 : session.level) %
-                                              10 ==
-                                          9
-                                      ? 50
-                                      : 40,
+                                  totalQuestions: 45,
                                 );
                             setState(() => _currentInput = '');
                           },

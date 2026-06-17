@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../../../core/sound_manager.dart';
 import '../../../core/providers.dart';
+import '../../../core/themes/app_themes.dart';
 import '../../../core/utils/responsive_utils.dart';
 import '../../../l10n/generated/app_localizations.dart';
 import '../../reports/reports_screen.dart';
@@ -27,7 +28,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   late AnimationController _fabAnimationController;
   late AnimationController _cardAnimationController;
   late Animation<double> _fabScaleAnimation;
-  late Animation<double> _cardSlideAnimation;
 
   @override
   void initState() {
@@ -50,16 +50,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       curve: Curves.easeInOut,
     ));
 
-    _cardSlideAnimation = Tween<double>(
-      begin: 30.0,
-      end: 0.0,
-    ).animate(CurvedAnimation(
-      parent: _cardAnimationController,
-      curve: Curves.easeOutCubic,
-    ));
-
     _cardAnimationController.forward();
-    
+
     // Load level progress and check daily challenges
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(levelProgressProvider.notifier).loadProgress();
@@ -287,152 +279,154 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     return Stack(
       children: [
         Positioned.fill(
-          child: _buildParticleBackground(theme),
+          child: _buildBackgroundRadialMesh(theme),
         ),
-        Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [
-                theme.scaffoldBackgroundColor,
-                theme.scaffoldBackgroundColor.withValues(alpha: 0.8),
-                theme.colorScheme.surface.withValues(alpha: 0.3),
-              ],
-            ),
-          ),
-          child: CustomScrollView(
-            physics: const BouncingScrollPhysics(),
-            slivers: [
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: EdgeInsets.fromLTRB(
-                    isMobile ? 16 : 24,
-                    20,
-                    isMobile ? 16 : 24,
-                    isMobile ? 160 : 200,
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _buildWelcomeSection(theme, l10n),
-                      const SizedBox(height: 24),
-                  _buildStatsOverview(
-                    theme, totalStars, completedLevels, totalTime, accuracy, l10n,
-                  ),
-                  const SizedBox(height: 24),
-                  _buildSessionStats(theme, sessionStats, l10n),
-                      const SizedBox(height: 32),
-_buildQuickActions(theme, l10n),
-                       const SizedBox(height: 32),
-                       _buildDailyChallenge(theme, l10n),
-                       const SizedBox(height: 32),
-                       _buildGameModesGrid(theme, l10n),
-                    ],
-                  ),
+        CustomScrollView(
+          physics: const BouncingScrollPhysics(),
+          slivers: [
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: EdgeInsets.fromLTRB(
+                  isMobile ? 16 : 24,
+                  20,
+                  isMobile ? 16 : 24,
+                  isMobile ? 160 : 200,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildWelcomeSection(theme, l10n),
+                    const SizedBox(height: 32),
+                    _buildStatsOverview(
+                      theme, totalStars, completedLevels, totalTime, accuracy, l10n,
+                    ).animate().fadeIn(duration: 600.ms, delay: 200.ms).slideY(begin: 0.1, end: 0),
+                    const SizedBox(height: 32),
+                    _buildSessionStats(theme, sessionStats, l10n),
+                    const SizedBox(height: 32),
+                    _buildQuickActions(theme, l10n),
+                    const SizedBox(height: 32),
+                    _buildDailyChallenge(theme, l10n),
+                    const SizedBox(height: 32),
+                    _buildGameModesGrid(theme, l10n),
+                  ],
                 ),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ],
     );
   }
 
-  Widget _buildWelcomeSection(ThemeData theme, AppLocalizations l10n) {
-    return AnimatedBuilder(
-      animation: _cardSlideAnimation,
-      builder: (context, child) {
-        return Transform.translate(
-          offset: Offset(0, _cardSlideAnimation.value),
-          child: Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(24),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  theme.colorScheme.primaryContainer.withValues(alpha: 0.8),
-                  theme.colorScheme.secondaryContainer.withValues(alpha: 0.6),
-                ],
-              ),
-              borderRadius: BorderRadius.circular(24),
-              boxShadow: [
-                BoxShadow(
-                  color: theme.shadowColor.withValues(alpha: 0.1),
-                  blurRadius: 20,
-                  offset: const Offset(0, 8),
-                ),
-              ],
-              border: Border.all(
-                color: theme.colorScheme.outline.withValues(alpha: 0.1),
-                width: 1,
-              ),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            l10n.welcomeBack,
-                            style: theme.textTheme.headlineSmall?.copyWith(
-                              fontWeight: FontWeight.bold,
-                              color: theme.colorScheme.onPrimaryContainer,
-                            ),
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            l10n.masterMathematicsDesc,
-                            style: theme.textTheme.bodyMedium?.copyWith(
-                              color: theme.colorScheme.onPrimaryContainer.withValues(alpha: 0.8),
-                            ),
-                            maxLines: 3,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: theme.colorScheme.primary.withValues(alpha: 0.2),
-                        borderRadius: BorderRadius.circular(16),
-                        boxShadow: [
-                          BoxShadow(
-                            color: theme.colorScheme.primary.withValues(alpha: 0.4),
-                            blurRadius: 12,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
-                      ),
-                      child: Icon(
-                        Icons.rocket_launch,
-                        color: theme.colorScheme.primary,
-                        size: 32,
-                      ),
-                    ).animate()
-                        .scale(begin: const Offset(0.8, 0.8), end: const Offset(1.1, 1.1))
-                        .then()
-                        .scale(begin: const Offset(1.1, 1.1), end: const Offset(1, 1)),
+  Widget _buildBackgroundRadialMesh(ThemeData theme) {
+    return Container(
+      color: AppDesignTokens.background,
+      child: Stack(
+        children: [
+          Positioned(
+            top: -100,
+            right: -100,
+            child: Container(
+              width: 400,
+              height: 400,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: RadialGradient(
+                  colors: [
+                    theme.colorScheme.primary.withValues(alpha: 0.15),
+                    theme.colorScheme.primary.withValues(alpha: 0),
                   ],
                 ),
-                const SizedBox(height: 16),
-                _buildDailyProgressIndicator(theme),
-              ],
+              ),
             ),
           ),
-        );
-      },
+          Positioned(
+            bottom: 100,
+            left: -150,
+            child: Container(
+              width: 500,
+              height: 500,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: RadialGradient(
+                  colors: [
+                    theme.colorScheme.secondary.withValues(alpha: 0.1),
+                    theme.colorScheme.secondary.withValues(alpha: 0),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          _buildParticleBackground(theme),
+        ],
+      ),
     );
+  }
+
+  Widget _buildWelcomeSection(ThemeData theme, AppLocalizations l10n) {
+    return PremiumGlassOverlay(
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      l10n.welcomeBack,
+                      style: theme.textTheme.headlineSmall?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: theme.colorScheme.onSurface,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      l10n.masterMathematicsDesc,
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 16),
+              Hero(
+                tag: 'app_logo_icon',
+                child: Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.primary.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                      color: theme.colorScheme.primary.withValues(alpha: 0.2),
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: theme.colorScheme.primary.withValues(alpha: 0.2),
+                        blurRadius: 15,
+                        spreadRadius: -5,
+                      ),
+                    ],
+                  ),
+                  child: Icon(
+                    Icons.rocket_launch,
+                    color: theme.colorScheme.primary,
+                    size: 32,
+                  ),
+                ),
+              ).animate(onPlay: (controller) => controller.repeat(reverse: true))
+                  .shimmer(duration: 2000.ms, color: Colors.white.withValues(alpha: 0.2))
+                  .moveY(begin: -2, end: 2, duration: 1500.ms, curve: Curves.easeInOut),
+            ],
+          ),
+          const SizedBox(height: 24),
+          _buildDailyProgressIndicator(theme),
+        ],
+      ),
+    ).animate().fadeIn(duration: 800.ms).slideY(begin: 0.2, end: 0, curve: Curves.easeOutCubic);
   }
 
   Widget _buildDailyProgressIndicator(ThemeData theme) {
@@ -590,53 +584,41 @@ _buildQuickActions(theme, l10n),
   }
 
   Widget _buildStatCard(String title, String value, Color color, IconData icon, ThemeData theme) {
-    return Container(
-      width: double.infinity,
+    return PremiumCard(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: color.withValues(alpha: 0.1),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
-        border: Border.all(
-          color: color.withValues(alpha: 0.2),
-          width: 1,
-        ),
-      ),
+      borderColor: color.withValues(alpha: 0.2),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(icon, color: color, size: 24),
-          const SizedBox(height: 8),
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.1),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(icon, color: color, size: 20),
+          ),
+          const SizedBox(height: 12),
           Text(
             value,
-            style: theme.textTheme.headlineSmall?.copyWith(
+            style: theme.textTheme.titleLarge?.copyWith(
               fontWeight: FontWeight.bold,
-              color: color,
+              color: AppDesignTokens.textPrimary,
             ),
             textAlign: TextAlign.center,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
           ),
           const SizedBox(height: 4),
           Text(
             title,
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+            style: theme.textTheme.labelSmall?.copyWith(
+              color: AppDesignTokens.textSecondary,
             ),
             textAlign: TextAlign.center,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
           ),
         ],
       ),
-    ).animate().fadeIn(duration: 400.ms).scale(begin: const Offset(0.9, 0.9), end: const Offset(1, 1));
+    );
   }
 
   Widget _buildSessionStats(ThemeData theme, SessionStats sessionStats, AppLocalizations l10n) {
@@ -1034,73 +1016,56 @@ _buildQuickActions(theme, l10n),
   }
 
   Widget _buildGameModeCard(String title, IconData icon, Color color, VoidCallback onPressed, ThemeData theme) {
-    return InkWell(
-      onTap: () {
-        HapticManager.instance.selectionClick();
-        onPressed();
-      },
-      borderRadius: BorderRadius.circular(16),
-      child: Container(
-        width: double.infinity,
-        height: 140,
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              color.withValues(alpha: 0.15),
-              color.withValues(alpha: 0.08),
-            ],
-          ),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: color.withValues(alpha: 0.3),
-            width: 1.5,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: color.withValues(alpha: 0.2),
-              blurRadius: 12,
-              offset: const Offset(0, 4),
+    return PremiumCard(
+      onTap: onPressed,
+      padding: EdgeInsets.zero,
+      borderColor: color.withValues(alpha: 0.3),
+      child: Stack(
+        children: [
+          Positioned(
+            top: -20,
+            right: -20,
+            child: Icon(
+              icon,
+              size: 80,
+              color: color.withValues(alpha: 0.05),
             ),
-          ],
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.2),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Icon(
-                icon,
-                color: color,
-                size: 24,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Flexible(
-              child: Text(
-                title,
-                style: theme.textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: theme.colorScheme.onSurface,
+          ),
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: color.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: color.withValues(alpha: 0.2)),
+                  ),
+                  child: Hero(
+                    tag: 'mode_icon_$title',
+                    child: Icon(icon, color: color, size: 24),
+                  ),
                 ),
-                textAlign: TextAlign.center,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
+                const Spacer(),
+                Text(
+                  title,
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: AppDesignTokens.textPrimary,
+                  ),
+                ),
+              ],
             ),
-          ],
-        ),
+          ),
+        ],
       ),
-    ).animate()
-        .fadeIn(duration: 600.ms)
-        .scale(begin: const Offset(0.8, 0.8), end: const Offset(1, 1))
-        .then(delay: 100.ms);
+    ).animate().fadeIn(duration: 400.ms, delay: 100.ms).scale(
+      begin: const Offset(0.9, 0.9),
+      end: const Offset(1, 1),
+      curve: Curves.easeOutBack,
+    );
   }
 
   Widget _buildAnimatedFAB(ThemeData theme, AppLocalizations l10n) {

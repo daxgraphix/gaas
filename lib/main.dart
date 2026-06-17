@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'dart:io' show Platform;
-import 'core/sound_manager.dart';
 import 'core/providers.dart';
 import 'core/notification_service.dart';
+import 'core/sound_manager.dart';
 import 'core/utils/game_flow_optimizer.dart';
 import 'core/utils/responsive_utils.dart';
 import 'data/repositories/database_service.dart';
@@ -14,12 +14,17 @@ import 'l10n/generated/app_localizations.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  GameFlowOptimizer.optimizeMemoryUsage();
+
   if (Platform.isAndroid || Platform.isIOS) {
     SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
     SystemChrome.setSystemUIOverlayStyle(
       const SystemUiOverlayStyle(
         statusBarColor: Colors.transparent,
-        statusBarIconBrightness: Brightness.dark,
+        statusBarIconBrightness: Brightness.light,
+        statusBarBrightness: Brightness.dark,
+        systemNavigationBarColor: Color(0xFF030712),
+        systemNavigationBarIconBrightness: Brightness.light,
       ),
     );
   } else if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
@@ -30,8 +35,6 @@ void main() async {
       DeviceOrientation.landscapeRight,
     ]);
   }
-
-  GameFlowOptimizer.optimizeMemoryUsage();
 
   try {
     final dbInit = DatabaseService.instance;
@@ -72,9 +75,8 @@ class GAASApp extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final currentTheme = ref.watch(themeProvider);
     final currentLocale = ref.watch(localeProvider);
+
     return MaterialApp(
-      // ValueKey forces rebuild of localization system when locale changes
-      // Without this, switching languages may not update AppLocalizations
       key: ValueKey(currentLocale.code),
       title: 'GAAS',
       debugShowCheckedModeBanner: false,
@@ -84,19 +86,16 @@ class GAASApp extends ConsumerWidget {
       supportedLocales: AppLocalizations.supportedLocales,
       home: const SplashScreen(),
       builder: (context, child) {
-        // Ensure proper scaling on desktop
         if (ResponsiveUtils.isWindows()) {
           return MediaQuery(
             data: MediaQuery.of(context).copyWith(
-              textScaler: TextScaler.noScaling, // Prevent system text scaling on desktop
+              textScaler: TextScaler.noScaling,
             ),
             child: child!,
           );
         }
         return child!;
       },
-      // Enable performance overlay in debug mode for monitoring
-      showPerformanceOverlay: false, // Set to true to enable performance monitoring
     );
   }
 }

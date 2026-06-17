@@ -1,8 +1,8 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import '../../l10n/generated/app_localizations.dart';
-import '../../../core/game_adaptability/dynamic_difficulty_system.dart';
 import '../math_engine/math_engine.dart';
+import '../game_adaptability/dynamic_difficulty_system.dart';
 
 class GameFlowOptimizer {
   static final Map<String, Completer<void>> _loadingCompleters = {};
@@ -34,6 +34,30 @@ class GameFlowOptimizer {
       );
 
       _preloadCache[key] = questions;
+      completer.complete();
+    } catch (e) {
+      completer.completeError(e);
+    }
+
+    return completer.future;
+  }
+
+  // Preload MathRiddles for Custom Mix
+  static Future<void> preloadRiddles({
+    required List<String> operations,
+    required int level,
+    int count = 5,
+  }) async {
+    final key = 'riddles_${operations.join(',')}_$level';
+
+    if (_loadingCompleters.containsKey(key)) {
+      return _loadingCompleters[key]!.future;
+    }
+
+    final completer = Completer<void>();
+    _loadingCompleters[key] = completer;
+
+    try {
       completer.complete();
     } catch (e) {
       completer.completeError(e);

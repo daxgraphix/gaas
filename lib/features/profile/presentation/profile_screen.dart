@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import '../../../core/providers.dart';
 import '../../../core/themes/app_themes.dart';
 import '../../../core/utils/responsive_utils.dart';
@@ -99,20 +98,6 @@ class ProfileScreen extends ConsumerWidget {
                   ),
                 ),
                 const SliverToBoxAdapter(child: SizedBox(height: 100)),
-                SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: ElevatedButton.icon(
-                      onPressed: () => _showDebugData(context, ref),
-                      icon: Icon(Icons.code, size: 18),
-                      label: Text('View Database'),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: theme.colorScheme.primary,
-                        foregroundColor: theme.colorScheme.onPrimary,
-                      ),
-                    ),
-                  ),
-                ),
               ],
             ),
           ),
@@ -765,49 +750,5 @@ onTap: () {
     } catch (e) {
       return theme.colorScheme.primary; // Default theme primary color
     }
-  }
-
-  void _showDebugData(BuildContext context, WidgetRef ref) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text('Database Debug Info'),
-        content: FutureBuilder(
-          future: _getDebugData(ref),
-          builder: (context, snapshot) {
-            if (snapshot.hasData) {
-              return SingleChildScrollView(
-                child: Text(snapshot.data ?? 'No data'),
-              );
-            }
-            return CircularProgressIndicator();
-          },
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: Text('Close')),
-        ],
-      ),
-    );
-  }
-
-  Future<String> _getDebugData(WidgetRef ref) async {
-    final user = ref.read(userSessionProvider);
-    final prefs = await SharedPreferences.getInstance();
-    
-    String levelProgressData = '\n\nLevel Progress:\n';
-    final keys = prefs.getKeys();
-    for (final key in keys) {
-      if (key.startsWith('level_progress_')) {
-        final data = prefs.getString(key);
-        levelProgressData += '$key: $data\n';
-      }
-    }
-    
-    return '''User Session:
-Name: ${user?.name ?? 'Not set'}
-ID: ${user?.id ?? 'N/A'}
-Points: ${user?.totalPoints ?? 0}
-Created: ${user?.createdAt ?? 'N/A'}
-$levelProgressData''';
   }
 }

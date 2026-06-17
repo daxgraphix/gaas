@@ -23,10 +23,8 @@ final dbProvider = FutureProvider<DatabaseService>((ref) async {
 });
 
 final appStartupProvider = FutureProvider<void>((ref) async {
-  // Ensure DB is ready first
   await ref.watch(dbProvider.future);
   
-  // Parallel initialization of other services
   await Future.wait([
     ref.read(userSessionProvider.notifier).initializeUser(),
     ref.read(levelProgressRepositoryProvider).initializeLevels(),
@@ -34,15 +32,7 @@ final appStartupProvider = FutureProvider<void>((ref) async {
     ref.read(localeProvider.notifier).loadLocale(),
     ref.read(settingsProvider.notifier).loadSettings(),
     ref.read(levelProgressProvider.notifier).loadProgress(),
-    ref.read(soundManagerProvider).initialize(),
-    ref.read(hapticManagerProvider).initialize(),
   ]);
-
-  final settings = ref.read(settingsProvider);
-  ref.read(soundManagerProvider).setMuted(!settings.soundEnabled);
-  ref.read(soundManagerProvider).setVolume(settings.soundVolume);
-  
-  NotificationService().initialize();
 });
 
 final notificationProvider = Provider((ref) => NotificationService());
@@ -1411,7 +1401,7 @@ class MathRiddleNotifier extends StateNotifier<MathRiddleState> {
   MathRiddleNotifier(this.ref) : super(const MathRiddleState());
 
   void loadArithmeticProblem(int difficulty) {
-    const questionCount = 45;
+    const questionCount = 20;
     final riddles = List.generate(questionCount, (i) => MathRiddleEngine.generateArithmeticProblem(difficulty));
     state = state.copyWith(
       currentRiddle: riddles.isNotEmpty ? riddles[0] : null,
@@ -1423,7 +1413,7 @@ class MathRiddleNotifier extends StateNotifier<MathRiddleState> {
   }
 
   void loadWordProblem(int difficulty) {
-    const questionCount = 45;
+    const questionCount = 20;
     final riddles = List.generate(questionCount, (i) => MathRiddleEngine.generateWordProblem(difficulty));
     state = state.copyWith(
       currentRiddle: riddles.isNotEmpty ? riddles[0] : null,
@@ -1435,7 +1425,7 @@ class MathRiddleNotifier extends StateNotifier<MathRiddleState> {
   }
 
   void loadNumberSequence(int difficulty) {
-    const questionCount = 45;
+    const questionCount = 20;
     final sequences = List.generate(questionCount, (i) => MathRiddleEngine.generateNumberSequence(difficulty));
     state = state.copyWith(
       currentSequence: sequences.isNotEmpty ? sequences[0] : null,
@@ -1447,8 +1437,7 @@ class MathRiddleNotifier extends StateNotifier<MathRiddleState> {
   }
 
   Future<void> loadLogicChallenge(int difficulty) async {
-    // Generate 45 logic challenges per level
-    const questionCount = 45;
+    const questionCount = 20;
     final challenges = <LogicMathChallenge>[];
 
     for (int i = 0; i < questionCount; i++) {
@@ -1461,7 +1450,6 @@ class MathRiddleNotifier extends StateNotifier<MathRiddleState> {
       }
     }
 
-    // Initialize level session with first challenge
     if (challenges.isNotEmpty) {
       state = state.copyWith(
         currentLogic: challenges[0],
@@ -1537,23 +1525,19 @@ class MathRiddleNotifier extends StateNotifier<MathRiddleState> {
   }
 
   Future<void> _saveLevelCompletion(int level, int correct, int total) async {
-    final passed = correct >= 35; // Must pass 35/45 to advance
+    final passed = correct >= 15;
     final repo = ref.read(levelProgressRepositoryProvider);
     
-    // Use operationId from widget context for proper level unlocking
     final operation = 'logic';
     
     if (passed && level < 30) {
-      // Unlock next level
       await repo.updateStars(operation, level + 1, 0, 0);
     }
     
-    // Save level progress
     final stars = state.stars;
-    await repo.updateStars(operation, level, stars, correct * 50);
+    await repo.updateStars(operation, level, stars, correct * 5);
     ref.read(levelProgressProvider.notifier).loadProgress();
     
-    // Update daily challenge
     if (stars > 0) {
       ref.read(dailyChallengeProvider.notifier).incrementProgress('stars', stars);
     }

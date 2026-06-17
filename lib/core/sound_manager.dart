@@ -157,9 +157,6 @@ class SoundManager {
   static SoundManager get instance => _instance;
   SoundManager._internal();
 
-  static const String _soundsPath = 'assets/sounds';
-  final Map<String, AudioPlayer> _players = {};
-
   bool _isMuted = false;
   bool _soundEnabled = true;
   double _volume = 1.0;
@@ -167,40 +164,7 @@ class SoundManager {
 
   Future<void> initialize() async {
     await _loadPreferences();
-    await _initPlayers();
     _isInitialized = true;
-  }
-
-  Future<void> _initPlayers() async {
-    final soundFiles = <String, String>{
-      'click': 'click.wav',
-      'correct': 'completion.wav',
-      'incorrect': 'bling.wav',
-      'success': 'completion.wav',
-      'hint': 'click.wav',
-      'complete': 'completion.wav',
-      'level_up': 'levelup.wav',
-      'achievement': 'bling.wav',
-      'game_start': 'click.wav',
-      'timer_warning': 'click.wav',
-      'startup': 'click.wav',
-      'button_press': 'click.wav',
-      'navigation': 'click.wav',
-      'transition': 'click.wav',
-      'wrong_answer': 'bling.wav',
-      'correct_answer': 'completion.wav',
-    };
-
-    for (final entry in soundFiles.entries) {
-      try {
-        final player = AudioPlayer();
-        await player.setSource(AssetSource('$_soundsPath/${entry.value}'));
-        player.setVolume(_volume);
-        _players[entry.key] = player;
-      } catch (e) {
-        _players[entry.key] = AudioPlayer();
-      }
-    }
   }
 
   Future<void> _loadPreferences() async {
@@ -241,13 +205,6 @@ class SoundManager {
   Future<void> setVolume(double volume) async {
     _volume = volume.clamp(0.0, 1.0);
     await _savePreferences();
-    _updatePlayerVolumes();
-  }
-
-  void _updatePlayerVolumes() {
-    for (final player in _players.values) {
-      player.setVolume(_volume);
-    }
   }
 
   Future<void> playEffect(String effect) async {
@@ -398,21 +355,36 @@ class SoundManager {
   }
 
   Future<void> _playSound(String key) async {
-    final player = _players[key];
-    if (player == null) {
-      HapticManager.instance.buttonPressPattern();
-      return;
-    }
+    final soundFile = _getSoundFile(key);
     try {
-      await player.resume();
+      final player = AudioPlayer();
+      await player.play(AssetSource('sounds/$soundFile'));
+      await Future.delayed(const Duration(milliseconds: 100));
+      await player.dispose();
     } catch (e) {
       HapticManager.instance.buttonPressPattern();
     }
   }
 
-  Future<void> dispose() async {
-    for (final player in _players.values) {
-      await player.dispose();
+  String _getSoundFile(String key) {
+    switch (key) {
+      case 'click': return 'click.wav';
+      case 'correct': return 'completion.wav';
+      case 'incorrect': return 'bling.wav';
+      case 'success': return 'completion.wav';
+      case 'hint': return 'click.wav';
+      case 'complete': return 'completion.wav';
+      case 'level_up': return 'levelup.wav';
+      case 'achievement': return 'bling.wav';
+      case 'game_start': return 'click.wav';
+      case 'timer_warning': return 'click.wav';
+      case 'startup': return 'click.wav';
+      case 'button_press': return 'click.wav';
+      case 'navigation': return 'click.wav';
+      case 'transition': return 'click.wav';
+      case 'wrong_answer': return 'bling.wav';
+      case 'correct_answer': return 'completion.wav';
+      default: return 'click.wav';
     }
   }
 }

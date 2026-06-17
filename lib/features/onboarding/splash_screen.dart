@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/providers.dart';
 import '../../core/themes/app_themes.dart';
+import '../../core/sound_manager.dart';
 import '../home/presentation/home_screen.dart';
 import '../profile_setup/profile_setup_screen.dart';
 import 'onboarding_screen.dart';
@@ -46,16 +47,16 @@ class _SplashScreenState extends ConsumerState<SplashScreen> with TickerProvider
 
   Future<void> _boot() async {
     try {
-      // Wait for the minimum animation time AND app startup
       await Future.wait([
         Future.delayed(const Duration(seconds: 2)),
         ref.read(appStartupProvider.future),
       ]);
-      
+
       if (!mounted) return;
-      
-      // Play sound using provider
-      ref.read(soundManagerProvider).playStartupSound();
+
+      await HapticManager.instance.initialize();
+      await SoundManager.instance.initialize();
+      SoundManager.instance.playStartupSound();
 
       await _navigateToNext();
     } catch (e) {

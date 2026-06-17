@@ -8,11 +8,11 @@
 5. [Security](#security)
 6. [Math Engine](#math-engine)
 7. [Game Modes](#game-modes)
-8. [User Interface](#user-interface)
-9. [Localization](#localization)
-7. [Game Modes](#game-modes)
-8. [User Interface](#user-interface)
-9. [Localization](#localization)
+8. [Scoring System](#scoring-system)
+9. [Achievements](#achievements)
+10. [Marks & Grades](#marks--grades)
+11. [User Interface](#user-interface)
+12. [Localization](#localization)
 
 ---
 
@@ -265,6 +265,96 @@ options = [answer, answer+7, answer-5, answer+12]
 - Leaderboard competition
 - Combo multipliers
 - Special power-ups
+
+---
+
+## Scoring System
+
+### Campaign Mode Scoring
+- **Questions per Level**: 20
+- **Pass Threshold**: 15 correct answers
+- **Star Rating**:
+  - 1 star: 15-17 correct answers (75-85%)
+  - 2 stars: 18-19 correct answers (90-95%)
+  - 3 stars: 20 correct answers (100%)
+
+### Puzzle Mode Scoring (Math Riddles, Number Sequences, Logic)
+- **Questions per Level**: 20
+- **Pass Threshold**: 15 correct answers
+- **Star Rating**:
+  - 1 star: 15-17 correct answers
+  - 2 stars: 18-19 correct answers
+  - 3 stars: 20 correct answers
+- **Points per Correct Answer**: 5 points × multiplier
+
+### Points System
+| Action | Points |
+|--------|--------|
+| Correct Answer | 10 base + combo bonus |
+| Combo x2 | +10 bonus |
+| Combo x3 | +20 bonus |
+| Combo x4 | +30 bonus |
+| Hint Used | -50% points |
+| Streak 5 | +20 bonus |
+| Streak 10 | +50 bonus |
+| Streak 15 | +100 bonus |
+
+### Level Progression
+- **Unlock Next Level**: Pass current level (15+ correct)
+- **Stars Awarded**: Sum of stars from all operations
+- **Total Stars Required**: 50 for "Stargazer" achievement
+
+---
+
+## Achievements
+
+### Core Achievements
+| ID | Title | Requirement | Reward |
+|----|-------|-------------|--------|
+| first_win | First Victory | Complete first game | 100 points |
+| campaign_master | Campaign Master | Complete all campaign levels | 1000 points |
+| speed_demon | Speed Demon | Answer 20 questions in 60s | 100 points |
+| perfect_score | Perfect Score | 100% accuracy in any mode | 150 points |
+| math_master | Math Master | Complete 50 arithmetic questions | 200 points |
+| stargazer | Stargazer | Earn 50 total stars | 500 points |
+| sharpshooter | Sharpshooter | 100% accuracy in 10 games | 750 points |
+| time_lord | Time Lord | 3600+ seconds played | 300 points |
+| scholar | Scholar | Earn 120 campaign stars | 1000 points |
+
+### Daily Challenges
+Randomly selected 4 challenges per day:
+- Speed Demon: Answer 20 questions in under 60 seconds
+- Perfect Score: Get 100% accuracy in any mode
+- Math Master: Complete 50 arithmetic questions
+- Unstoppable!: Get 10 correct answers in a row
+- Campaign Grinder: Earn 9 stars in Campaign Mode
+- Duel Master: Win 3 Duel games against AI
+- Endless Survivor: Reach score of 200 in Endless Mode
+- Division Expert: Answer 15 division questions correctly
+
+---
+
+## Marks & Grades
+
+### Star-Based Progression
+Stars are awarded per level and contribute to overall progress:
+- **Total Stars**: Sum across all operations
+- **Stars per Operation**: Sum of stars for that operation type
+- **Level Mastery**: Stars determine which levels are "mastered"
+
+### Accuracy Metrics
+- **Overall Accuracy**: Total correct / Total answered × 100
+- **Per-Operation Accuracy**: Accuracy for each math operation
+- **Best Streak**: Highest consecutive correct answers
+- **Current Streak**: Active streak counter
+
+### Performance Tiers
+| Tier | Stars | Description |
+|------|-------|-------------|
+| Bronze | 1-2 stars | Basic completion |
+| Silver | 3-4 stars | Good performance |
+| Gold | 5-6 stars | Excellent mastery |
+| Platinum | 7+ stars | Perfect score |
 
 ---
 

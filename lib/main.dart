@@ -36,36 +36,7 @@ void main() async {
     ]);
   }
 
-  try {
-    final dbInit = DatabaseService.instance;
-
-    final container = ProviderContainer();
-
-    final futures = [
-      dbInit,
-      container.read(userSessionProvider.notifier).initializeUser(),
-      container.read(themeProvider.notifier).loadTheme(),
-      container.read(localeProvider.notifier).loadLocale(),
-      container.read(settingsProvider.notifier).loadSettings(),
-      container.read(levelProgressProvider.notifier).loadProgress(),
-    ];
-
-    await Future.wait(futures);
-
-    final settings = container.read(settingsProvider);
-    container.read(soundManagerProvider).setMuted(!settings.soundEnabled);
-    await HapticManager.instance.initialize();
-    await SoundManager.instance.initialize();
-
-    NotificationService().initialize();
-
-    runApp(
-      UncontrolledProviderScope(container: container, child: const GAASApp()),
-    );
-  } catch (e) {
-    debugPrint('Initialization error: $e');
-    runApp(const ProviderScope(child: GAASApp()));
-  }
+  runApp(const ProviderScope(child: GAASApp()));
 }
 
 class GAASApp extends ConsumerWidget {
@@ -76,26 +47,47 @@ class GAASApp extends ConsumerWidget {
     final currentTheme = ref.watch(themeProvider);
     final currentLocale = ref.watch(localeProvider);
 
-    return MaterialApp(
-      key: ValueKey(currentLocale.code),
-      title: 'GAAS',
-      debugShowCheckedModeBanner: false,
-      theme: AdaptiveTheme.getAdaptiveTheme(context, currentTheme),
-      locale: Locale(currentLocale.code),
-      localizationsDelegates: AppLocalizations.localizationsDelegates,
-      supportedLocales: AppLocalizations.supportedLocales,
-      home: const SplashScreen(),
-      builder: (context, child) {
-        if (ResponsiveUtils.isWindows()) {
-          return MediaQuery(
-            data: MediaQuery.of(context).copyWith(
-              textScaler: TextScaler.noScaling,
+    return FutureBuilder(
+      future: _initializeApp(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState != ConnectionState.done) {
+          return const MaterialApp(
+            home: Scaffold(
+              backgroundColor: Color(0xFF030712),
+              body: Center(child: CircularProgressIndicator()),
             ),
-            child: child!,
           );
         }
-        return child!;
+
+        return MaterialApp(
+          key: ValueKey(currentLocale.code),
+          title: 'GAAS',
+          debugShowCheckedModeBanner: false,
+          theme: AdaptiveTheme.getAdaptiveTheme(context, currentTheme),
+          locale: Locale(currentLocale.code),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: const SplashScreen(),
+          builder: (context, child) {
+            if (ResponsiveUtils.isWindows()) {
+              return MediaQuery(
+                data: MediaQuery.of(context).copyWith(
+                  textScaler: TextScaler.noScaling,
+                ),
+                child: child!,
+              );
+            }
+            return child!;
+          },
+        );
       },
     );
   }
+}
+
+Future<void> _initializeApp() async {
+  await DatabaseService.instance;
+  await HapticManager.instance.initialize();
+  await SoundManager.instance.initialize();
+  NotificationService().initialize();
 }

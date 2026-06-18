@@ -22,19 +22,6 @@ final dbProvider = FutureProvider<DatabaseService>((ref) async {
   return await DatabaseService.instance;
 });
 
-final appStartupProvider = FutureProvider<void>((ref) async {
-  await ref.watch(dbProvider.future);
-  
-  await Future.wait([
-    ref.read(userSessionProvider.notifier).initializeUser(),
-    ref.read(levelProgressRepositoryProvider).initializeLevels(),
-    ref.read(themeProvider.notifier).loadTheme(),
-    ref.read(localeProvider.notifier).loadLocale(),
-    ref.read(settingsProvider.notifier).loadSettings(),
-    ref.read(levelProgressProvider.notifier).loadProgress(),
-  ]);
-});
-
 final notificationProvider = Provider((ref) => NotificationService());
 final userRepositoryProvider = Provider((ref) => UserRepository());
 final levelProgressRepositoryProvider = Provider((ref) => LevelProgressRepository());

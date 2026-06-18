@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/providers.dart';
 import '../../../core/themes/app_themes.dart';
+import '../../../core/sound_manager.dart';
 import '../crossword/crossword_screen.dart';
 import '../math_riddle/math_riddle_screen.dart';
 import '../../../data/models/math_riddle.dart';
@@ -645,6 +646,10 @@ class _ChallengePuzzleScreenState extends ConsumerState<ChallengePuzzleScreen> {
 
   void _showTimeUpDialog() {
     final challengeState = ref.read(challengeModeProvider);
+
+    // Play time up/wrong audio and haptic feedback
+    ref.read(soundManagerProvider).playWrongAnswer();
+    HapticManager.instance.wrongAnswerPattern();
 
     showDialog(
       context: context,

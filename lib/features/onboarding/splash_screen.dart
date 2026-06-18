@@ -6,9 +6,10 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/providers.dart';
 import '../../core/themes/app_themes.dart';
 import '../../core/sound_manager.dart';
-
 import '../../shared/widgets/main_navigation_scaffold.dart';
 import '../profile_setup/profile_setup_screen.dart';
+import '../../core/notification_service.dart';
+import '../../data/repositories/database_service.dart';
 import 'onboarding_screen.dart';
 
 class SplashScreen extends ConsumerStatefulWidget {
@@ -47,40 +48,121 @@ class _SplashScreenState extends ConsumerState<SplashScreen> with TickerProvider
   }
 
   Future<void> _boot() async {
+    final bootStart = DateTime.now();
+    
+    await _initializeServices();
+    
+    final elapsed = DateTime.now().difference(bootStart);
+    if (elapsed < const Duration(seconds: 2)) {
+      await Future.delayed(const Duration(seconds: 2) - elapsed);
+    }
+
+    if (mounted) {
+      await _safeNavigate();
+    }
+  }
+
+  Future<void> _initializeServices() async {
+    try {
+      await DatabaseService.reset();
+    } catch (_) {}
+    
     try {
       await Future.wait([
-        Future.delayed(const Duration(seconds: 2)),
-        ref.read(appStartupProvider.future),
+        _initDatabase(),
+        _initUserSession(),
+        _initTheme(),
+        _initLocale(),
+        _initHaptics(),
+        _initSound(),
+        _initNotifications(),
       ]);
+    } catch (_) {
+      await _ensureBasicState();
+    }
+  }
 
-      if (!mounted) return;
+  Future<void> _initDatabase() async {
+    try {
+      await DatabaseService.instance;
+    } catch (_) {}
+  }
 
+  Future<void> _initUserSession() async {
+    try {
+      await ref.read(userSessionProvider.notifier).initializeUser();
+    } catch (_) {}
+  }
+
+  Future<void> _initTheme() async {
+    try {
+      await ref.read(themeProvider.notifier).loadTheme();
+    } catch (_) {}
+  }
+
+  Future<void> _initLocale() async {
+    try {
+      await ref.read(localeProvider.notifier).loadLocale();
+    } catch (_) {}
+  }
+
+  Future<void> _initHaptics() async {
+    try {
       await HapticManager.instance.initialize();
-      await SoundManager.instance.initialize();
-      SoundManager.instance.playStartupSound();
+    } catch (_) {}
+  }
 
+  Future<void> _initSound() async {
+    try {
+      await SoundManager.instance.initialize();
+    } catch (_) {}
+  }
+
+  Future<void> _initNotifications() async {
+    try {
+      await NotificationService().initialize();
+    } catch (_) {}
+  }
+
+Future<void> _ensureBasicState() async {
+    try {
+      await ref.read(themeProvider.notifier).loadTheme();
+      await ref.read(localeProvider.notifier).loadLocale();
+    } catch (_) {}
+  }
+
+  Future<void> _safeNavigate() async {
+    try {
       await _navigateToNext();
-    } catch (e) {
-      // Error is handled in the build method via ref.watch(appStartupProvider)
+    } catch (_) {
+      if (!mounted) return;
+      _performFinalNavigation(const MainNavigationScaffold());
     }
   }
 
   Future<void> _navigateToNext() async {
-    final prefs = await SharedPreferences.getInstance();
-    final seenIntro = prefs.getBool('seen_intro') ?? false;
-    final hasCustomization = prefs.getBool('has_customization') ?? false;
-    final user = ref.read(userSessionProvider);
-    final hasCompleteProfile =
-        user != null && user.name.trim().isNotEmpty && user.avatarShape.trim().isNotEmpty;
+    Widget next;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final seenIntro = prefs.getBool('seen_intro') ?? false;
+      final hasCustomization = prefs.getBool('has_customization') ?? false;
 
-    // New flow: Splash → Intro → User Customization → Home
-    final Widget next = !seenIntro
-        ? const OnboardingScreen()
-        : (!hasCustomization || !hasCompleteProfile
-              ? const ProfileSetupScreen(isInitialSetup: true)
-              : const MainNavigationScaffold());
+      if (!seenIntro) {
+        next = const OnboardingScreen();
+      } else if (!hasCustomization) {
+        next = const ProfileSetupScreen(isInitialSetup: false);
+      } else {
+        next = const MainNavigationScaffold();
+      }
+    } catch (_) {
+      next = const MainNavigationScaffold();
+    }
 
     if (!mounted) return;
+    _performFinalNavigation(next);
+  }
+
+  void _performFinalNavigation(Widget next) {
     Navigator.of(context).pushReplacement(
       PageRouteBuilder(
         pageBuilder: (_, _, _) => next,
@@ -100,9 +182,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> with TickerProvider
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final startupState = ref.watch(appStartupProvider);
 
-    // Modern Deep Dark Palette
     final bg = AppDesignTokens.background;
     final primary = AppDesignTokens.primary;
     final secondary = AppDesignTokens.secondary;
@@ -111,7 +191,6 @@ class _SplashScreenState extends ConsumerState<SplashScreen> with TickerProvider
       backgroundColor: bg,
       body: Stack(
         children: [
-          // Dynamic mesh-style background
           AnimatedBuilder(
             animation: _bgController,
             builder: (_, child) {
@@ -142,7 +221,6 @@ class _SplashScreenState extends ConsumerState<SplashScreen> with TickerProvider
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      // Modern Glassmorphic Logo Container
                       Container(
                         width: 140,
                         height: 140,
@@ -195,35 +273,6 @@ class _SplashScreenState extends ConsumerState<SplashScreen> with TickerProvider
                         ),
                       ),
                       const SizedBox(height: 60),
-                      if (startupState.hasError)
-                         Column(
-                           children: [
-                             Text(
-                               'Initialization Error',
-                               style: theme.textTheme.bodyMedium?.copyWith(color: AppDesignTokens.error),
-                             ),
-                             const SizedBox(height: 16),
-                             OutlinedButton(
-                               onPressed: () {
-                                 ref.invalidate(appStartupProvider);
-                                 _boot();
-                               },
-                               child: const Text('RETRY'),
-                             )
-                           ],
-                         )
-                      else
-                        SizedBox(
-                          width: 200,
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(2),
-                            child: LinearProgressIndicator(
-                              minHeight: 2,
-                              backgroundColor: Colors.white.withValues(alpha: 0.05),
-                              valueColor: AlwaysStoppedAnimation<Color>(primary),
-                            ),
-                          ),
-                        ),
                     ],
                   ),
                 ),

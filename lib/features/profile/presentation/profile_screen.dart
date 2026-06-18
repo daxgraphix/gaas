@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../../../core/providers.dart';
+import '../../../core/sound_manager.dart';
 import '../../../core/themes/app_themes.dart';
 import '../../../core/utils/responsive_utils.dart';
 import '../../../l10n/generated/app_localizations.dart';
@@ -405,6 +406,7 @@ class ProfileScreen extends ConsumerWidget {
             trailing: Switch(
               value: settings.notificationsEnabled,
               onChanged: (value) {
+                HapticManager.instance.selectionClick();
                 ref.read(settingsProvider.notifier).toggleNotifications(value);
               },
               activeThumbColor: theme.colorScheme.secondary,
@@ -419,6 +421,7 @@ class ProfileScreen extends ConsumerWidget {
             trailing: Switch(
               value: settings.soundEnabled,
               onChanged: (value) {
+                HapticManager.instance.selectionClick();
                 ref.read(settingsProvider.notifier).toggleSound(value);
               },
               activeThumbColor: theme.colorScheme.tertiary,
@@ -433,6 +436,7 @@ class ProfileScreen extends ConsumerWidget {
             trailing: Switch(
               value: settings.hapticsEnabled,
               onChanged: (value) {
+                HapticManager.instance.selectionClick();
                 ref.read(settingsProvider.notifier).toggleHaptics(value);
               },
               activeThumbColor: theme.colorScheme.error,
@@ -602,6 +606,7 @@ class ProfileScreen extends ConsumerWidget {
     WidgetRef ref,
     AppLocale currentLocale,
   ) {
+    HapticManager.instance.selectionClick();
     final l10n = AppLocalizations.of(context)!;
     showDialog(
       context: context,
@@ -657,6 +662,7 @@ onTap: () {
     AppThemeType currentTheme,
     ThemeData theme,
   ) {
+    HapticManager.instance.selectionClick();
     final l10n = AppLocalizations.of(context)!;
     showDialog(
       context: context,

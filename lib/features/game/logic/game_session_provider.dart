@@ -4,7 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/utils/game_flow_optimizer.dart';
 import '../../../core/math_engine/math_engine.dart';
 import '../../../core/providers.dart';
-import '../../../core/sound_manager.dart';
 import '../../../core/notification_service.dart';
 
 enum GameMode {
@@ -552,11 +551,11 @@ class GameSessionNotifier extends StateNotifier<GameSession?> {
     int newLives = state!.lives;
 
     if (isCorrect) {
-      HapticManager.instance.successPattern();
+      ref.read(soundManagerProvider).playCorrect();
       newScore += 15;
       newCorrect++;
     } else {
-      HapticManager.instance.errorPattern();
+      ref.read(soundManagerProvider).playIncorrect();
       if (state!.mode == GameMode.endless) {
         newLives--;
       }

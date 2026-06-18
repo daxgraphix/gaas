@@ -539,6 +539,14 @@ class _MathRiddleScreenState extends ConsumerState<MathRiddleScreen> with Single
       ref.read(levelProgressProvider.notifier).unlockNextLevel(widget.operationId!, state.level);
     }
 
+    if (passed) {
+      ref.read(soundManagerProvider).playComplete();
+      HapticManager.instance.successPattern();
+    } else {
+      ref.read(soundManagerProvider).playWrongAnswer();
+      HapticManager.instance.wrongAnswerPattern();
+    }
+
     showDialog(
       context: context,
       barrierDismissible: false,

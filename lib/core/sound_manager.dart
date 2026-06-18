@@ -410,6 +410,11 @@ class SoundManager {
       await player.dispose();
     }
     _playerPool.clear();
+    _isInitialized = false;
+  }
+
+  void reset() {
+    _isInitialized = false;
   }
 
   String _getSoundFile(String key) {

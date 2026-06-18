@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../l10n/generated/app_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/providers.dart';
 import '../../../core/sound_manager.dart';
 import '../../../core/math_engine/math_equation_engine.dart';
 import '../../../data/models/crossword_puzzle.dart';
@@ -141,6 +142,14 @@ class _MathEquationScreenState extends ConsumerState<MathEquationScreen> with Ti
 
   void _endGame(int correctCount) {
     final stars = _puzzle.calculateStars(_elapsedSeconds, _hintsUsed, correctCount);
+
+    if (stars > 0) {
+      ref.read(soundManagerProvider).playComplete();
+      HapticManager.instance.successPattern();
+    } else {
+      ref.read(soundManagerProvider).playWrongAnswer();
+      HapticManager.instance.wrongAnswerPattern();
+    }
 
     Navigator.of(context).pop({
       'stars': stars,

@@ -8,22 +8,22 @@ import '../../core/security/security_service.dart';
 class DatabaseService {
   static DatabaseService? _instance;
   static SharedPreferences? _prefs;
+  static bool _isInitialized = false;
 
   DatabaseService._private();
 
-  factory DatabaseService() {
-    if (_instance == null) {
-      _instance = DatabaseService._private();
-      SharedPreferences.getInstance().then((prefs) => _prefs = prefs);
-    }
+  static Future<DatabaseService> get instance async {
+    if (_instance != null && _isInitialized) return _instance!;
+    _instance = DatabaseService._private();
+    _prefs = await SharedPreferences.getInstance();
+    _isInitialized = true;
     return _instance!;
   }
 
-  static Future<DatabaseService> get instance async {
-    if (_instance != null) return _instance!;
-    _instance = DatabaseService._private();
+  static Future<void> reset() async {
+    _instance = null;
     _prefs = await SharedPreferences.getInstance();
-    return _instance!;
+    _isInitialized = false;
   }
 
   Future<void> saveUserSession(UserSession userSession) async {

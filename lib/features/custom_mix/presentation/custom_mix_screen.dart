@@ -708,6 +708,8 @@ class _CustomMixScreenState extends ConsumerState<CustomMixScreen>
     final theme = Theme.of(context);
     final state = ref.read(customMixArithmeticProvider);
     if (state.currentQuestion != null && state.currentQuestion!.progressiveHints.isNotEmpty) {
+      ref.read(soundManagerProvider).playEffect('hint');
+      HapticManager.instance.mediumImpact();
       showDialog(
         context: context,
         barrierColor: theme.brightness == Brightness.light
@@ -779,6 +781,7 @@ class _CustomMixScreenState extends ConsumerState<CustomMixScreen>
   }
 
   void _showHelp() {
+    HapticManager.instance.selectionClick();
     final theme = Theme.of(context);
     showDialog(
       context: context,

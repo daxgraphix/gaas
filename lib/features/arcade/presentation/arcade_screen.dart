@@ -4,6 +4,7 @@ import '../../../core/themes/app_themes.dart';
 import '../../../l10n/generated/app_localizations.dart';
 import '../../game/logic/game_session_provider.dart';
 import '../../game/ui/game_screen.dart';
+import '../../../core/providers.dart';
 
 class ArcadeScreen extends ConsumerWidget {
   const ArcadeScreen({super.key});
@@ -30,28 +31,40 @@ class ArcadeScreen extends ConsumerWidget {
               context,
               l10n.scoreAttack,
               l10n.scoreAttackDesc,
-              () => _showOperationDialog(context, ref, GameMode.scoreAttack),
+              () {
+                ref.read(soundManagerProvider).playClick();
+                _showOperationDialog(context, ref, GameMode.scoreAttack);
+              },
               theme.colorScheme.primary,
             ),
             _buildArcadeListItem(
               context,
               l10n.endless,
               l10n.endlessDesc,
-              () => _showOperationDialog(context, ref, GameMode.endless),
+              () {
+                ref.read(soundManagerProvider).playClick();
+                _showOperationDialog(context, ref, GameMode.endless);
+              },
               theme.colorScheme.secondary,
             ),
             _buildArcadeListItem(
               context,
               l10n.duel,
               l10n.duelDesc,
-              () => _showOperationDialog(context, ref, GameMode.duel),
+              () {
+                ref.read(soundManagerProvider).playClick();
+                _showOperationDialog(context, ref, GameMode.duel);
+              },
               AppDesignTokens.neonYellow,
             ),
             _buildArcadeListItem(
               context,
               l10n.flash,
               l10n.flashDesc,
-              () => _showOperationDialog(context, ref, GameMode.flash),
+              () {
+                ref.read(soundManagerProvider).playClick();
+                _showOperationDialog(context, ref, GameMode.flash);
+              },
               AppDesignTokens.neonPink,
             ),
             const SizedBox(height: 32),
@@ -61,21 +74,30 @@ class ArcadeScreen extends ConsumerWidget {
               context,
               l10n.speedDemon,
               l10n.speedDemonDesc,
-              () => _showOperationDialog(context, ref, GameMode.speedDemon),
+              () {
+                ref.read(soundManagerProvider).playClick();
+                _showOperationDialog(context, ref, GameMode.speedDemon);
+              },
               theme.colorScheme.primary,
             ),
             _buildArcadeListItem(
               context,
               l10n.mathMaster,
               l10n.mathMasterDesc,
-              () => _showOperationDialog(context, ref, GameMode.mathMaster),
+              () {
+                ref.read(soundManagerProvider).playClick();
+                _showOperationDialog(context, ref, GameMode.mathMaster);
+              },
               theme.colorScheme.secondary,
             ),
             _buildArcadeListItem(
               context,
               l10n.marathon,
               l10n.marathonDesc,
-              () => _showOperationDialog(context, ref, GameMode.marathon),
+              () {
+                ref.read(soundManagerProvider).playClick();
+                _showOperationDialog(context, ref, GameMode.marathon);
+              },
               AppDesignTokens.neonPink,
             ),
           ],
@@ -249,6 +271,7 @@ class ArcadeScreen extends ConsumerWidget {
     final theme = Theme.of(context);
     return InkWell(
       onTap: () {
+        ref.read(soundManagerProvider).playClick();
         Navigator.pop(context);
         _startGame(context, ref, operation, mode);
       },
@@ -351,7 +374,10 @@ class ArcadeScreen extends ConsumerWidget {
                           ),
                           selected: selectedLevel == level,
                           onSelected: (selected) {
-                            if (selected) setState(() => selectedLevel = level);
+                            if (selected) {
+                              ref.read(soundManagerProvider).playClick();
+                              setState(() => selectedLevel = level);
+                            }
                           },
                           backgroundColor: theme.colorScheme.surface,
                           selectedColor: theme.colorScheme.primary.withValues(alpha: 0.1),
@@ -367,6 +393,7 @@ class ArcadeScreen extends ConsumerWidget {
                   width: double.infinity,
                   child: ElevatedButton(
                     onPressed: () {
+                      ref.read(soundManagerProvider).playGameStart();
                       Navigator.pop(context);
                       _launchGame(context, ref, operation, mode, selectedLevel);
                     },

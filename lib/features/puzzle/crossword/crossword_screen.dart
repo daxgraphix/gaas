@@ -407,13 +407,14 @@ final theme = Theme.of(context);
         _buildSpecialKey(
           Icons.lightbulb_outline,
           () {
-          HapticManager.instance.mediumImpact();
-          final user = ref.read(userSessionProvider);
-          if (user != null && user.totalPoints >= hintCostPoints) {
-            ref.read(crosswordPuzzleProvider.notifier).revealLetter();
-          } else {
-            _triggerShake();
-          }
+            ref.read(soundManagerProvider).playHint();
+            HapticManager.instance.mediumImpact();
+            final user = ref.read(userSessionProvider);
+            if (user != null && user.totalPoints >= hintCostPoints) {
+              ref.read(crosswordPuzzleProvider.notifier).revealLetter();
+            } else {
+              _triggerShake();
+            }
           },
           enabled: canUseHint,
         ),
@@ -581,6 +582,10 @@ final theme = Theme.of(context);
 
   void _showSuccess(CrosswordPuzzleState state) {
     final stars = state.stars;
+
+    // Play complete sound and success haptic pattern
+    ref.read(soundManagerProvider).playComplete();
+    HapticManager.instance.successPattern();
 
     ref
         .read(levelProgressRepositoryProvider)

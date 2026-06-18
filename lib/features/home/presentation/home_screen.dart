@@ -7,7 +7,7 @@ import '../../../core/themes/app_themes.dart';
 import '../../../core/utils/responsive_utils.dart';
 import '../../../l10n/generated/app_localizations.dart';
 import '../../reports/reports_screen.dart';
-import '../../profile/presentation/profile_screen.dart';
+
 import '../../campaign/presentation/campaign_screen.dart';
 import '../../arcade/presentation/arcade_screen.dart';
 import '../../arcade/enhanced_challenge_screen.dart';
@@ -25,30 +25,15 @@ class HomeScreen extends ConsumerStatefulWidget {
 
 class _HomeScreenState extends ConsumerState<HomeScreen>
     with TickerProviderStateMixin {
-  late AnimationController _fabAnimationController;
   late AnimationController _cardAnimationController;
-  late Animation<double> _fabScaleAnimation;
 
   @override
   void initState() {
     super.initState();
-    _fabAnimationController = AnimationController(
-      duration: const Duration(milliseconds: 2000),
-      vsync: this,
-    )..repeat(reverse: true);
-
     _cardAnimationController = AnimationController(
       duration: const Duration(milliseconds: 600),
       vsync: this,
     );
-
-    _fabScaleAnimation = Tween<double>(
-      begin: 1.0,
-      end: 1.05,
-    ).animate(CurvedAnimation(
-      parent: _fabAnimationController,
-      curve: Curves.easeInOut,
-    ));
 
     _cardAnimationController.forward();
 
@@ -61,7 +46,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
 
   @override
   void dispose() {
-    _fabAnimationController.dispose();
     _cardAnimationController.dispose();
     super.dispose();
   }
@@ -87,14 +71,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                 : l10n.goodNight;
 
     return Scaffold(
-      backgroundColor: theme.scaffoldBackgroundColor,
+      backgroundColor: Colors.transparent,
       extendBody: true,
       appBar: _buildAdvancedAppBar(theme, greeting, l10n),
       body: _buildAdvancedBody(
         theme, user, totalStars, completedLevels, totalTime, accuracy, sessionStats, l10n,
       ),
-      floatingActionButton: _buildAnimatedFAB(theme, l10n),
-      bottomNavigationBar: _buildModernBottomNav(theme, l10n),
     );
   }
 
@@ -130,7 +112,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
               ],
             ),
             child: Icon(
-              Icons.calculate,
+              Icons.bolt_rounded,
               color: theme.colorScheme.primary,
               size: 20,
             ),
@@ -142,10 +124,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  l10n.welcomeToGAAS,
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: theme.colorScheme.onSurface,
+                  'COMMAND CENTER',
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 2,
+                    color: theme.colorScheme.primary,
                   ),
                 ),
                 Text(
@@ -163,8 +146,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
         _buildStreakIndicator(theme),
         const SizedBox(width: 8),
         _buildLanguageToggle(theme, l10n),
-        const SizedBox(width: 8),
-        _buildProfileButton(theme, l10n),
+        const SizedBox(width: 16),
       ],
     );
   }
@@ -242,28 +224,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     );
   }
 
-  Widget _buildProfileButton(ThemeData theme, AppLocalizations l10n) {
-    return IconButton(
-      icon: CircleAvatar(
-        radius: 14,
-        backgroundColor: theme.colorScheme.primary.withValues(alpha: 0.2),
-        child: Icon(
-          Icons.person_outline,
-          size: 16,
-          color: theme.colorScheme.primary,
-        ),
-      ),
-      tooltip: l10n.profile,
-      onPressed: () {
-        HapticManager.instance.selectionClick();
-        ref.read(soundManagerProvider).playEffect('click');
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => const ProfileScreen()),
-        );
-      },
-    );
-  }
+
 
   Widget _buildAdvancedBody(
     ThemeData theme,
@@ -276,92 +237,129 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     AppLocalizations l10n,
   ) {
     final isMobile = ResponsiveUtils.isMobile(context);
-    return Stack(
-      children: [
-        Positioned.fill(
-          child: _buildBackgroundRadialMesh(theme),
-        ),
-        CustomScrollView(
-          physics: const BouncingScrollPhysics(),
-          slivers: [
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: EdgeInsets.fromLTRB(
-                  isMobile ? 16 : 24,
-                  20,
-                  isMobile ? 16 : 24,
-                  isMobile ? 160 : 200,
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _buildWelcomeSection(theme, l10n),
-                    const SizedBox(height: 32),
-                    _buildStatsOverview(
-                      theme, totalStars, completedLevels, totalTime, accuracy, l10n,
-                    ).animate().fadeIn(duration: 600.ms, delay: 200.ms).slideY(begin: 0.1, end: 0),
-                    const SizedBox(height: 32),
-                    _buildSessionStats(theme, sessionStats, l10n),
-                    const SizedBox(height: 32),
-                    _buildQuickActions(theme, l10n),
-                    const SizedBox(height: 32),
-                    _buildDailyChallenge(theme, l10n),
-                    const SizedBox(height: 32),
-                    _buildGameModesGrid(theme, l10n),
-                  ],
-                ),
-              ),
+    return CustomScrollView(
+      physics: const BouncingScrollPhysics(),
+      slivers: [
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: EdgeInsets.fromLTRB(
+              isMobile ? 16 : 24,
+              20,
+              isMobile ? 16 : 24,
+              120, // Reduced padding as we have global nav now
             ),
-          ],
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildWelcomeSection(theme, l10n),
+                const SizedBox(height: 32),
+                _buildQuickPlayModule(theme, l10n), // New Quick Play Module
+                const SizedBox(height: 32),
+                _buildStatsOverview(
+                  theme, totalStars, completedLevels, totalTime, accuracy, l10n,
+                ).animate().fadeIn(duration: 600.ms, delay: 200.ms).slideY(begin: 0.1, end: 0),
+                const SizedBox(height: 32),
+                _buildSessionStats(theme, sessionStats, l10n),
+                const SizedBox(height: 32),
+                _buildQuickActions(theme, l10n),
+                const SizedBox(height: 32),
+                _buildDailyChallenge(theme, l10n),
+                const SizedBox(height: 32),
+                _buildGameModesGrid(theme, l10n),
+              ],
+            ),
+          ),
         ),
       ],
     );
   }
 
-  Widget _buildBackgroundRadialMesh(ThemeData theme) {
-    return Container(
-      color: AppDesignTokens.background,
-      child: Stack(
-        children: [
-          Positioned(
-            top: -100,
-            right: -100,
-            child: Container(
-              width: 400,
-              height: 400,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: RadialGradient(
-                  colors: [
-                    theme.colorScheme.primary.withValues(alpha: 0.15),
-                    theme.colorScheme.primary.withValues(alpha: 0),
+  Widget _buildQuickPlayModule(ThemeData theme, AppLocalizations l10n) {
+    return Consumer(
+      builder: (context, ref, child) {
+        final progressMap = ref.watch(levelProgressProvider);
+        if (progressMap.isEmpty) return const SizedBox.shrink();
+
+        // Find the last unlocked level that isn't completed with 3 stars, or just the next unlocked level
+        // For simplicity, we'll pick the first operation and its first incomplete unlocked level
+        String? nextOp;
+        int? nextLevel;
+        
+        for (final entry in progressMap.entries) {
+          final levels = entry.value;
+          for (final level in levels) {
+            if (level.isUnlocked && level.stars < 3) {
+              nextOp = entry.key;
+              nextLevel = level.level;
+              break;
+            }
+          }
+          if (nextOp != null) break;
+        }
+
+        // Fallback to first level if everything is 3-starred
+        nextOp ??= progressMap.keys.first;
+        nextLevel ??= 1;
+
+        return PremiumCard(
+          padding: const EdgeInsets.all(20),
+          borderColor: theme.colorScheme.primary.withValues(alpha: 0.4),
+          onTap: () {
+            // Logic to launch campaign level
+            // For now, navigating to campaign screen as a safe default
+            _navigateToScreen(const CampaignScreen());
+          },
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.primary.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Icon(
+                  Icons.play_circle_filled_rounded,
+                  color: theme.colorScheme.primary,
+                  size: 32,
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'QUICK RESUME',
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 2,
+                        color: theme.colorScheme.primary,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      '${nextOp.toUpperCase()} LEVEL $nextLevel',
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                   ],
                 ),
               ),
-            ),
-          ),
-          Positioned(
-            bottom: 100,
-            left: -150,
-            child: Container(
-              width: 500,
-              height: 500,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: RadialGradient(
-                  colors: [
-                    theme.colorScheme.secondary.withValues(alpha: 0.1),
-                    theme.colorScheme.secondary.withValues(alpha: 0),
-                  ],
-                ),
+              Icon(
+                Icons.chevron_right_rounded,
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.3),
               ),
-            ),
+            ],
           ),
-          _buildParticleBackground(theme),
-        ],
-      ),
+        ).animate()
+         .fadeIn(duration: 600.ms, delay: 100.ms)
+         .slideX(begin: -0.1, end: 0);
+      },
     );
   }
+
+
 
   Widget _buildWelcomeSection(ThemeData theme, AppLocalizations l10n) {
     return PremiumGlassOverlay(
@@ -1068,158 +1066,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     );
   }
 
-  Widget _buildAnimatedFAB(ThemeData theme, AppLocalizations l10n) {
-    return AnimatedBuilder(
-      animation: _fabScaleAnimation,
-      builder: (context, child) {
-        return Container(
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                theme.colorScheme.primary,
-                theme.colorScheme.primary.withValues(alpha: 0.8),
-              ],
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: theme.colorScheme.primary.withValues(alpha: 0.4),
-                blurRadius: 16,
-                offset: const Offset(0, 6),
-              ),
-              BoxShadow(
-                color: theme.colorScheme.primary.withValues(alpha: 0.2),
-                blurRadius: 24,
-                offset: const Offset(0, 12),
-              ),
-            ],
-          ),
-          child: Transform.scale(
-            scale: _fabScaleAnimation.value,
-            child: FloatingActionButton(
-              onPressed: () {
-                HapticManager.instance.selectionClick();
-                ref.read(soundManagerProvider).playEffect('click');
-                _showQuickStartDialog(theme, l10n);
-              },
-              backgroundColor: Colors.transparent,
-              foregroundColor: theme.colorScheme.onPrimary,
-              elevation: 0,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: const Icon(Icons.play_arrow, size: 28),
-            ),
-          ),
-        ).animate()
-            .scale(begin: const Offset(0.8, 0.8), end: const Offset(1.05, 1.05))
-            .then()
-            .scale(begin: const Offset(1.05, 1.05), end: const Offset(1, 1));
-      },
-    );
-  }
 
-  Widget _buildModernBottomNav(ThemeData theme, AppLocalizations l10n) {
-    return SafeArea(
-      bottom: true,
-      child: Container(
-        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        decoration: BoxDecoration(
-          color: theme.colorScheme.surface.withValues(alpha: 0.95),
-          borderRadius: BorderRadius.circular(20),
-          boxShadow: [
-            BoxShadow(
-              color: theme.shadowColor.withValues(alpha: 0.15),
-              blurRadius: 12,
-              offset: const Offset(0, 4),
-            ),
-          ],
-          border: Border.all(
-            color: theme.colorScheme.outline.withValues(alpha: 0.1),
-            width: 1,
-          ),
-        ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(20),
-          child: BottomNavigationBar(
-            backgroundColor: Colors.transparent,
-            elevation: 0,
-            type: BottomNavigationBarType.fixed,
-            showSelectedLabels: false,
-            showUnselectedLabels: false,
-            selectedItemColor: theme.colorScheme.primary,
-            unselectedItemColor: theme.colorScheme.onSurface.withValues(alpha: 0.6),
-            currentIndex: 0,
-            items: [
-              BottomNavigationBarItem(
-                icon: const Icon(Icons.home_outlined, size: 24),
-                activeIcon: const Icon(Icons.home, size: 24),
-                label: l10n.home,
-                tooltip: l10n.home,
-              ),
-              BottomNavigationBarItem(
-                icon: const Icon(Icons.games_outlined, size: 24),
-                activeIcon: const Icon(Icons.games, size: 24),
-                label: l10n.gameModes,
-                tooltip: l10n.gameModes,
-              ),
-              BottomNavigationBarItem(
-                icon: const Icon(Icons.bar_chart_outlined, size: 24),
-                activeIcon: const Icon(Icons.bar_chart, size: 24),
-                label: l10n.stats,
-                tooltip: l10n.stats,
-              ),
-              BottomNavigationBarItem(
-                icon: const Icon(Icons.person_outline, size: 24),
-                activeIcon: const Icon(Icons.person, size: 24),
-                label: l10n.profile,
-                tooltip: l10n.profile,
-              ),
-            ],
-            onTap: (index) {
-              switch (index) {
-                case 0:
-                  // Already on home
-                  break;
-                case 1:
-                  _navigateToScreen(const ArcadeScreen());
-                  break;
-                case 2:
-                  _navigateToScreen(const ReportsScreen());
-                  break;
-                case 3:
-                  _navigateToScreen(const ProfileScreen());
-                  break;
-              }
-            },
-          ),
-        ),
-      ),
-    );
-  }
 
-  Widget _buildParticleBackground(ThemeData theme) {
-    return Stack(
-      children: List.generate(15, (index) {
-        return Positioned(
-          left: (index * 53.0) % MediaQuery.of(context).size.width,
-          top: (index * 97.0) % MediaQuery.of(context).size.height,
-          child: Container(
-            width: 2 + (index % 3).toDouble(),
-            height: 2 + (index % 3).toDouble(),
-            decoration: BoxDecoration(
-              color: theme.colorScheme.primary.withValues(alpha: 0.05 + (index % 3) * 0.01),
-              shape: BoxShape.circle,
-            ),
-          ).animate()
-              .fadeIn(duration: 2000.ms)
-              .moveY(begin: 0, end: -30, duration: 4000.ms + (index * 300).ms),
-        );
-      }),
-    );
-  }
+
+
+
 
   void _navigateToScreen(Widget screen) {
     Navigator.push(
@@ -1227,150 +1078,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       PageRouteBuilder(
         pageBuilder: (context, animation, secondaryAnimation) => screen,
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
-          const begin = Offset(1.0, 0.0);
-          const end = Offset.zero;
-          const curve = Curves.easeInOutCubic;
-
-          var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
-          var offsetAnimation = animation.drive(tween);
-
-          return SlideTransition(
-            position: offsetAnimation,
-            child: child,
-          );
+          return FadeTransition(opacity: animation, child: child);
         },
-        transitionDuration: const Duration(milliseconds: 500),
+        transitionDuration: const Duration(milliseconds: 300),
       ),
     );
   }
 
-  void _showQuickStartDialog(ThemeData theme, AppLocalizations l10n) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: theme.colorScheme.surface,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(24),
-        ),
-        title: Row(
-          children: [
-            Icon(
-              Icons.rocket_launch,
-              color: theme.colorScheme.primary,
-            ),
-            const SizedBox(width: 12),
-            Text(
-              l10n.quickStart,
-              style: theme.textTheme.headlineSmall?.copyWith(
-                fontWeight: FontWeight.bold,
-                color: theme.colorScheme.onSurface,
-              ),
-            ),
-          ],
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            _buildQuickStartOption(
-              l10n.campaignMode,
-              l10n.startYourMathematicalJourney,
-              Icons.map,
-              () {
-                Navigator.pop(context);
-                _navigateToScreen(const CampaignScreen());
-              },
-              theme,
-            ),
-            const SizedBox(height: 12),
-            _buildQuickStartOption(
-              l10n.practiceMode,
-              l10n.focusOnSpecificOperations,
-              Icons.school,
-              () {
-                Navigator.pop(context);
-                _navigateToScreen(const PracticeScreen());
-              },
-              theme,
-            ),
-            const SizedBox(height: 12),
-            _buildQuickStartOption(
-              l10n.arcadeMode,
-              l10n.fastPacedGamingExperience,
-              Icons.flash_on,
-              () {
-                Navigator.pop(context);
-                _navigateToScreen(const ArcadeScreen());
-              },
-              theme,
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(
-              l10n.cancel,
-              style: TextStyle(color: theme.colorScheme.onSurface.withValues(alpha: 0.6)),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 
-  Widget _buildQuickStartOption(String title, String subtitle, IconData icon, VoidCallback onPressed, ThemeData theme) {
-    return InkWell(
-      onTap: onPressed,
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: theme.colorScheme.outline.withValues(alpha: 0.2),
-            width: 1,
-          ),
-        ),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: theme.colorScheme.primary.withValues(alpha: 0.2),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Icon(icon, color: theme.colorScheme.primary, size: 20),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: theme.textTheme.bodyLarge?.copyWith(
-                      fontWeight: FontWeight.w600,
-                      color: theme.colorScheme.onSurface,
-                    ),
-                  ),
-                  Text(
-                    subtitle,
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Icon(
-              Icons.arrow_forward_ios,
-              color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
-              size: 16,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 }

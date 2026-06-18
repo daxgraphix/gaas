@@ -392,5 +392,16 @@
   "century": "Karne",
   "mathEquationsLevelPrefix": "HESABU za MATH - NGazi",
   "selectDifficultyLevel": "CHAGUA KIWANGO CHA UGUMU",
-  "levelPrefix": "N"
+  "levelPrefix": "N",
+  "performanceOverview": "Muhtasari wa Utendaji",
+  "currentSession": "Kipindi cha Sasa",
+  "realTimeStats": "Takwimu za Wakati Halisi",
+  "questions": "Maswali",
+  "bestStreak": "Mfululizo Bora",
+  "sessions": "Vipindi",
+  "gameModeDistribution": "Usambazaji wa Modi ya Mchezo",
+  "performanceInsights": "Maarifa ya Utendaji",
+  "bestAccuracy": "Usahihi Bora",
+  "averageResponseTime": "Muda wa Wastani wa Kujibu",
+  "completionRate": "Kiwango cha Ukamilishaji"
 }

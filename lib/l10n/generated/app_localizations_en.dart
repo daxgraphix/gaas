@@ -1199,4 +1199,37 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get levelPrefix => 'L';
+
+  @override
+  String get performanceOverview => 'Performance Overview';
+
+  @override
+  String get currentSession => 'Current Session';
+
+  @override
+  String get realTimeStats => 'Real-time Stats';
+
+  @override
+  String get questions => 'Questions';
+
+  @override
+  String get bestStreak => 'Best Streak';
+
+  @override
+  String get sessions => 'Sessions';
+
+  @override
+  String get gameModeDistribution => 'Game Mode Distribution';
+
+  @override
+  String get performanceInsights => 'Performance Insights';
+
+  @override
+  String get bestAccuracy => 'Best Accuracy';
+
+  @override
+  String get averageResponseTime => 'Avg Response Time';
+
+  @override
+  String get completionRate => 'Completion Rate';
 }

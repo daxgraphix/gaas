@@ -163,7 +163,7 @@ final gameSessionProvider =
     });
 
 class GameSessionNotifier extends StateNotifier<GameSession?> {
-  static const int campaignPassThreshold = 15;
+  static const int campaignPassThreshold = 35;
   final Ref ref;
   Timer? _timer;
   Timer? _duelTimer;
@@ -179,7 +179,7 @@ class GameSessionNotifier extends StateNotifier<GameSession?> {
     int minNumber = 1,
     int maxNumber = 10,
     bool isVisualCounting = false,
-    int totalQuestions = 20,
+    int totalQuestions = 45,
     int? timeLimit,
     List<MathQuestion>? preloadedQuestions,
   }) {
@@ -361,25 +361,25 @@ class GameSessionNotifier extends StateNotifier<GameSession?> {
     }
 
     if (isCorrect) {
-      ref.read(soundManagerProvider).playEffect('correct');
+      ref.read(soundManagerProvider).playCorrect();
       final baseScore = _getScoreForMode();
       newScore += (hintUsed ? (baseScore ~/ 2) : baseScore) * newCombo;
       newCorrect++;
 
       if (newCombo == 5) {
-        ref.read(soundManagerProvider).playEffect('level_up');
+        ref.read(soundManagerProvider).playLevelUp();
         NotificationService().showStreakNotification(
           '5-Question Streak!',
           'Keep going! You\'ve answered 5 in a row.',
         );
       } else if (newCombo == 10) {
-        ref.read(soundManagerProvider).playEffect('level_up');
+        ref.read(soundManagerProvider).playLevelUp();
         NotificationService().showAchievementNotification(
           '10-Question Streak!',
           'Incredible! Double-digit streak achieved.',
         );
       } else if (newCombo == 15) {
-        ref.read(soundManagerProvider).playEffect('achievement');
+        ref.read(soundManagerProvider).playAchievement();
         NotificationService().showAchievementNotification(
           '15-Question Streak!',
           'Unstoppable! You\'re on fire!',
@@ -396,7 +396,7 @@ class GameSessionNotifier extends StateNotifier<GameSession?> {
       }
       challengeNotifier.incrementProgress('streak', 1);
     } else {
-      ref.read(soundManagerProvider).playEffect('incorrect');
+      ref.read(soundManagerProvider).playIncorrect();
       newCombo = 1;
       if (state!.mode == GameMode.endless) {
         newLives--;
@@ -764,11 +764,18 @@ class GameSessionNotifier extends StateNotifier<GameSession?> {
   }
 
   int _calculateStarsForCampaign(int correct, int total) {
-    if (correct < 15) return 0;
+    if (total != 45) {
+      // Fallback for non-standard sessions if any
+      final percentage = (correct / total) * 100;
+      if (percentage >= 95) return 3;
+      if (percentage >= 85) return 2;
+      if (percentage >= 75) return 1;
+      return 0;
+    }
     
-    if (correct >= 18) return 3;
-    if (correct >= 16) return 2;
-    if (correct >= 15) return 1;
+    if (correct >= 43) return 3;
+    if (correct >= 39) return 2;
+    if (correct >= 35) return 1;
     return 0;
   }
 

@@ -2455,6 +2455,72 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'L'**
   String get levelPrefix;
+
+  /// No description provided for @performanceOverview.
+  ///
+  /// In en, this message translates to:
+  /// **'Performance Overview'**
+  String get performanceOverview;
+
+  /// No description provided for @currentSession.
+  ///
+  /// In en, this message translates to:
+  /// **'Current Session'**
+  String get currentSession;
+
+  /// No description provided for @realTimeStats.
+  ///
+  /// In en, this message translates to:
+  /// **'Real-time Stats'**
+  String get realTimeStats;
+
+  /// No description provided for @questions.
+  ///
+  /// In en, this message translates to:
+  /// **'Questions'**
+  String get questions;
+
+  /// No description provided for @bestStreak.
+  ///
+  /// In en, this message translates to:
+  /// **'Best Streak'**
+  String get bestStreak;
+
+  /// No description provided for @sessions.
+  ///
+  /// In en, this message translates to:
+  /// **'Sessions'**
+  String get sessions;
+
+  /// No description provided for @gameModeDistribution.
+  ///
+  /// In en, this message translates to:
+  /// **'Game Mode Distribution'**
+  String get gameModeDistribution;
+
+  /// No description provided for @performanceInsights.
+  ///
+  /// In en, this message translates to:
+  /// **'Performance Insights'**
+  String get performanceInsights;
+
+  /// No description provided for @bestAccuracy.
+  ///
+  /// In en, this message translates to:
+  /// **'Best Accuracy'**
+  String get bestAccuracy;
+
+  /// No description provided for @averageResponseTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Avg Response Time'**
+  String get averageResponseTime;
+
+  /// No description provided for @completionRate.
+  ///
+  /// In en, this message translates to:
+  /// **'Completion Rate'**
+  String get completionRate;
 }
 
 class _AppLocalizationsDelegate

@@ -1202,4 +1202,37 @@ class AppLocalizationsSw extends AppLocalizations {
 
   @override
   String get levelPrefix => 'N';
+
+  @override
+  String get performanceOverview => 'Muhtasari wa Utendaji';
+
+  @override
+  String get currentSession => 'Kipindi cha Sasa';
+
+  @override
+  String get realTimeStats => 'Takwimu za Wakati Halisi';
+
+  @override
+  String get questions => 'Maswali';
+
+  @override
+  String get bestStreak => 'Mfululizo Bora';
+
+  @override
+  String get sessions => 'Vipindi';
+
+  @override
+  String get gameModeDistribution => 'Usambazaji wa Modi ya Mchezo';
+
+  @override
+  String get performanceInsights => 'Maarifa ya Utendaji';
+
+  @override
+  String get bestAccuracy => 'Usahihi Bora';
+
+  @override
+  String get averageResponseTime => 'Muda wa Wastani wa Kujibu';
+
+  @override
+  String get completionRate => 'Kiwango cha Ukamilishaji';
 }

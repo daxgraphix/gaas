@@ -13,121 +13,73 @@ class ArcadeScreen extends ConsumerWidget {
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context)!;
     return Scaffold(
-      backgroundColor: theme.scaffoldBackgroundColor,
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new, size: 20),
-          onPressed: () => Navigator.pop(context),
-        ),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        centerTitle: true,
         title: Text(l10n.arcade),
       ),
-      body: Stack(
-        children: [
-          Positioned.fill(
-            child: Container(
-              color: AppDesignTokens.background,
-              child: Stack(
-                children: [
-                  Positioned(
-                    top: -50,
-                    left: -50,
-                    child: Container(
-                      width: 300,
-                      height: 300,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        gradient: RadialGradient(
-                          colors: [
-                            theme.colorScheme.primary.withValues(alpha: 0.1),
-                            theme.colorScheme.primary.withValues(alpha: 0),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                  Positioned(
-                    bottom: 100,
-                    right: -100,
-                    child: Container(
-                      width: 400,
-                      height: 400,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        gradient: RadialGradient(
-                          colors: [
-                            theme.colorScheme.secondary.withValues(alpha: 0.05),
-                            theme.colorScheme.secondary.withValues(alpha: 0),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+      body: SafeArea(
+        child: ListView(
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+          children: [
+            _buildSectionHeader(l10n.gameModes, theme),
+            const SizedBox(height: 16),
+            _buildArcadeListItem(
+              context,
+              l10n.scoreAttack,
+              l10n.scoreAttackDesc,
+              () => _showOperationDialog(context, ref, GameMode.scoreAttack),
+              theme.colorScheme.primary,
             ),
-          ),
-          SafeArea(
-            child: ListView(
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-              children: [
-                _buildSectionHeader(l10n.gameModes, theme),
-                const SizedBox(height: 16),
-                _buildArcadeListItem(
-                  context,
-                  l10n.scoreAttack,
-                  l10n.scoreAttackDesc,
-                  () => _showOperationDialog(context, ref, GameMode.scoreAttack),
-                  theme.colorScheme.primary,
-                ),
-                _buildArcadeListItem(
-                  context,
-                  l10n.endless,
-                  l10n.endlessDesc,
-                  () => _showOperationDialog(context, ref, GameMode.endless),
-                  theme.colorScheme.secondary,
-                ),
-                _buildArcadeListItem(
-                  context,
-                  l10n.duel,
-                  l10n.duelDesc,
-                  () => _showOperationDialog(context, ref, GameMode.duel),
-                  AppDesignTokens.neonYellow,
-                ),
-                _buildArcadeListItem(
-                  context,
-                  l10n.flash,
-                  l10n.flashDesc,
-                  () => _showOperationDialog(context, ref, GameMode.flash),
-                  AppDesignTokens.neonPink,
-                ),
-                const SizedBox(height: 32),
-                _buildSectionHeader(l10n.activeChallenges, theme),
-                const SizedBox(height: 16),
-                _buildArcadeListItem(
-                  context,
-                  l10n.speedDemon,
-                  l10n.speedDemonDesc,
-                  () => _showOperationDialog(context, ref, GameMode.speedDemon),
-                  theme.colorScheme.primary,
-                ),
-                _buildArcadeListItem(
-                  context,
-                  l10n.mathMaster,
-                  l10n.mathMasterDesc,
-                  () => _showOperationDialog(context, ref, GameMode.mathMaster),
-                  theme.colorScheme.secondary,
-                ),
-                _buildArcadeListItem(
-                  context,
-                  l10n.marathon,
-                  l10n.marathonDesc,
-                  () => _showOperationDialog(context, ref, GameMode.marathon),
-                  AppDesignTokens.neonPink,
-                ),
-              ],
+            _buildArcadeListItem(
+              context,
+              l10n.endless,
+              l10n.endlessDesc,
+              () => _showOperationDialog(context, ref, GameMode.endless),
+              theme.colorScheme.secondary,
             ),
-          ),
-        ],
+            _buildArcadeListItem(
+              context,
+              l10n.duel,
+              l10n.duelDesc,
+              () => _showOperationDialog(context, ref, GameMode.duel),
+              AppDesignTokens.neonYellow,
+            ),
+            _buildArcadeListItem(
+              context,
+              l10n.flash,
+              l10n.flashDesc,
+              () => _showOperationDialog(context, ref, GameMode.flash),
+              AppDesignTokens.neonPink,
+            ),
+            const SizedBox(height: 32),
+            _buildSectionHeader(l10n.activeChallenges, theme),
+            const SizedBox(height: 16),
+            _buildArcadeListItem(
+              context,
+              l10n.speedDemon,
+              l10n.speedDemonDesc,
+              () => _showOperationDialog(context, ref, GameMode.speedDemon),
+              theme.colorScheme.primary,
+            ),
+            _buildArcadeListItem(
+              context,
+              l10n.mathMaster,
+              l10n.mathMasterDesc,
+              () => _showOperationDialog(context, ref, GameMode.mathMaster),
+              theme.colorScheme.secondary,
+            ),
+            _buildArcadeListItem(
+              context,
+              l10n.marathon,
+              l10n.marathonDesc,
+              () => _showOperationDialog(context, ref, GameMode.marathon),
+              AppDesignTokens.neonPink,
+            ),
+          ],
+        ),
       ),
     );
   }

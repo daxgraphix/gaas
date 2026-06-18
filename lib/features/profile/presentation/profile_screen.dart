@@ -36,72 +36,46 @@ class ProfileScreen extends ConsumerWidget {
     }
 
     return Scaffold(
-      backgroundColor: theme.scaffoldBackgroundColor,
-      body: Stack(
-        children: [
-          // Technical HUD Background
-          Positioned.fill(
-            child: Opacity(
-              opacity: 0.05,
-              child: Image.asset(
-                'assets/images/grid.png',
-                repeat: ImageRepeat.repeat,
-                errorBuilder: (context, error, stackTrace) => Container(),
+      backgroundColor: Colors.transparent,
+      body: SafeArea(
+        child: CustomScrollView(
+          slivers: [
+            SliverToBoxAdapter(
+              child: _buildHeader(context, ref, user, theme, l10n),
+            ),
+            SliverToBoxAdapter(
+              child: _buildStats(
+                totalStars,
+                completedLevels,
+                totalTime,
+                accuracy,
+                theme,
+                l10n,
               ),
             ),
-          ),
-          // Scanline Overlay
-          Positioned.fill(
-            child: Opacity(
-              opacity: 0.03,
-              child: Image.asset(
-                'assets/images/scanline.png',
-                repeat: ImageRepeat.repeat,
-                errorBuilder: (context, error, stackTrace) => Container(),
+            SliverToBoxAdapter(
+                child: _buildMenuSection(
+                  context,
+                  ref,
+                  theme,
+                  currentLocale,
+                  currentTheme,
+                  settings,
+                  l10n,
+                ),
+            ),
+            SliverToBoxAdapter(
+              child: _buildAchievementsSection(
+                theme,
+                totalStars.value ?? 0,
+                accuracy.value ?? 0.0,
+                totalTime.value ?? 0,
+                l10n,
               ),
             ),
-          ),
-          SafeArea(
-            child: CustomScrollView(
-              slivers: [
-                SliverToBoxAdapter(
-                  child: _buildHeader(context, ref, user, theme, l10n),
-                ),
-                SliverToBoxAdapter(
-                  child: _buildStats(
-                    totalStars,
-                    completedLevels,
-                    totalTime,
-                    accuracy,
-                    theme,
-                    l10n,
-                  ),
-                ),
-                SliverToBoxAdapter(
-                    child: _buildMenuSection(
-                      context,
-                      ref,
-                      theme,
-                      currentLocale,
-                      currentTheme,
-                      settings,
-                      l10n,
-                    ),
-                ),
-                SliverToBoxAdapter(
-                  child: _buildAchievementsSection(
-                    theme,
-                    totalStars.value ?? 0,
-                    accuracy.value ?? 0.0,
-                    totalTime.value ?? 0,
-                    l10n,
-                  ),
-                ),
-                const SliverToBoxAdapter(child: SizedBox(height: 100)),
-              ],
-            ),
-          ),
-        ],
+            const SliverToBoxAdapter(child: SizedBox(height: 100)),
+          ],
+        ),
       ),
     );
   }
@@ -119,13 +93,10 @@ class ProfileScreen extends ConsumerWidget {
         children: [
           Row(
             children: [
-              IconButton(
-                onPressed: () => Navigator.pop(context),
-                icon: Icon(Icons.arrow_back, color: theme.colorScheme.primary),
-              ),
+              const SizedBox(width: 48), // Spacer to balance the edit button if no back button
               Expanded(
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     Text(
                       l10n.userProfile,

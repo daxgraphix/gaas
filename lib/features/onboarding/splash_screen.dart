@@ -6,7 +6,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/providers.dart';
 import '../../core/themes/app_themes.dart';
 import '../../core/sound_manager.dart';
-import '../home/presentation/home_screen.dart';
+
+import '../../shared/widgets/main_navigation_scaffold.dart';
 import '../profile_setup/profile_setup_screen.dart';
 import 'onboarding_screen.dart';
 
@@ -77,7 +78,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> with TickerProvider
         ? const OnboardingScreen()
         : (!hasCustomization || !hasCompleteProfile
               ? const ProfileSetupScreen(isInitialSetup: true)
-              : const HomeScreen());
+              : const MainNavigationScaffold());
 
     if (!mounted) return;
     Navigator.of(context).pushReplacement(

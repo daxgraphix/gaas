@@ -134,10 +134,23 @@ ref.listen<GameSession?>(gameSessionProvider, (previous, next) {
           // HUD Scanlines
           Positioned.fill(
             child: Opacity(
-              opacity: 0.02,
-              child: Image.network(
-                'https://www.transparenttextures.com/patterns/carbon-fibre.png',
-                repeat: ImageRepeat.repeat,
+              opacity: 0.015,
+              child: Container(
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      Colors.transparent,
+                      Colors.black54,
+                      Colors.transparent,
+                    ],
+                    stops: [0.0, 0.5, 1.0],
+                  ),
+                ),
+                child: CustomPaint(
+                  painter: _ScanlinePainter(),
+                ),
               ),
             ),
           ),
@@ -764,11 +777,8 @@ if (gameSession.mode == GameMode.duel)
         children: [
           Positioned.fill(
             child: Opacity(
-              opacity: 0.05,
-              child: Image.network(
-                'https://www.transparenttextures.com/patterns/carbon-fibre.png',
-                repeat: ImageRepeat.repeat,
-              ),
+              opacity: 0.01,
+              child: CustomPaint(painter: _ScanlinePainter()),
             ),
           ),
           SafeArea(
@@ -887,10 +897,17 @@ if (gameSession.mode == GameMode.duel)
   }
 
   int _calculateStars(int correct, int total) {
-    final percentage = (correct / total) * 100;
-    if (percentage >= 90) return 3;
-    if (percentage >= 70) return 2;
-    if (percentage >= 50) return 1;
+    if (total != 45) {
+      final percentage = (correct / total) * 100;
+      if (percentage >= 95) return 3;
+      if (percentage >= 85) return 2;
+      if (percentage >= 75) return 1;
+      return 0;
+    }
+    
+    if (correct >= 43) return 3;
+    if (correct >= 39) return 2;
+    if (correct >= 35) return 1;
     return 0;
   }
 
@@ -934,6 +951,22 @@ if (gameSession.mode == GameMode.duel)
         return '+';
     }
   }
+}
+
+class _ScanlinePainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = Colors.white.withValues(alpha: 0.05)
+      ..strokeWidth = 1.0;
+
+    for (double i = 0; i < size.height; i += 4) {
+      canvas.drawLine(Offset(0, i), Offset(size.width, i), paint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
 
 class VisualShapesPainter extends CustomPainter {

@@ -8,6 +8,7 @@ import 'package:pdf/widgets.dart' as pw;
 import 'package:share_plus/share_plus.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:printing/printing.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import '../../core/providers.dart';
 import '../../core/themes/app_themes.dart';
 import '../../l10n/generated/app_localizations.dart';
@@ -25,51 +26,52 @@ class ReportsScreen extends ConsumerWidget {
     final totalTime = ref.watch(totalTimePlayedProvider);
 
     return Scaffold(
-      backgroundColor: theme.scaffoldBackgroundColor,
+      backgroundColor: Colors.transparent,
       appBar: _buildAppBar(context, theme, l10n, ref),
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              theme.colorScheme.primary.withValues(alpha: 0.02),
-              theme.scaffoldBackgroundColor,
-            ],
-          ),
-        ),
-        child: CustomScrollView(
-          slivers: [
-            SliverPadding(
-              padding: const EdgeInsets.all(20),
-              sliver: SliverList(
-                delegate: SliverChildBuilderDelegate(
-                  (context, index) {
-                    switch (index) {
-                      case 0:
-                        return _buildOverviewCards(theme, totalStars, completedLevels, totalTime, accuracy, l10n);
-                      case 1:
-                        return const SizedBox(height: 32);
-                      case 2:
-                        return _buildPerformanceAnalytics(context, theme, accuracy, totalTime, l10n);
-                      case 3:
-                        return const SizedBox(height: 32);
-                      case 4:
-                        return _buildLevelMastery(context, theme, ref, l10n);
-                      case 5:
-                        return const SizedBox(height: 32);
-                      case 6:
-                        return _buildPerformanceInsights(context, theme, l10n);
-                      default:
-                        return const SizedBox.shrink();
-                    }
-                  },
-                  childCount: 7,
-                ),
+      body: CustomScrollView(
+        physics: const BouncingScrollPhysics(),
+        slivers: [
+          SliverPadding(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+            sliver: SliverList(
+              delegate: SliverChildBuilderDelegate(
+                (context, index) {
+                  Widget? child;
+                  switch (index) {
+                    case 0:
+                      child = _buildOverviewCards(theme, totalStars, completedLevels, totalTime, accuracy, l10n);
+                      break;
+                    case 1:
+                      child = const SizedBox(height: 32);
+                      break;
+                    case 2:
+                      child = _buildPerformanceAnalytics(context, theme, accuracy, totalTime, l10n);
+                      break;
+                    case 3:
+                      child = const SizedBox(height: 32);
+                      break;
+                    case 4:
+                      child = _buildLevelMastery(context, theme, ref, l10n);
+                      break;
+                    case 5:
+                      child = const SizedBox(height: 32);
+                      break;
+                    case 6:
+                      child = _buildPerformanceInsights(context, theme, l10n);
+                      break;
+                  }
+                  
+                  if (child == null) return null;
+                  
+                  return child.animate()
+                      .fadeIn(duration: 400.ms, delay: (index * 50).ms)
+                      .slideY(begin: 0.05, end: 0, curve: Curves.easeOutCubic);
+                },
+                childCount: 7,
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -78,6 +80,8 @@ class ReportsScreen extends ConsumerWidget {
     return AppBar(
       title: Text(l10n.reports),
       centerTitle: true,
+      backgroundColor: Colors.transparent,
+      elevation: 0,
       actions: [
         IconButton(
           icon: Container(
@@ -111,76 +115,74 @@ class ReportsScreen extends ConsumerWidget {
     AsyncValue<double> accuracy,
     AppLocalizations l10n,
   ) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Performance Overview',
-          style: theme.textTheme.titleLarge?.copyWith(
-            fontWeight: FontWeight.bold,
-            color: theme.colorScheme.onSurface,
+    return RepaintBoundary(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            l10n.performanceOverview,
+            style: theme.textTheme.titleLarge?.copyWith(
+              fontWeight: FontWeight.bold,
+              color: theme.colorScheme.onSurface,
+            ),
           ),
-        ),
-        const SizedBox(height: 16),
-        Row(
-          children: [
-            Expanded(
-              child: _buildStatCard(
-                'Stars Earned',
-                totalStars.value?.toString() ?? '0',
-                Icons.star,
-                theme.colorScheme.primary,
-                theme,
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Expanded(
+                child: _buildStatCard(
+                  l10n.starsEarned,
+                  totalStars.value?.toString() ?? '0',
+                  Icons.star,
+                  theme.colorScheme.primary,
+                  theme,
+                ),
               ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: _buildStatCard(
-                'Levels Completed',
-                completedLevels.value?.toString() ?? '0',
-                Icons.flag,
-                theme.colorScheme.secondary,
-                theme,
+              const SizedBox(width: 12),
+              Expanded(
+                child: _buildStatCard(
+                  l10n.levelsCompleted,
+                  completedLevels.value?.toString() ?? '0',
+                  Icons.flag,
+                  theme.colorScheme.secondary,
+                  theme,
+                ),
               ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 12),
-        Row(
-          children: [
-            Expanded(
-              child: _buildStatCard(
-                'Accuracy',
-                '${accuracy.value?.toStringAsFixed(1) ?? '0'}%',
-                Icons.trending_up,
-                theme.colorScheme.tertiary,
-                theme,
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: _buildStatCard(
+                  l10n.accuracy,
+                  '${accuracy.value?.toStringAsFixed(1) ?? '0'}%',
+                  Icons.trending_up,
+                  theme.colorScheme.tertiary,
+                  theme,
+                ),
               ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: _buildStatCard(
-                'Time Played',
-                '${(totalTime.value ?? 0) ~/ 60}h ${(totalTime.value ?? 0) % 60}m',
-                Icons.timer,
-                theme.colorScheme.error,
-                theme,
+              const SizedBox(width: 12),
+              Expanded(
+                child: _buildStatCard(
+                  l10n.timePlayed,
+                  '${(totalTime.value ?? 0) ~/ 60}h ${(totalTime.value ?? 0) % 60}m',
+                  Icons.timer,
+                  theme.colorScheme.error,
+                  theme,
+                ),
               ),
-            ),
-          ],
-        ),
-      ],
+            ],
+          ),
+        ],
+      ),
     );
   }
 
   Widget _buildStatCard(String title, String value, IconData icon, Color color, ThemeData theme) {
-    return Container(
+    return PremiumCard(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withValues(alpha: 0.3)),
-      ),
+      borderColor: color.withValues(alpha: 0.2),
       child: Column(
         children: [
           Icon(icon, color: color, size: 24),
@@ -218,65 +220,63 @@ class ReportsScreen extends ConsumerWidget {
         final trends = ref.watch(performanceTrendsProvider);
         final bestStreak = ref.watch(bestStreakProvider);
 
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Performance Analytics',
-              style: theme.textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.bold,
-                color: theme.colorScheme.onSurface,
+        return RepaintBoundary(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                l10n.performanceAnalytics,
+                style: theme.textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: theme.colorScheme.onSurface,
+                ),
               ),
-            ),
-            const SizedBox(height: 16),
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: theme.colorScheme.surface,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: theme.colorScheme.outline.withValues(alpha: 0.3)),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Current Session',
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
+              const SizedBox(height: 16),
+              PremiumCard(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      l10n.currentSession,
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: theme.colorScheme.primary,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 16),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceAround,
-                    children: [
-                      _buildMetricItem('Accuracy', '${accuracy.value?.toStringAsFixed(1) ?? '0'}%', theme),
-                      _buildMetricItem('Time', '${(totalTime.value ?? 0) ~/ 60}m', theme),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  const Divider(height: 1, color: Colors.white10),
-                  const SizedBox(height: 12),
-                  Text(
-                    'Real-Time Stats',
-                    style: theme.textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.w600,
-                      color: theme.colorScheme.primary,
+                    const SizedBox(height: 20),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      children: [
+                        _buildMetricItem(l10n.accuracy, '${accuracy.value?.toStringAsFixed(1) ?? '0'}%', theme),
+                        _buildMetricItem(l10n.time, '${(totalTime.value ?? 0) ~/ 60}m', theme),
+                      ],
                     ),
-                  ),
-                  const SizedBox(height: 12),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      _buildMiniStat('Questions', '${stats.questionsAnswered}', theme),
-                      _buildMiniStat('Correct', '${stats.correctAnswers}', theme),
-                      _buildMiniStat('Best Streak', '${bestStreak.value ?? 0}', theme),
-                      _buildMiniStat('Sessions', '${trends.accuracyHistory.length}', theme),
-                    ],
-                  ),
-                ],
+                    const SizedBox(height: 20),
+                    const Divider(height: 1, color: Colors.white10),
+                    const SizedBox(height: 20),
+                    Text(
+                      l10n.realTimeStats,
+                      style: theme.textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w600,
+                        color: theme.colorScheme.secondary,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        _buildMiniStat(l10n.questions, '${stats.questionsAnswered}', theme),
+                        _buildMiniStat(l10n.correct, '${stats.correctAnswers}', theme),
+                        _buildMiniStat(l10n.bestStreak, '${bestStreak.value ?? 0}', theme),
+                        _buildMiniStat(l10n.sessions, '${trends.accuracyHistory.length}', theme),
+                      ],
+                    ),
+                  ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         );
       },
     );
@@ -336,86 +336,103 @@ class ReportsScreen extends ConsumerWidget {
         final analytics = ref.watch(analyticsProvider);
         final progressMap = ref.watch(levelProgressProvider);
         
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              l10n.levelMasteryBreakdown,
-              style: theme.textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.bold,
-                color: theme.colorScheme.onSurface,
+        return RepaintBoundary(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                l10n.levelMasteryBreakdown,
+                style: theme.textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: theme.colorScheme.onSurface,
+                ),
               ),
-            ),
-            const SizedBox(height: 16),
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: theme.colorScheme.surface,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: theme.colorScheme.outline.withValues(alpha: 0.3)),
-              ),
-              child: Column(
-                children: [
-                  if (progressMap.isNotEmpty) ...[
-                    ...progressMap.entries.map((entry) {
-                      final operation = entry.key;
-                      final levels = entry.value;
-                      final completed = levels.where((level) => level.stars > 0).length;
-                      final unlocked = levels.where((level) => level.isUnlocked).length;
-                      final totalStarsEarned = levels.fold<int>(0, (sum, level) => sum + level.stars);
+              const SizedBox(height: 16),
+              PremiumCard(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  children: [
+                    if (progressMap.isNotEmpty) ...[
+                      ...progressMap.entries.map((entry) {
+                        final operation = entry.key;
+                        final levels = entry.value;
+                        final completed = levels.where((level) => level.stars > 0).length;
+                        final unlocked = levels.where((level) => level.isUnlocked).length;
+                        final totalStarsEarned = levels.fold<int>(0, (sum, level) => sum + level.stars);
+                        return Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 8),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                operation.toUpperCase(),
+                                style: theme.textTheme.titleSmall?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                  letterSpacing: 1.1,
+                                ),
+                              ),
+                              Row(
+                                children: [
+                                  Icon(Icons.star, size: 14, color: AppDesignTokens.neonYellow),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    '$totalStarsEarned',
+                                    style: const TextStyle(fontWeight: FontWeight.bold),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Text('$completed/${levels.length}'),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    '($unlocked ${l10n.unlocked})',
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        );
+                      }),
+                    ] else ...[
+                      Center(child: Text(l10n.noProgressDataAvailable)),
+                    ],
+                    const SizedBox(height: 16),
+                    const Divider(height: 1, color: Colors.white10),
+                    const SizedBox(height: 16),
+                    Text(
+                      l10n.gameModeDistribution,
+                      style: theme.textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w600,
+                        color: theme.colorScheme.primary,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    ...analytics.operationUsage.entries.map((entry) {
+                      final mode = entry.key;
+                      final count = entry.value;
                       return Padding(
                         padding: const EdgeInsets.symmetric(vertical: 4),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Text(operation.toUpperCase()),
-                            Row(
-                              children: [
-                                Icon(Icons.star, size: 14, color: AppDesignTokens.neonYellow),
-                                const SizedBox(width: 4),
-                                Text('$totalStarsEarned'),
-                                const SizedBox(width: 12),
-                                Text('$completed/${levels.length}'),
-                                const SizedBox(width: 8),
-                                Text('($unlocked unlocked)', style: TextStyle(fontSize: 10, color: theme.colorScheme.onSurface.withValues(alpha: 0.3))),
-                              ],
+                            Text(mode.toUpperCase(), style: theme.textTheme.bodyMedium),
+                            Text(
+                              '$count ${l10n.sessions}',
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+                              ),
                             ),
                           ],
                         ),
                       );
                     }),
-                  ] else ...[
-                    Center(child: Text(l10n.noProgressDataAvailable)),
                   ],
-                  const SizedBox(height: 12),
-                  const Divider(height: 1, color: Colors.white10),
-                  const SizedBox(height: 12),
-                  Text(
-                    'Game Mode Distribution',
-                    style: theme.textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.w600,
-                      color: theme.colorScheme.primary,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  ...analytics.operationUsage.entries.map((entry) {
-                    final mode = entry.key;
-                    final count = entry.value;
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 2),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(mode.toUpperCase()),
-                          Text('$count sessions'),
-                        ],
-                      ),
-                    );
-                  }),
-                ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         );
       },
     );
@@ -427,57 +444,54 @@ class ReportsScreen extends ConsumerWidget {
         final trends = ref.watch(performanceTrendsProvider);
         final stats = ref.watch(sessionStatsProvider);
         
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Performance Insights',
-              style: theme.textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.bold,
-                color: theme.colorScheme.onSurface,
+        return RepaintBoundary(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                l10n.performanceInsights,
+                style: theme.textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: theme.colorScheme.onSurface,
+                ),
               ),
-            ),
-            const SizedBox(height: 16),
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: theme.colorScheme.surface,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: theme.colorScheme.outline.withValues(alpha: 0.3)),
+              const SizedBox(height: 16),
+              PremiumCard(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  children: [
+                    _buildInsightRow(
+                      l10n.bestAccuracy,
+                      '${trends.peakAccuracy.toStringAsFixed(1)}%',
+                      Icons.arrow_upward,
+                      theme.colorScheme.primary,
+                      theme,
+                    ),
+                    const SizedBox(height: 16),
+                    _buildInsightRow(
+                      l10n.averageResponseTime,
+                      '${stats.timeSpent > 0 && stats.questionsAnswered > 0 
+                          ? (stats.timeSpent / stats.questionsAnswered).toStringAsFixed(0) 
+                          : '0'}s',
+                      Icons.timer,
+                      theme.colorScheme.secondary,
+                      theme,
+                    ),
+                    const SizedBox(height: 16),
+                    _buildInsightRow(
+                      l10n.completionRate,
+                      stats.questionsAnswered > 0 
+                          ? '${(stats.correctAnswers / stats.questionsAnswered * 100).toStringAsFixed(1)}%'
+                          : '0%',
+                      Icons.check_circle,
+                      theme.colorScheme.tertiary,
+                      theme,
+                    ),
+                  ],
+                ),
               ),
-              child: Column(
-                children: [
-                  _buildInsightRow(
-                    'Best Accuracy',
-                    '${trends.peakAccuracy.toStringAsFixed(1)}%',
-                    Icons.arrow_upward,
-                    theme.colorScheme.primary,
-                    theme,
-                  ),
-                  const SizedBox(height: 12),
-                  _buildInsightRow(
-                    'Average Response Time',
-                    '${stats.timeSpent > 0 && stats.questionsAnswered > 0 
-                        ? (stats.timeSpent / stats.questionsAnswered).toStringAsFixed(0) 
-                        : '0'}s',
-                    Icons.timer,
-                    theme.colorScheme.secondary,
-                    theme,
-                  ),
-                  const SizedBox(height: 12),
-                  _buildInsightRow(
-                    'Completion Rate',
-                    stats.questionsAnswered > 0 
-                        ? '${(stats.correctAnswers / stats.questionsAnswered * 100).toStringAsFixed(1)}%'
-                        : '0%',
-                    Icons.check_circle,
-                    theme.colorScheme.tertiary,
-                    theme,
-                  ),
-                ],
-              ),
-            ),
-          ],
+            ],
+          ),
         );
       },
     );
@@ -500,33 +514,35 @@ class ReportsScreen extends ConsumerWidget {
     final theme = Theme.of(context);
     showModalBottomSheet(
       context: context,
-      backgroundColor: theme.colorScheme.surface,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (context) => SafeArea(
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (context) => PremiumGlassOverlay(
+        borderRadius: 32,
+        padding: EdgeInsets.zero,
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
+            const SizedBox(height: 12),
             Container(
-              padding: const EdgeInsets.all(20),
+              width: 40,
+              height: 4,
               decoration: BoxDecoration(
-                border: Border(
-                  bottom: BorderSide(
-                    color: theme.colorScheme.outline.withValues(alpha: 0.1),
-                    width: 1,
-                  ),
-                ),
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.2),
+                borderRadius: BorderRadius.circular(2),
               ),
+            ),
+            const SizedBox(height: 24),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
               child: Row(
                 children: [
                   Icon(
-                    Icons.file_download,
+                    Icons.ios_share_rounded,
                     color: theme.colorScheme.primary,
                   ),
                   const SizedBox(width: 12),
                   Text(
-                    'Export Report',
+                    l10n.exportReport,
                     style: theme.textTheme.titleLarge?.copyWith(
                       fontWeight: FontWeight.bold,
                     ),
@@ -534,47 +550,40 @@ class ReportsScreen extends ConsumerWidget {
                 ],
               ),
             ),
+            const SizedBox(height: 24),
             _buildExportOption(
               context: context,
-              icon: Icons.picture_as_pdf,
-              title: 'Export as PDF',
-              subtitle: 'Generate and share detailed PDF report',
-              onTap: () => _exportAsPDF(context, ref, l10n),
+              icon: Icons.picture_as_pdf_rounded,
+              title: l10n.exportAsPdf,
+              subtitle: l10n.generateDetailedPdfReport,
+              onTap: () => _shareAsPdf(context, ref, l10n),
               theme: theme,
             ),
             _buildExportOption(
               context: context,
-              icon: Icons.image,
-              title: 'Share as Image',
-              subtitle: 'Capture and share report as high-quality image',
+              icon: Icons.image_rounded,
+              title: l10n.shareAsImage,
+              subtitle: l10n.captureHighQualityImage,
               onTap: () => _exportAsImage(context, ref, l10n),
               theme: theme,
             ),
             _buildExportOption(
               context: context,
-              icon: Icons.print,
-              title: 'Print Report',
-              subtitle: 'Send report to printer',
+              icon: Icons.print_rounded,
+              title: l10n.printReport,
+              subtitle: l10n.sendReportToPrinter,
               onTap: () => _printReport(context, ref, l10n),
               theme: theme,
             ),
             _buildExportOption(
               context: context,
-              icon: Icons.save,
-              title: 'Save to Device',
-              subtitle: 'Save PDF to device storage',
+              icon: Icons.save_rounded,
+              title: l10n.saveToDevice,
+              subtitle: l10n.savePdfToDeviceStorage,
               onTap: () => _saveToDevice(context, ref, l10n),
               theme: theme,
             ),
-            _buildExportOption(
-              context: context,
-              icon: Icons.share,
-              title: 'Share as PDF',
-              subtitle: 'Quick share PDF via messaging apps',
-              onTap: () => _shareAsPdf(context, ref, l10n),
-              theme: theme,
-            ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 32),
           ],
         ),
       ),
@@ -595,14 +604,17 @@ class ReportsScreen extends ConsumerWidget {
         onTap();
       },
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
         child: Row(
           children: [
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
                 color: theme.colorScheme.primary.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: theme.colorScheme.primary.withValues(alpha: 0.2),
+                ),
               ),
               child: Icon(
                 icon,
@@ -618,22 +630,22 @@ class ReportsScreen extends ConsumerWidget {
                   Text(
                     title,
                     style: theme.textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
-                  const SizedBox(height: 2),
+                  const SizedBox(height: 4),
                   Text(
                     subtitle,
                     style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                      color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
                     ),
                   ),
                 ],
               ),
             ),
             Icon(
-              Icons.chevron_right,
-              color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
+              Icons.chevron_right_rounded,
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.3),
             ),
           ],
         ),
@@ -741,7 +753,7 @@ class ReportsScreen extends ConsumerWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         Text(
-          'GAAS Performance Report',
+          l10n.performanceReportTitle,
           style: theme.textTheme.headlineSmall?.copyWith(
             fontWeight: FontWeight.bold,
             color: theme.colorScheme.primary,
@@ -755,17 +767,38 @@ class ReportsScreen extends ConsumerWidget {
           textAlign: TextAlign.center,
         ),
         if (user != null) ...[
-          const SizedBox(height: 16),
-          Text('Player: ${user.name}', style: theme.textTheme.titleMedium),
+          const SizedBox(height: 20),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            decoration: BoxDecoration(
+              color: theme.colorScheme.primary.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Text(
+              '${l10n.playerLabel}: ${user.name}',
+              style: theme.textTheme.titleMedium?.copyWith(
+                color: theme.colorScheme.primary,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
         ],
+        const SizedBox(height: 32),
+        _buildStatCardForImage(l10n.starsEarned, '${totalStars.value ?? 0}', Icons.star, theme.colorScheme.primary, theme),
+        const SizedBox(height: 12),
+        _buildStatCardForImage(l10n.levelsCompleted, '${completedLevels.value ?? 0}', Icons.flag, theme.colorScheme.secondary, theme),
+        const SizedBox(height: 12),
+        _buildStatCardForImage(l10n.accuracy, '${accuracy.value?.toStringAsFixed(1) ?? '0'}%', Icons.trending_up, theme.colorScheme.tertiary, theme),
+        const SizedBox(height: 12),
+        _buildStatCardForImage(l10n.timePlayed, '${(totalTime.value ?? 0) ~/ 60}h ${(totalTime.value ?? 0) % 60}m', Icons.timer, theme.colorScheme.error, theme),
         const SizedBox(height: 24),
-        _buildStatCardForImage('Stars Earned', '${totalStars.value ?? 0}', Icons.star, theme.colorScheme.primary, theme),
-        const SizedBox(height: 12),
-        _buildStatCardForImage('Levels Completed', '${completedLevels.value ?? 0}', Icons.flag, theme.colorScheme.secondary, theme),
-        const SizedBox(height: 12),
-        _buildStatCardForImage('Accuracy', '${accuracy.value?.toStringAsFixed(1) ?? '0'}%', Icons.trending_up, theme.colorScheme.tertiary, theme),
-        const SizedBox(height: 12),
-        _buildStatCardForImage('Time Played', '${(totalTime.value ?? 0) ~/ 60}h ${(totalTime.value ?? 0) % 60}m', Icons.timer, theme.colorScheme.error, theme),
+        Text(
+          'gaas-math.app',
+          style: theme.textTheme.labelSmall?.copyWith(
+            color: theme.colorScheme.onSurface.withValues(alpha: 0.3),
+            letterSpacing: 2,
+          ),
+        ),
       ],
     );
   }
@@ -774,21 +807,28 @@ class ReportsScreen extends ConsumerWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withValues(alpha: 0.3)),
+        color: color.withValues(alpha: 0.05),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: color.withValues(alpha: 0.2)),
       ),
       child: Row(
         children: [
-          Icon(icon, color: color, size: 24),
-          const SizedBox(width: 12),
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Icon(icon, color: color, size: 20),
+          ),
+          const SizedBox(width: 16),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   value,
-                  style: theme.textTheme.headlineSmall?.copyWith(
+                  style: theme.textTheme.titleLarge?.copyWith(
                     color: color,
                     fontWeight: FontWeight.bold,
                   ),
@@ -796,7 +836,8 @@ class ReportsScreen extends ConsumerWidget {
                 Text(
                   label,
                   style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                    fontWeight: FontWeight.w500,
                   ),
                 ),
               ],
@@ -971,80 +1012,7 @@ class ReportsScreen extends ConsumerWidget {
   }
 
   Future<void> _saveToDevice(BuildContext context, WidgetRef ref, AppLocalizations l10n) async {
-    try {
-      if (!context.mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(l10n.generatingPdf),
-          duration: const Duration(seconds: 2),
-        ),
-      );
-
-      final user = ref.read(userSessionProvider);
-      final accuracy = ref.read(overallAccuracyProvider);
-      final totalStars = ref.read(totalStarsProvider);
-      final completedLevels = ref.read(completedLevelsProvider);
-      final totalTime = ref.read(totalTimePlayedProvider);
-
-      final pdf = pw.Document();
-
-      pdf.addPage(
-        pw.Page(
-          build: (pw.Context context) {
-            return pw.Column(
-              crossAxisAlignment: pw.CrossAxisAlignment.start,
-              children: [
-                pw.Text(
-                  'GAAS Performance Report',
-                  style: pw.TextStyle(fontSize: 20, fontWeight: pw.FontWeight.bold),
-                ),
-                pw.SizedBox(height: 20),
-                if (user != null) pw.Text('${l10n.playerLabel}: ${user.name}', style: pw.TextStyle(fontSize: 14)),
-                pw.SizedBox(height: 20),
-                _buildPdfStatRow('Total Stars', totalStars.value?.toString() ?? '0'),
-                _buildPdfStatRow('Levels Completed', completedLevels.value?.toString() ?? '0'),
-                _buildPdfStatRow('Accuracy', '${accuracy.value?.toStringAsFixed(1) ?? '0'}%'),
-                _buildPdfStatRow('Time Played', '${(totalTime.value ?? 0) ~/ 60}h ${(totalTime.value ?? 0) % 60}m'),
-              ],
-            );
-          },
-        ),
-      );
-
-      Directory? downloadsDir;
-      if (Platform.isAndroid) {
-        downloadsDir = Directory('/storage/emulated/0/Download');
-      } else if (Platform.isIOS) {
-        downloadsDir = await getApplicationDocumentsDirectory();
-      } else {
-        downloadsDir = await getDownloadsDirectory();
-      }
-
-      if (downloadsDir != null) {
-        final fileName = 'gaas_report_${DateTime.now().millisecondsSinceEpoch}.pdf';
-        final file = File('${downloadsDir.path}/$fileName');
-        await file.writeAsBytes(await pdf.save());
-
-        if (!context.mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(l10n.reportSaved(file.path)),
-            backgroundColor: Theme.of(context).colorScheme.primary,
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
-      } else {
-        throw 'Could not access downloads directory';
-      }
-    } catch (e) {
-      if (!context.mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(l10n.reportSaveFailed(e.toString())),
-          backgroundColor: Theme.of(context).colorScheme.error,
-        ),
-      );
-    }
+    await _exportAsPDF(context, ref, l10n);
   }
 
   Future<void> _shareAsPdf(BuildContext context, WidgetRef ref, AppLocalizations l10n) async {

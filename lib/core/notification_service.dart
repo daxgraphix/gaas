@@ -1,7 +1,10 @@
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:timezone/timezone.dart' as tz;
+import 'package:timezone/data/latest.dart' as tz;
 import 'dart:convert';
+import 'dart:developer';
+import 'dart:io' show Platform;
 
 class NotificationService {
   static final NotificationService _instance = NotificationService._internal();
@@ -15,6 +18,9 @@ class NotificationService {
 
   Future<void> initialize() async {
     if (_initialized) return;
+
+    // Initialize time zones for scheduled notifications
+    tz.initializeTimeZones();
 
     const AndroidInitializationSettings androidSettings =
         AndroidInitializationSettings('@mipmap/ic_launcher');
@@ -30,14 +36,24 @@ class NotificationService {
       iOS: iosSettings,
     );
 
-    await _notificationsPlugin.initialize(
-      settings,
-      onDidReceiveNotificationResponse: _onNotificationTapped,
-    );
+    try {
+      if (Platform.isAndroid || Platform.isIOS) {
+        await _notificationsPlugin.initialize(
+          settings,
+          onDidReceiveNotificationResponse: _onNotificationTapped,
+        );
+      }
+    } catch (e) {
+      log('Notification Service Initialization Error: $e');
+    }
 
     // Load user preferences
-    final prefs = await SharedPreferences.getInstance();
-    _notificationsEnabled = prefs.getBool('notifications_enabled') ?? true;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      _notificationsEnabled = prefs.getBool('notifications_enabled') ?? true;
+    } catch (e) {
+      _notificationsEnabled = true;
+    }
 
     _initialized = true;
   }

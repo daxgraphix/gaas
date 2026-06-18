@@ -1,6 +1,7 @@
 import 'dart:io' show Platform;
+import 'dart:developer';
 import 'package:flutter/services.dart';
-import 'package:audioplayers/audioplayers.dart' show AudioPlayer, AssetSource;
+import 'package:audioplayers/audioplayers.dart' show AudioPlayer, AssetSource, ReleaseMode;
 import 'package:shared_preferences/shared_preferences.dart';
 
 class HapticManager {
@@ -19,7 +20,7 @@ class HapticManager {
       _hapticsEnabled = true;
     }
 
-    if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
+    if (!Platform.isAndroid && !Platform.isIOS) {
       _platformSupportsHaptics = false;
     }
   }
@@ -59,35 +60,37 @@ class HapticManager {
 
   Future<void> successPattern() async {
     if (!isEnabled) return;
-    await HapticFeedback.lightImpact();
-    await Future.delayed(const Duration(milliseconds: 50));
     await HapticFeedback.mediumImpact();
+    await Future.delayed(const Duration(milliseconds: 40));
+    await HapticFeedback.lightImpact();
   }
 
   Future<void> errorPattern() async {
     if (!isEnabled) return;
     await HapticFeedback.heavyImpact();
-    await Future.delayed(const Duration(milliseconds: 50));
+    await Future.delayed(const Duration(milliseconds: 60));
     await HapticFeedback.heavyImpact();
+    await Future.delayed(const Duration(milliseconds: 60));
+    await HapticFeedback.vibrate();
   }
 
   Future<void> correctAnswerPattern() async {
     if (!isEnabled) return;
-    await HapticFeedback.lightImpact();
+    await HapticFeedback.selectionClick();
   }
 
   Future<void> correctAnswerPatternWithIntensity() async {
     if (!isEnabled) return;
-    await HapticFeedback.lightImpact();
-    await Future.delayed(const Duration(milliseconds: 50));
     await HapticFeedback.mediumImpact();
+    await Future.delayed(const Duration(milliseconds: 30));
+    await HapticFeedback.lightImpact();
   }
 
   Future<void> wrongAnswerPattern() async {
     if (!isEnabled) return;
     await HapticFeedback.heavyImpact();
-    await Future.delayed(const Duration(milliseconds: 150));
-    await HapticFeedback.heavyImpact();
+    await Future.delayed(const Duration(milliseconds: 100));
+    await HapticFeedback.mediumImpact();
   }
 
   Future<void> achievementPattern() async {
@@ -161,9 +164,26 @@ class SoundManager {
   bool _soundEnabled = true;
   double _volume = 1.0;
   bool _isInitialized = false;
+  
+  // Use a pool of players to prevent overhead of creating new ones
+  final Map<String, AudioPlayer> _playerPool = {};
+  
+  // Preload common players
+  static const List<String> _essentialEffects = [
+    'click', 'correct', 'incorrect', 'success', 'level_up', 'button_press'
+  ];
 
   Future<void> initialize() async {
+    if (_isInitialized) return;
     await _loadPreferences();
+    
+    // Warm up essential players
+    for (final effect in _essentialEffects) {
+      final player = AudioPlayer();
+      player.setReleaseMode(ReleaseMode.stop);
+      _playerPool[effect] = player;
+    }
+    
     _isInitialized = true;
   }
 
@@ -229,6 +249,7 @@ class SoundManager {
       return;
     }
     await _playSound('correct');
+    await HapticManager.instance.successPattern();
   }
 
   Future<void> playIncorrect() async {
@@ -237,6 +258,7 @@ class SoundManager {
       return;
     }
     await _playSound('incorrect');
+    await HapticManager.instance.errorPattern();
   }
 
   Future<void> playSuccess() async {
@@ -266,6 +288,7 @@ class SoundManager {
       return;
     }
     await _playSound('correct_answer');
+    await HapticManager.instance.correctAnswerPattern();
   }
 
   Future<void> playWrongAnswer() async {
@@ -274,6 +297,7 @@ class SoundManager {
       return;
     }
     await _playSound('wrong_answer');
+    await HapticManager.instance.wrongAnswerPattern();
   }
 
   Future<void> playComplete() async {
@@ -282,6 +306,7 @@ class SoundManager {
       return;
     }
     await _playSound('complete');
+    await HapticManager.instance.successPattern();
   }
 
   Future<void> playLevelUp() async {
@@ -290,6 +315,7 @@ class SoundManager {
       return;
     }
     await _playSound('level_up');
+    await HapticManager.instance.levelUpPattern();
   }
 
   Future<void> playAchievement() async {
@@ -298,6 +324,7 @@ class SoundManager {
       return;
     }
     await _playSound('achievement');
+    await HapticManager.instance.achievementPattern();
   }
 
   Future<void> playButtonPress() async {
@@ -306,6 +333,7 @@ class SoundManager {
       return;
     }
     await _playSound('button_press');
+    await HapticManager.instance.selectionClick();
   }
 
   Future<void> playBackgroundMusic(String trackName) async {
@@ -344,6 +372,7 @@ class SoundManager {
       return;
     }
     await _playSound('navigation');
+    await HapticManager.instance.navigationPattern();
   }
 
   Future<void> playTransition() async {
@@ -352,18 +381,35 @@ class SoundManager {
       return;
     }
     await _playSound('transition');
+    await HapticManager.instance.transitionPattern();
   }
 
   Future<void> _playSound(String key) async {
+    if (!_isInitialized) return;
     final soundFile = _getSoundFile(key);
     try {
-      final player = AudioPlayer();
+      AudioPlayer? player = _playerPool[key];
+      if (player == null) {
+        player = AudioPlayer();
+        player.setReleaseMode(ReleaseMode.stop);
+        _playerPool[key] = player;
+      }
+      
+      // Stop current playback to allow rapid firing of same sound
+      await player.stop();
+      await player.setVolume(_volume);
       await player.play(AssetSource('sounds/$soundFile'));
-      await Future.delayed(const Duration(milliseconds: 100));
-      await player.dispose();
     } catch (e) {
+      log('Sound Manager Error ($key): $e');
       HapticManager.instance.buttonPressPattern();
     }
+  }
+
+  Future<void> dispose() async {
+    for (final player in _playerPool.values) {
+      await player.dispose();
+    }
+    _playerPool.clear();
   }
 
   String _getSoundFile(String key) {

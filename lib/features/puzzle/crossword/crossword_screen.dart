@@ -117,9 +117,7 @@ final theme = Theme.of(context);
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w200,
-                  color: theme.brightness == Brightness.light
-                      ? theme.colorScheme.onSurface.withValues(alpha: 0.7)
-                      : Colors.white70,
+                  color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
                 ),
               ),
             ),
@@ -168,9 +166,7 @@ final theme = Theme.of(context);
         padding: const EdgeInsets.all(1),
         decoration: BoxDecoration(
           border: Border.all(
-            color: theme.brightness == Brightness.light
-                ? theme.colorScheme.outline.withValues(alpha: 0.3)
-                : Colors.white10,
+            color: theme.colorScheme.outline.withValues(alpha: 0.2),
             width: 0.5,
           ),
         ),
@@ -204,14 +200,14 @@ final theme = Theme.of(context);
                       height: 34,
                       decoration: BoxDecoration(
                         color: isBlocked
-                            ? (theme.brightness == Brightness.light ? theme.colorScheme.surface : Colors.black)
+                            ? theme.colorScheme.surfaceContainerHighest
                             : isSelected
-                            ? (theme.brightness == Brightness.light ? theme.colorScheme.primary.withValues(alpha: 0.1) : Colors.white.withValues(alpha: 0.1))
+                            ? theme.colorScheme.primary.withValues(alpha: 0.15)
                             : Colors.transparent,
                         border: Border.all(
                           color: isSelected
-                              ? (theme.brightness == Brightness.light ? theme.colorScheme.primary.withValues(alpha: 0.5) : Colors.white54)
-                              : (theme.brightness == Brightness.light ? theme.colorScheme.outline.withValues(alpha: 0.3) : Colors.white10),
+                              ? theme.colorScheme.primary.withValues(alpha: 0.5)
+                              : theme.colorScheme.outline.withValues(alpha: 0.2),
                           width: 0.5,
                         ),
                       ),
@@ -221,9 +217,9 @@ final theme = Theme.of(context);
                           style: TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.w300,
-                            color: theme.brightness == Brightness.light
-                                ? (isRevealed || isCorrect ? theme.colorScheme.primary : theme.colorScheme.onSurface.withValues(alpha: 0.7))
-                                : (isRevealed || isCorrect ? Colors.white : Colors.white70),
+                            color: isRevealed || isCorrect 
+                                ? theme.colorScheme.primary 
+                                : theme.colorScheme.onSurface.withValues(alpha: 0.8),
                           ),
                         ),
                       ),
@@ -249,9 +245,7 @@ final theme = Theme.of(context);
             fontSize: 14,
             fontWeight: FontWeight.w300,
             letterSpacing: 2,
-            color: theme.brightness == Brightness.light
-                ? theme.colorScheme.onSurface.withValues(alpha: 0.6)
-                : Colors.white54,
+            color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
           ),
         ),
         const SizedBox(height: 16),
@@ -259,19 +253,17 @@ final theme = Theme.of(context);
         Padding(
           padding: const EdgeInsets.symmetric(vertical: 24),
           child: Divider(
-            color: theme.brightness == Brightness.light
-                ? theme.colorScheme.outline.withValues(alpha: 0.3)
-                : Colors.white10,
+            color: theme.colorScheme.outline.withValues(alpha: 0.2),
             thickness: 0.5,
           ),
         ),
-        const Text(
+        Text(
           'DOWN',
           style: TextStyle(
             fontSize: 14,
             fontWeight: FontWeight.w300,
             letterSpacing: 2,
-            color: Colors.white54,
+            color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
           ),
         ),
         const SizedBox(height: 16),
@@ -299,9 +291,7 @@ final theme = Theme.of(context);
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w200,
-                  color: theme.brightness == Brightness.light
-                      ? theme.colorScheme.onSurface.withValues(alpha: 0.4)
-                      : Colors.white38,
+                  color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
                 ),
               ),
             ),
@@ -311,9 +301,7 @@ final theme = Theme.of(context);
                 style: TextStyle(
                   fontSize: 15,
                   fontWeight: FontWeight.w200,
-                  color: theme.brightness == Brightness.light
-                      ? theme.colorScheme.onSurface.withValues(alpha: 0.7)
-                      : Colors.white70,
+                  color: theme.colorScheme.onSurface.withValues(alpha: 0.8),
                   height: 1.4,
                 ),
               ),
@@ -332,14 +320,10 @@ final theme = Theme.of(context);
 
     return Container(
       decoration: BoxDecoration(
-        color: theme.brightness == Brightness.light
-            ? theme.colorScheme.surface
-            : const Color(0xFF151519),
+        color: theme.colorScheme.surface,
         border: Border(
           top: BorderSide(
-            color: theme.brightness == Brightness.light
-                ? theme.colorScheme.outline.withValues(alpha: 0.3)
-                : Colors.white.withValues(alpha: 0.08),
+            color: theme.colorScheme.outline.withValues(alpha: 0.1),
             width: 1,
           ),
         ),
@@ -366,9 +350,7 @@ final theme = Theme.of(context);
                 Text(
                   '${l10n.hint} $hintCostPoints pts',
                   style: TextStyle(
-                    color: theme.brightness == Brightness.light
-                        ? (canUseHint ? theme.colorScheme.primary : theme.colorScheme.onSurface.withValues(alpha: 0.4))
-                        : (canUseHint ? Colors.white70 : Colors.white38),
+                    color: canUseHint ? theme.colorScheme.primary : theme.colorScheme.onSurface.withValues(alpha: 0.4),
                     fontSize: 12,
                     fontWeight: FontWeight.w600,
                   ),
@@ -436,16 +418,15 @@ final theme = Theme.of(context);
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(10),
             gradient: LinearGradient(
-              colors: theme.brightness == Brightness.light
-                  ? [theme.colorScheme.primary.withValues(alpha: 0.08), theme.colorScheme.primary.withValues(alpha: 0.03)]
-                  : [Colors.white.withValues(alpha: 0.08), Colors.white.withValues(alpha: 0.03)],
+              colors: [
+                theme.colorScheme.primary.withValues(alpha: 0.08),
+                theme.colorScheme.primary.withValues(alpha: 0.03),
+              ],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
             border: Border.all(
-              color: theme.brightness == Brightness.light
-                  ? theme.colorScheme.primary.withValues(alpha: 0.2)
-                  : Colors.white.withValues(alpha: 0.12),
+              color: theme.colorScheme.primary.withValues(alpha: 0.2),
               width: 0.7,
             ),
           ),
@@ -455,9 +436,7 @@ final theme = Theme.of(context);
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w200,
-                color: theme.brightness == Brightness.light
-                    ? theme.colorScheme.primary
-                    : Colors.white70,
+                color: theme.colorScheme.primary,
               ),
             ),
           ),
@@ -477,22 +456,15 @@ final theme = Theme.of(context);
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(10),
             gradient: LinearGradient(
-              colors: theme.brightness == Brightness.light
-                  ? [
-                      theme.colorScheme.primary.withValues(alpha: enabled ? 0.12 : 0.04),
-                      theme.colorScheme.primary.withValues(alpha: enabled ? 0.05 : 0.02),
-                    ]
-                  : [
-                      Colors.white.withValues(alpha: enabled ? 0.12 : 0.04),
-                      Colors.white.withValues(alpha: enabled ? 0.05 : 0.02),
-                    ],
+              colors: [
+                theme.colorScheme.primary.withValues(alpha: enabled ? 0.12 : 0.04),
+                theme.colorScheme.primary.withValues(alpha: enabled ? 0.05 : 0.02),
+              ],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
             border: Border.all(
-              color: theme.brightness == Brightness.light
-                  ? theme.colorScheme.primary.withValues(alpha: enabled ? 0.2 : 0.1)
-                  : Colors.white.withValues(alpha: enabled ? 0.16 : 0.06),
+              color: theme.colorScheme.primary.withValues(alpha: enabled ? 0.2 : 0.1),
               width: 0.7,
             ),
           ),
@@ -500,9 +472,7 @@ final theme = Theme.of(context);
             child: Icon(
               icon,
               size: 18,
-              color: theme.brightness == Brightness.light
-                  ? (enabled ? theme.colorScheme.primary : theme.colorScheme.onSurface.withValues(alpha: 0.3))
-                  : (enabled ? Colors.white70 : Colors.white30),
+              color: enabled ? theme.colorScheme.primary : theme.colorScheme.onSurface.withValues(alpha: 0.3),
             ),
           ),
         ),
@@ -525,12 +495,12 @@ final theme = Theme.of(context);
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(999),
           color: selected
-              ? (theme.brightness == Brightness.light ? theme.colorScheme.primary.withValues(alpha: 0.16) : Colors.white.withValues(alpha: 0.16))
-              : (theme.brightness == Brightness.light ? theme.colorScheme.surface.withValues(alpha: 0.04) : Colors.white.withValues(alpha: 0.04)),
+              ? theme.colorScheme.primary.withValues(alpha: 0.15)
+              : theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
           border: Border.all(
-            color: theme.brightness == Brightness.light
-                ? theme.colorScheme.primary.withValues(alpha: selected ? 0.3 : 0.1)
-                : Colors.white.withValues(alpha: selected ? 0.28 : 0.08),
+            color: selected
+                ? theme.colorScheme.primary.withValues(alpha: 0.5)
+                : theme.colorScheme.outline.withValues(alpha: 0.1),
             width: 0.8,
           ),
         ),
@@ -538,8 +508,8 @@ final theme = Theme.of(context);
           label,
           style: TextStyle(
             color: selected
-                ? (theme.brightness == Brightness.light ? theme.colorScheme.onPrimary : Colors.white)
-                : (theme.brightness == Brightness.light ? theme.colorScheme.onSurface.withValues(alpha: 0.6) : Colors.white60),
+                ? theme.colorScheme.primary
+                : theme.colorScheme.onSurface.withValues(alpha: 0.6),
             fontSize: 11,
             letterSpacing: 1.2,
             fontWeight: FontWeight.w700,
@@ -582,6 +552,7 @@ final theme = Theme.of(context);
 
   void _showSuccess(CrosswordPuzzleState state) {
     final stars = state.stars;
+    final theme = Theme.of(context);
 
     // Play complete sound and success haptic pattern
     ref.read(soundManagerProvider).playComplete();
@@ -607,15 +578,16 @@ final theme = Theme.of(context);
       context: context,
       barrierDismissible: false,
       builder: (context) => AlertDialog(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-        shape: const RoundedRectangleBorder(
-          side: BorderSide(color: Colors.white10, width: 0.5),
+      backgroundColor: theme.colorScheme.surface,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: BorderSide(color: theme.colorScheme.outline.withValues(alpha: 0.1), width: 0.5),
         ),
-        title: const Center(
+        title: Center(
           child: Text(
             'PUZZLE SOLVED',
             style: TextStyle(
-              color: Colors.white,
+              color: theme.colorScheme.onSurface,
               letterSpacing: 4,
               fontWeight: FontWeight.w100,
               fontSize: 18,
@@ -632,15 +604,15 @@ final theme = Theme.of(context);
                 (i) => Icon(
                   Icons.star,
                   size: 32,
-                  color: i < stars ? Colors.white : Colors.white12,
+                  color: i < stars ? theme.colorScheme.primary : theme.colorScheme.onSurface.withValues(alpha: 0.1),
                 ),
               ),
             ),
             const SizedBox(height: 20),
             Text(
               'Time: ${_formatTime(state.elapsedSeconds)}',
-              style: const TextStyle(
-                color: Colors.white60,
+              style: TextStyle(
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
                 fontWeight: FontWeight.w200,
               ),
             ),
@@ -652,10 +624,10 @@ final theme = Theme.of(context);
               Navigator.pop(context);
               Navigator.pop(context);
             },
-            child: const Text(
+            child: Text(
               'BACK TO LEVELS',
               style: TextStyle(
-                color: Colors.white38,
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
                 fontWeight: FontWeight.w200,
               ),
             ),
@@ -679,10 +651,10 @@ final theme = Theme.of(context);
                 ),
               );
             },
-            child: const Text(
+            child: Text(
               'NEXT LEVEL',
               style: TextStyle(
-                color: Colors.white,
+                color: theme.colorScheme.primary,
                 fontWeight: FontWeight.w300,
               ),
             ),

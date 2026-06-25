@@ -188,7 +188,7 @@ AnimatedContainer(
                           if (gameSession.level == 1 &&
                               gameSession.currentQuestionIndex == 0 &&
                               gameSession.currentQuestion?.options == null)
-                            _buildGhostOnboarding('SOLVE_TO_INIT'),
+                            _buildGhostOnboarding('SOLVE_TO_INIT', theme),
                         ],
                       ),
                     ),
@@ -214,17 +214,17 @@ AnimatedContainer(
               ref.read(gameSessionProvider.notifier).endGame();
               Navigator.of(context).pop();
             },
-            icon: const Icon(
+            icon: Icon(
               Icons.arrow_back_ios_new,
               size: 20,
-              color: Colors.white70,
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
             ),
           ),
           Expanded(
             child: Text(
               _getModeTitle(gameSession.mode).toUpperCase(),
-              style: const TextStyle(
-                color: Colors.white,
+              style: TextStyle(
+                color: theme.colorScheme.onSurface,
                 fontSize: 14,
                 letterSpacing: 2,
                 fontWeight: FontWeight.w300,
@@ -240,9 +240,9 @@ AnimatedContainer(
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Icon(
+                  Icon(
                     Icons.timer_outlined,
-                    color: Colors.white38,
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.38),
                     size: 16,
                   ),
                   const SizedBox(width: 4),
@@ -250,8 +250,8 @@ AnimatedContainer(
                     '${gameSession.timeRemaining}S',
                     style: TextStyle(
                       color: gameSession.timeRemaining <= 10
-                          ? Colors.redAccent
-                          : Colors.white70,
+                          ? theme.colorScheme.error
+                          : theme.colorScheme.onSurface.withValues(alpha: 0.7),
                       fontWeight: FontWeight.w200,
                       fontSize: 16,
                     ),
@@ -270,8 +270,8 @@ AnimatedContainer(
                         ? Icons.favorite
                         : Icons.favorite_border,
                     color: i < gameSession.lives
-                        ? Colors.redAccent
-                        : Colors.white10,
+                        ? theme.colorScheme.error
+                        : theme.colorScheme.onSurface.withValues(alpha: 0.1),
                     size: 16,
                   ),
                 ),
@@ -291,7 +291,7 @@ if (gameSession.mode == GameMode.duel)
       child: Text(
         '${session.score} / ${session.aiScore ?? 0}',
         style: TextStyle(
-          color: playerAhead ? Colors.white : Colors.white38,
+          color: playerAhead ? theme.colorScheme.onSurface : theme.colorScheme.onSurface.withValues(alpha: 0.38),
           fontWeight: FontWeight.w300,
           fontSize: 14,
         ),
@@ -340,11 +340,12 @@ if (gameSession.mode == GameMode.duel)
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              _buildMinimalStat('SCORE', '${gameSession.score}'),
-              _buildMinimalStat('ACCURACY', '$currentAccuracy%'),
+              _buildMinimalStat('SCORE', '${gameSession.score}', theme),
+              _buildMinimalStat('ACCURACY', '$currentAccuracy%', theme),
               _buildMinimalStat(
                 'PROGRESS',
                 '${gameSession.correctAnswers}/${gameSession.currentQuestionIndex}',
+                theme,
               ),
             ],
           ),
@@ -353,8 +354,8 @@ if (gameSession.mode == GameMode.duel)
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               _buildStreakStat(gameSession.comboMultiplier, theme),
-              _buildMinimalStat('LEVEL', '${gameSession.level}'),
-              _buildMinimalStat('TIME', '${gameSession.timeRemaining}s'),
+              _buildMinimalStat('LEVEL', '${gameSession.level}', theme),
+              _buildMinimalStat('TIME', '${gameSession.timeRemaining}s', theme),
             ],
           ),
           const SizedBox(height: 8),
@@ -364,7 +365,7 @@ if (gameSession.mode == GameMode.duel)
               return Container(
                 height: 4,
                 decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.1),
+                  color: theme.colorScheme.onSurface.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(2),
                 ),
                 child: FractionallySizedBox(
@@ -401,14 +402,14 @@ if (gameSession.mode == GameMode.duel)
               Icons.local_fire_department,
               color: isMilestone 
                   ? (streak == 5 ? Colors.orange : streak == 10 ? Colors.red : Colors.purple)
-                  : AppDesignTokens.secondary,
+                  : theme.colorScheme.secondary,
               size: 16,
             ),
             if (isMilestone) ...[
               const SizedBox(width: 4),
               Icon(
                 Icons.star,
-                color: streak == 10 ? Colors.yellow : Colors.white,
+                color: streak == 10 ? Colors.yellow : theme.colorScheme.onSurface,
                 size: 12,
               ),
             ],
@@ -418,7 +419,7 @@ if (gameSession.mode == GameMode.duel)
               style: TextStyle(
                 color: isMilestone 
                     ? (streak == 5 ? Colors.orange : streak == 10 ? Colors.red : Colors.purple)
-                    : AppDesignTokens.secondary,
+                    : theme.colorScheme.secondary,
                 fontSize: 20,
                 fontWeight: isMilestone ? FontWeight.bold : FontWeight.w900,
                 fontFamily: 'monospace',
@@ -430,7 +431,7 @@ if (gameSession.mode == GameMode.duel)
         Text(
           'STREAK',
           style: TextStyle(
-            color: AppDesignTokens.secondary.withValues(alpha: 0.5),
+            color: theme.colorScheme.secondary.withValues(alpha: 0.5),
             fontSize: 10,
             letterSpacing: 2,
             fontWeight: FontWeight.w900,
@@ -440,7 +441,7 @@ if (gameSession.mode == GameMode.duel)
     );
   }
 
-  Widget _buildGhostOnboarding(String text) {
+  Widget _buildGhostOnboarding(String text, ThemeData theme) {
     return Center(
       child: Container(
         padding: const EdgeInsets.only(top: 160),
@@ -448,7 +449,7 @@ if (gameSession.mode == GameMode.duel)
             Text(
                   text,
                   style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.15),
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.15),
                     fontSize: 12,
                     letterSpacing: 4,
                     fontWeight: FontWeight.w300,
@@ -461,13 +462,13 @@ if (gameSession.mode == GameMode.duel)
     );
   }
 
-  Widget _buildMinimalStat(String label, String value) {
+  Widget _buildMinimalStat(String label, String value, ThemeData theme) {
     return Column(
       children: [
         Text(
           label,
           style: TextStyle(
-            color: AppDesignTokens.primary.withValues(alpha: 0.5),
+            color: theme.colorScheme.primary.withValues(alpha: 0.5),
             fontSize: 10,
             letterSpacing: 2,
             fontWeight: FontWeight.w900,
@@ -476,8 +477,8 @@ if (gameSession.mode == GameMode.duel)
         const SizedBox(height: 4),
         Text(
           value,
-          style: const TextStyle(
-            color: AppDesignTokens.primary,
+          style: TextStyle(
+            color: theme.colorScheme.primary,
             fontSize: 20,
             fontWeight: FontWeight.w900,
             fontFamily: 'monospace',
@@ -516,13 +517,13 @@ if (gameSession.mode == GameMode.duel)
               child: Text(
                 isRiddle ? question.customQuestion! : '${question.operand1} ${_getOperationSymbol(session.operation)} ${question.operand2}',
                 style: TextStyle(
-                  fontSize: _getResponsiveFontSize(context, isRiddle ? 32 : 84), // Make font size responsive
+                  fontSize: _getResponsiveFontSize(context, isRiddle ? 32 : 84),
                   fontWeight: isRiddle ? FontWeight.w600 : FontWeight.w900,
-                  color: AppDesignTokens.textPrimary,
+                  color: theme.colorScheme.onSurface,
                   letterSpacing: isRiddle ? 0 : -2,
                   fontFamily: isRiddle ? null : 'monospace',
                   shadows: [
-                    Shadow(color: AppDesignTokens.primary.withValues(alpha: 0.3), blurRadius: 20),
+                    Shadow(color: theme.colorScheme.primary.withValues(alpha: 0.3), blurRadius: 20),
                   ],
                 ),
                 textAlign: TextAlign.center,
@@ -537,7 +538,7 @@ if (gameSession.mode == GameMode.duel)
               child: Text(
                 'HINT: ${question.hint?.toUpperCase() ?? 'NOT AVAILABLE'}',
                 style: TextStyle(
-                  color: AppDesignTokens.accent.withValues(alpha: 0.7),
+                  color: theme.colorScheme.secondary.withValues(alpha: 0.7),
                   fontSize: _getResponsiveFontSize(context, 14),
                   letterSpacing: 2,
                   fontWeight: FontWeight.w900,
@@ -572,7 +573,7 @@ if (gameSession.mode == GameMode.duel)
           Text(
             'COUNT THE SHAPES',
             style: TextStyle(
-              color: Colors.white38,
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.38),
               fontSize: 12,
               letterSpacing: 2,
               fontWeight: FontWeight.w300,
@@ -584,13 +585,13 @@ if (gameSession.mode == GameMode.duel)
             height: 300,
             decoration: BoxDecoration(
               border: Border.all(
-                color: Colors.white10,
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.1),
                 width: 0.5,
               ),
             ),
             child: CustomPaint(
               size: const Size(300, 300),
-              painter: VisualShapesPainter(shapes: visualData.shapes),
+              painter: VisualShapesPainter(shapes: visualData.shapes, theme: theme),
             ),
           ),
         ],
@@ -606,7 +607,7 @@ if (gameSession.mode == GameMode.duel)
       mainAxisSize: MainAxisSize.min,
       children: [
         Divider(
-          color: Colors.white10,
+          color: theme.colorScheme.onSurface.withValues(alpha: 0.1),
           height: 1,
           thickness: 0.5,
         ),
@@ -618,6 +619,7 @@ if (gameSession.mode == GameMode.duel)
               _buildControlBtn(
                 icon: Icons.lightbulb_outline,
                 label: AppLocalizations.of(context)!.hint,
+                theme: theme,
                 onTap: () {
                   HapticManager.instance.lightImpact();
                   final user = ref.read(userSessionProvider);
@@ -631,6 +633,7 @@ if (gameSession.mode == GameMode.duel)
               _buildControlBtn(
                 icon: Icons.skip_next_rounded,
                 label: AppLocalizations.of(context)!.skip,
+                theme: theme,
                 onTap: () {
                   HapticManager.instance.lightImpact();
                   ref.read(gameSessionProvider.notifier).skipQuestion();
@@ -641,7 +644,7 @@ if (gameSession.mode == GameMode.duel)
           ),
         ),
         if (useOptions)
-          _buildOptionsGrid(question.options!)
+          _buildOptionsGrid(question.options!, theme)
         else
           CustomKeypad(
             currentInput: _currentInput,
@@ -661,7 +664,7 @@ if (gameSession.mode == GameMode.duel)
     );
   }
 
-  Widget _buildOptionsGrid(List<String> options) {
+  Widget _buildOptionsGrid(List<String> options, ThemeData theme) {
     return Padding(
       padding: const EdgeInsets.all(16.0),
       child: GridView.builder(
@@ -682,9 +685,9 @@ if (gameSession.mode == GameMode.duel)
               _submitAnswer(option);
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.white.withValues(alpha: 0.05),
-              foregroundColor: Colors.white,
-              side: BorderSide(color: Colors.white10, width: 1),
+              backgroundColor: theme.colorScheme.surface.withValues(alpha: 0.05),
+              foregroundColor: theme.colorScheme.onSurface,
+              side: BorderSide(color: theme.colorScheme.onSurface.withValues(alpha: 0.1), width: 1),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             ),
             child: Text(
@@ -702,6 +705,7 @@ if (gameSession.mode == GameMode.duel)
     required IconData icon,
     required String label,
     required VoidCallback onTap,
+    required ThemeData theme,
     bool disabled = false,
   }) {
     return Opacity(
@@ -713,13 +717,13 @@ if (gameSession.mode == GameMode.duel)
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(icon, color: Colors.white70, size: 20),
+              Icon(icon, color: theme.colorScheme.onSurface.withValues(alpha: 0.7), size: 20),
               const SizedBox(height: 4),
               Text(
                 label,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 9,
-                  color: Colors.white38,
+                  color: theme.colorScheme.onSurface.withValues(alpha: 0.38),
                   letterSpacing: 1,
                   fontWeight: FontWeight.w300,
                 ),
@@ -790,7 +794,7 @@ if (gameSession.mode == GameMode.duel)
                       ? (playerWon == true ? 'SYS_VICTORY' : 'SYS_DEFEAT')
                       : (stars > 0 ? 'LEVEL_STABILIZED' : 'INTEGRITY_FAILED'),
                   style: theme.textTheme.headlineSmall?.copyWith(
-                    color: stars > 0 ? AppDesignTokens.neonCyan : AppDesignTokens.neonPink,
+                    color: stars > 0 ? theme.colorScheme.secondary : theme.colorScheme.error,
                     letterSpacing: 4,
                     fontWeight: FontWeight.w900,
                   ),
@@ -804,7 +808,7 @@ if (gameSession.mode == GameMode.duel)
                         padding: const EdgeInsets.symmetric(horizontal: 8),
                         child: Icon(
                           index < stars ? Icons.star : Icons.star_border,
-                          color: index < stars ? AppDesignTokens.neonYellow : AppDesignTokens.neonCyan.withValues(alpha: 0.1),
+                          color: index < stars ? Colors.amber : theme.colorScheme.secondary.withValues(alpha: 0.1),
                           size: 40,
                         ),
                       );
@@ -957,7 +961,7 @@ class _ScanlinePainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = Colors.white.withValues(alpha: 0.05)
+      ..color = Colors.grey.withValues(alpha: 0.05)
       ..strokeWidth = 1.0;
 
     for (double i = 0; i < size.height; i += 4) {
@@ -971,18 +975,19 @@ class _ScanlinePainter extends CustomPainter {
 
 class VisualShapesPainter extends CustomPainter {
   final List<ShapeData> shapes;
+  final ThemeData theme;
 
-  VisualShapesPainter({required this.shapes});
+  VisualShapesPainter({required this.shapes, required this.theme});
 
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = Colors.white.withValues(alpha: 0.8)
+      ..color = theme.colorScheme.onSurface.withValues(alpha: 0.8)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 0.5;
 
     final glowPaint = Paint()
-      ..color = Colors.white.withValues(alpha: 0.1)
+      ..color = theme.colorScheme.onSurface.withValues(alpha: 0.1)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 2.0
       ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3);

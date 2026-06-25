@@ -5,7 +5,6 @@ import 'dart:async';
 import 'dart:math';
 import '../../../core/providers.dart';
 import '../../../core/sound_manager.dart';
-import '../../../core/themes/app_themes.dart';
 import '../../../data/models/math_riddle.dart';
 import '../../../l10n/generated/app_localizations.dart';
 
@@ -115,7 +114,7 @@ class _MathRiddleScreenState extends ConsumerState<MathRiddleScreen> with Single
               child: Text(
                 '${state.questionIndex}/${state.totalQuestions}',
                 style: TextStyle(
-                  color: AppDesignTokens.neonCyan,
+                  color: theme.colorScheme.secondary,
                   fontSize: 14,
                   fontWeight: FontWeight.bold,
                 ),
@@ -295,12 +294,8 @@ class _MathRiddleScreenState extends ConsumerState<MathRiddleScreen> with Single
 
   Widget _buildNumpad(MathRiddleState state) {
     final theme = Theme.of(context);
-    final bool isLight = theme.brightness == Brightness.light;
-    final background = isLight
-        ? theme.colorScheme.primary.withValues(alpha: 0.08)
-        : theme.colorScheme.surfaceContainerHighest;
     return Container(
-      color: background,
+      color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [_buildInputBar(state, theme), _buildGrid()],
@@ -309,16 +304,12 @@ class _MathRiddleScreenState extends ConsumerState<MathRiddleScreen> with Single
   }
 
   Widget _buildInputBar(MathRiddleState state, ThemeData theme) {
-    final bool isLight = theme.brightness == Brightness.light;
-    final inputBackground = isLight
-        ? theme.colorScheme.secondary.withValues(alpha: 0.12)
-        : theme.colorScheme.surface.withValues(alpha: 0.12);
     return Container(
       decoration: BoxDecoration(
-        color: inputBackground,
+        color: theme.colorScheme.surface,
         border: Border(
-          top: BorderSide(color: theme.colorScheme.onSurface.withValues(alpha: 0.12)),
-          bottom: BorderSide(color: theme.colorScheme.onSurface.withValues(alpha: 0.12)),
+          top: BorderSide(color: theme.colorScheme.outline.withValues(alpha: 0.1)),
+          bottom: BorderSide(color: theme.colorScheme.outline.withValues(alpha: 0.1)),
         ),
       ),
       height: 72,
@@ -439,16 +430,6 @@ class _MathRiddleScreenState extends ConsumerState<MathRiddleScreen> with Single
     final keys = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0'];
     final screenWidth = MediaQuery.of(context).size.width;
     final crossAxisCount = screenWidth < 400 ? 4 : 5;
-    final bool isLight = theme.brightness == Brightness.light;
-    final keyBackground = isLight
-        ? theme.colorScheme.surface
-        : theme.colorScheme.surfaceContainerHighest;
-    final keyBorder = isLight
-        ? theme.colorScheme.primary.withValues(alpha: 0.2)
-        : theme.colorScheme.onSurface.withValues(alpha: 0.12);
-    final keyText = isLight
-        ? theme.colorScheme.primary
-        : theme.colorScheme.onSurface;
 
     return GridView.builder(
       shrinkWrap: true,
@@ -470,15 +451,15 @@ class _MathRiddleScreenState extends ConsumerState<MathRiddleScreen> with Single
           child: Container(
             margin: const EdgeInsets.all(6),
             decoration: BoxDecoration(
-              color: keyBackground,
+              color: theme.colorScheme.surface,
               border: Border.all(
-                color: keyBorder,
+                color: theme.colorScheme.outline.withValues(alpha: 0.1),
                 width: 1,
               ),
               borderRadius: BorderRadius.circular(14),
               boxShadow: [
                 BoxShadow(
-                  color: theme.colorScheme.onSurface.withValues(alpha: 0.04),
+                  color: theme.colorScheme.shadow.withValues(alpha: 0.05),
                   blurRadius: 6,
                   offset: const Offset(0, 2),
                 ),
@@ -488,7 +469,7 @@ class _MathRiddleScreenState extends ConsumerState<MathRiddleScreen> with Single
               child: Text(
                 keys[index],
                 style: TextStyle(
-                  color: keyText,
+                  color: theme.colorScheme.onSurface,
                   fontSize: (screenWidth * 0.045).clamp(14.0, 20.0),
                   fontWeight: FontWeight.w600,
                 ),
@@ -559,7 +540,7 @@ class _MathRiddleScreenState extends ConsumerState<MathRiddleScreen> with Single
           child: Text(
             passed ? 'LEVEL COMPLETE' : 'NOT PASSED',
             style: TextStyle(
-              color: passed ? AppDesignTokens.neonGreen : AppDesignTokens.neonPink,
+              color: passed ? theme.colorScheme.primary : theme.colorScheme.error,
               letterSpacing: 4,
               fontWeight: FontWeight.w100,
               fontSize: 18,

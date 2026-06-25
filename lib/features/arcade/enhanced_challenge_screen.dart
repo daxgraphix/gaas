@@ -45,8 +45,8 @@ class _EnhancedChallengeScreenState
             end: Alignment.bottomCenter,
             colors: theme.brightness == Brightness.light
                 ? [
-                    const Color(0xFFE0F2FE), // Light sky blue
-                    const Color(0xFFF8FAFC), // Very light background
+                    theme.colorScheme.primary.withValues(alpha: 0.1),
+                    theme.colorScheme.surface,
                   ]
                 : [
                     Colors.orange.withValues(alpha: 0.15),

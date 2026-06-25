@@ -17,6 +17,7 @@ class CustomKeypad extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -27,7 +28,7 @@ class CustomKeypad extends StatelessWidget {
           decoration: BoxDecoration(
             border: Border(
               bottom: BorderSide(
-                color: Colors.white24,
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.1),
                 width: 0.5,
               ),
             ),
@@ -41,7 +42,7 @@ class CustomKeypad extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 40,
                       fontWeight: FontWeight.w200,
-                      color: Colors.white,
+                      color: theme.colorScheme.onSurface,
                       letterSpacing: 4,
                     ),
                   ),
@@ -54,7 +55,7 @@ class CustomKeypad extends StatelessWidget {
                 },
                 icon: Icon(
                   Icons.backspace_outlined,
-                   color: Colors.white70,
+                   color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
                 ),
                 iconSize: 20,
               ),
@@ -116,6 +117,7 @@ class CustomKeypad extends StatelessWidget {
   }
 
   Widget _buildKey(BuildContext context, String key) {
+    final theme = Theme.of(context);
     return SizedBox(
       height: 65,
       child: InkWell(
@@ -126,7 +128,7 @@ class CustomKeypad extends StatelessWidget {
         child: Container(
           decoration: BoxDecoration(
             border: Border.all(
-              color: Colors.white10,
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.05),
               width: 0.25,
             ),
           ),
@@ -136,7 +138,7 @@ class CustomKeypad extends StatelessWidget {
               style: TextStyle(
                 fontSize: 28,
                 fontWeight: FontWeight.w200,
-                color: Colors.white,
+                color: theme.colorScheme.onSurface,
               ),
             ),
           ),
@@ -150,6 +152,7 @@ class CustomKeypad extends StatelessWidget {
     IconData icon,
     VoidCallback onPressed,
   ) {
+    final theme = Theme.of(context);
     return SizedBox(
       height: 65,
       child: InkWell(
@@ -157,14 +160,14 @@ class CustomKeypad extends StatelessWidget {
         child: Container(
           decoration: BoxDecoration(
             border: Border.all(
-              color: Colors.white10,
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.05),
               width: 0.25,
             ),
           ),
           child: Icon(
             icon,
             size: 24,
-            color: Colors.white70,
+            color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
           ),
         ),
       ),

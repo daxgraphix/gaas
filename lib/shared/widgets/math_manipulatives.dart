@@ -63,12 +63,10 @@ class _MathManipulativesWidgetState extends State<MathManipulativesWidget> {
                     height: 80,
                     decoration: BoxDecoration(
                       color: _currentCount == widget.targetNumber
-                          ? Colors.green.withValues(alpha: 0.3)
+                          ? theme.colorScheme.primary.withValues(alpha: 0.3)
                           : theme.colorScheme.primary.withValues(alpha: 0.1),
                       border: Border.all(
-                        color: _currentCount == widget.targetNumber
-                            ? Colors.green
-                            : theme.colorScheme.primary,
+                        color: theme.colorScheme.primary,
                         width: 3,
                       ),
                       borderRadius: BorderRadius.circular(8),
@@ -79,9 +77,7 @@ class _MathManipulativesWidgetState extends State<MathManipulativesWidget> {
                         style: TextStyle(
                           fontSize: 24,
                           fontWeight: FontWeight.bold,
-                          color: _currentCount == widget.targetNumber
-                              ? Colors.green
-                              : theme.colorScheme.primary,
+                          color: theme.colorScheme.primary,
                         ),
                       ),
                     ),
@@ -99,10 +95,10 @@ class _MathManipulativesWidgetState extends State<MathManipulativesWidget> {
                     top: position.dy,
                     child: Draggable<int>(
                       data: index,
-                      feedback: _buildObject(true),
+                      feedback: _buildObject(context, true),
                       childWhenDragging: Opacity(
                         opacity: 0.5,
-                        child: _buildObject(false),
+                        child: _buildObject(context, false),
                       ),
                       onDragEnd: (details) {
                         setState(() {
@@ -118,7 +114,7 @@ class _MathManipulativesWidgetState extends State<MathManipulativesWidget> {
                           }
                         });
                       },
-                      child: _buildObject(false),
+                      child: _buildObject(context, false),
                     ),
                   );
                 }),
@@ -139,7 +135,7 @@ class _MathManipulativesWidgetState extends State<MathManipulativesWidget> {
                           borderRadius: BorderRadius.circular(8),
                           border: Border.all(
                             color: candidateData.isNotEmpty
-                                ? Colors.green
+                                ? theme.colorScheme.primary
                                 : Colors.transparent,
                             width: 2,
                           ),
@@ -156,24 +152,27 @@ class _MathManipulativesWidgetState extends State<MathManipulativesWidget> {
     );
   }
 
-  Widget _buildObject(bool isDragging) {
+  Widget _buildObject(BuildContext context, bool isDragging) {
+    final theme = Theme.of(context);
+    final color = isDragging ? theme.colorScheme.secondary : theme.colorScheme.error;
+    
     return Container(
       width: 40,
       height: 40,
       decoration: BoxDecoration(
-        color: isDragging ? Colors.blue : Colors.red,
+        color: color,
         shape: BoxShape.circle,
         boxShadow: isDragging ? [
           BoxShadow(
-            color: Colors.blue.withValues(alpha: 0.5),
+            color: color.withValues(alpha: 0.5),
             blurRadius: 10,
             spreadRadius: 2,
           ),
         ] : null,
       ),
-      child: const Icon(
+      child: Icon(
         Icons.circle,
-        color: Colors.white,
+        color: theme.colorScheme.onPrimary,
         size: 24,
       ),
     );

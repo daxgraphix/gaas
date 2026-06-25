@@ -132,7 +132,7 @@ class _CustomMixScreenState extends ConsumerState<CustomMixScreen>
               style: TextStyle(
                 fontSize: 48,
                 fontWeight: FontWeight.w200,
-                color: AppDesignTokens.textPrimary,
+                color: theme.colorScheme.onSurface,
                 fontFamily: 'monospace',
                 letterSpacing: 8,
               ),
@@ -165,11 +165,11 @@ class _CustomMixScreenState extends ConsumerState<CustomMixScreen>
         const SizedBox(width: 8),
         Text(
           title,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 10,
             fontWeight: FontWeight.w600,
             letterSpacing: 2,
-            color: Colors.white54,
+            color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
             fontFamily: 'monospace',
           ),
         ),
@@ -224,7 +224,7 @@ class _CustomMixScreenState extends ConsumerState<CustomMixScreen>
                           border: Border.all(
                             color: isSelected
                                 ? theme.colorScheme.primary
-                                : AppDesignTokens.textMuted.withValues(alpha: 0.3),
+                                : theme.colorScheme.onSurface.withValues(alpha: 0.1),
                             width: 2,
                           ),
                           boxShadow: isSelected
@@ -240,7 +240,7 @@ class _CustomMixScreenState extends ConsumerState<CustomMixScreen>
                           child: Text(
                             _getOperationSymbol(op),
                             style: TextStyle(
-                              color: isSelected ? AppDesignTokens.textPrimary : AppDesignTokens.textSecondary,
+                              color: isSelected ? theme.colorScheme.onSurface : theme.colorScheme.onSurface.withValues(alpha: 0.7),
                               fontSize: 24,
                               fontWeight: FontWeight.bold,
                               fontFamily: 'monospace',
@@ -288,7 +288,7 @@ class _CustomMixScreenState extends ConsumerState<CustomMixScreen>
               SliderTheme(
                 data: SliderTheme.of(context).copyWith(
                   activeTrackColor: theme.colorScheme.primary,
-                  inactiveTrackColor: AppDesignTokens.surfaceLighter,
+                  inactiveTrackColor: theme.colorScheme.onSurface.withValues(alpha: 0.1),
                   thumbColor: theme.colorScheme.primary,
                   overlayColor: theme.colorScheme.primary.withValues(alpha: 0.2),
                   valueIndicatorColor: theme.colorScheme.primary,
@@ -307,8 +307,8 @@ class _CustomMixScreenState extends ConsumerState<CustomMixScreen>
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text('EASY', style: TextStyle(color: AppDesignTokens.textMuted, fontSize: 10, fontFamily: 'monospace', fontWeight: FontWeight.bold)),
-                  Text('HARD', style: TextStyle(color: AppDesignTokens.textMuted, fontSize: 10, fontFamily: 'monospace', fontWeight: FontWeight.bold)),
+                  Text('EASY', style: TextStyle(color: theme.colorScheme.onSurface.withValues(alpha: 0.4), fontSize: 10, fontFamily: 'monospace', fontWeight: FontWeight.bold)),
+                  Text('HARD', style: TextStyle(color: theme.colorScheme.onSurface.withValues(alpha: 0.4), fontSize: 10, fontFamily: 'monospace', fontWeight: FontWeight.bold)),
                 ],
               ),
             ],
@@ -355,9 +355,9 @@ class _CustomMixScreenState extends ConsumerState<CustomMixScreen>
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
-                  _buildStatItem(l10n.score, '${state.correctAnswers}/${state.questionsCompleted}'),
-                  _buildStatItem(l10n.accuracy, '${(progress * 100).toStringAsFixed(1)}%'),
-                  _buildStatItem(l10n.streak, '${state.currentStreak}'),
+                  _buildStatItem(l10n.score, '${state.correctAnswers}/${state.questionsCompleted}', theme),
+                  _buildStatItem(l10n.accuracy, '${(progress * 100).toStringAsFixed(1)}%', theme),
+                  _buildStatItem(l10n.streak, '${state.currentStreak}', theme),
                 ],
               ),
               const SizedBox(height: 12),
@@ -551,13 +551,13 @@ class _CustomMixScreenState extends ConsumerState<CustomMixScreen>
     );
   }
 
-  Widget _buildStatItem(String label, String value) {
+  Widget _buildStatItem(String label, String value, ThemeData theme) {
     return Column(
       children: [
         Text(
           value,
-          style: const TextStyle(
-            color: Colors.white,
+          style: TextStyle(
+            color: theme.colorScheme.onSurface,
             fontSize: 20,
             fontWeight: FontWeight.bold,
             fontFamily: 'monospace',
@@ -566,8 +566,8 @@ class _CustomMixScreenState extends ConsumerState<CustomMixScreen>
         const SizedBox(height: 4),
         Text(
           label,
-          style: const TextStyle(
-            color: Colors.white38,
+          style: TextStyle(
+            color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
             fontSize: 8,
             letterSpacing: 1,
             fontFamily: 'monospace',
@@ -612,7 +612,7 @@ class _CustomMixScreenState extends ConsumerState<CustomMixScreen>
             child: Text(
               question.question,
               style: TextStyle(
-                color: Colors.white,
+                color: theme.colorScheme.onSurface,
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
                 height: 1.4,
@@ -687,8 +687,8 @@ class _CustomMixScreenState extends ConsumerState<CustomMixScreen>
                     ),
                     child: Text(
                       option,
-                      style: const TextStyle(
-                        color: Colors.white,
+                      style: TextStyle(
+                        color: theme.colorScheme.onSurface,
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
                         fontFamily: 'monospace',
@@ -748,8 +748,8 @@ class _CustomMixScreenState extends ConsumerState<CustomMixScreen>
             ),
             child: Text(
               state.currentQuestion!.progressiveHints[0],
-              style: const TextStyle(
-                color: Colors.white,
+              style: TextStyle(
+                color: theme.colorScheme.onSurface,
                 fontSize: 14,
                 height: 1.5,
                 fontFamily: 'monospace',
@@ -804,7 +804,7 @@ class _CustomMixScreenState extends ConsumerState<CustomMixScreen>
             ),
           ),
         ),
-        content: const SingleChildScrollView(
+        content: SingleChildScrollView(
           child: Text(
             'CUSTOM MIX ARITHMETIC allows you to create personalized arithmetic challenges.\n\n'
             '1. Select one or more operations (+, -, ×, ÷)\n'
@@ -814,7 +814,7 @@ class _CustomMixScreenState extends ConsumerState<CustomMixScreen>
             '5. Use hints if needed (reveals the answer)\n\n'
             'Perfect for targeted practice and skill development.',
             style: TextStyle(
-              color: Colors.white70,
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
               fontSize: 12,
               height: 1.5,
               fontFamily: 'monospace',

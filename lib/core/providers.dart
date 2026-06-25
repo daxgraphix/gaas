@@ -18,9 +18,14 @@ import '../core/math_engine/math_equation_engine.dart';
 import '../core/sound_manager.dart';
 import '../core/notification_service.dart';
 
+import '../core/performance/isar_service.dart';
+import '../core/performance/performance_models.dart';
+
 final dbProvider = FutureProvider<DatabaseService>((ref) async {
   return await DatabaseService.instance;
 });
+
+final isarServiceProvider = Provider((ref) => IsarService());
 
 final notificationProvider = Provider((ref) => NotificationService());
 final userRepositoryProvider = Provider((ref) => UserRepository());
@@ -36,16 +41,25 @@ final themeProvider = StateNotifierProvider<ThemeNotifier, AppThemeType>((ref) {
 });
 
 class ThemeNotifier extends StateNotifier<AppThemeType> {
-  ThemeNotifier() : super(AppThemeType.midnight);
+  ThemeNotifier() : super(AppThemeType.solar) {
+    loadTheme();
+  }
 
   Future<void> loadTheme() async {
-    // Force midnight (dark mode)
-    state = AppThemeType.midnight;
+    final prefs = await SharedPreferences.getInstance();
+    final themeName = prefs.getString('app_theme');
+    if (themeName != null) {
+      state = AppThemeType.values.firstWhere(
+        (e) => e.name == themeName,
+        orElse: () => AppThemeType.solar,
+      );
+    }
   }
 
   Future<void> setTheme(AppThemeType theme) async {
-    // Only allow midnight
-    state = AppThemeType.midnight;
+    state = theme;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('app_theme', theme.name);
   }
 }
 
@@ -735,7 +749,8 @@ class SessionStatsNotifier extends StateNotifier<SessionStats> {
 
 // Real-time performance trends
 final performanceTrendsProvider = StateNotifierProvider<PerformanceTrendsNotifier, PerformanceTrends>((ref) {
-  return PerformanceTrendsNotifier();
+  final isarService = ref.watch(isarServiceProvider);
+  return PerformanceTrendsNotifier(isarService);
 });
 
 class PerformanceTrends {
@@ -775,7 +790,9 @@ class PerformanceTrends {
 }
 
 class PerformanceTrendsNotifier extends StateNotifier<PerformanceTrends> {
-  PerformanceTrendsNotifier() : super(PerformanceTrends()) {
+  final IsarService _isarService;
+
+  PerformanceTrendsNotifier(this._isarService) : super(PerformanceTrends()) {
     _loadHistoricalData();
   }
 
@@ -799,43 +816,68 @@ class PerformanceTrendsNotifier extends StateNotifier<PerformanceTrends> {
       streakHistory: newStreakHistory,
     );
 
-    _saveHistoricalData();
+    _saveHistoricalData(accuracy, avgTime, streak);
   }
 
   Future<void> _loadHistoricalData() async {
-    // Load historical data from shared preferences
-    final prefs = await SharedPreferences.getInstance();
-    final accuracyData = prefs.getStringList('performance_accuracy_history') ?? [];
-    final timeData = prefs.getStringList('performance_time_history') ?? [];
-    final streakData = prefs.getStringList('performance_streak_history') ?? [];
+    final recentData = await _isarService.getRecentPerformanceData(50);
+    
+    if (recentData.isEmpty) {
+      // Try to migrate from SharedPreferences
+      final prefs = await SharedPreferences.getInstance();
+      final accuracyData = prefs.getStringList('performance_accuracy_history') ?? [];
+      final timeData = prefs.getStringList('performance_time_history') ?? [];
+      final streakData = prefs.getStringList('performance_streak_history') ?? [];
 
-    try {
-      state = PerformanceTrends(
-        accuracyHistory: accuracyData.map(double.parse).toList(),
-        timeHistory: timeData.map(int.parse).toList(),
-        streakHistory: streakData.map(int.parse).toList(),
-      );
-    } catch (e) {
-      // If parsing fails, start with empty data
-      state = PerformanceTrends();
+      if (accuracyData.isNotEmpty) {
+        final List<PerformanceDataPoint> migratedPoints = [];
+        for (int i = 0; i < accuracyData.length; i++) {
+          migratedPoints.add(PerformanceDataPoint(
+            timestamp: DateTime.now().subtract(Duration(minutes: accuracyData.length - i)),
+            accuracy: double.tryParse(accuracyData[i]) ?? 0.0,
+            averageTime: i < timeData.length ? int.tryParse(timeData[i]) ?? 0 : 0,
+            streak: i < streakData.length ? int.tryParse(streakData[i]) ?? 0 : 0,
+          ));
+        }
+        
+        for (final point in migratedPoints) {
+          await _isarService.savePerformanceData(point);
+        }
+        
+        // Clear old data
+        await prefs.remove('performance_accuracy_history');
+        await prefs.remove('performance_time_history');
+        await prefs.remove('performance_streak_history');
+
+        final newData = await _isarService.getRecentPerformanceData(50);
+        final historicalData = newData.reversed.toList();
+        state = PerformanceTrends(
+          accuracyHistory: historicalData.map((e) => e.accuracy).toList(),
+          timeHistory: historicalData.map((e) => e.averageTime).toList(),
+          streakHistory: historicalData.map((e) => e.streak).toList(),
+        );
+        return;
+      }
     }
+
+    // Recent data is Descending, so we reverse it to maintain chronological order in the UI
+    final historicalData = recentData.reversed.toList();
+
+    state = PerformanceTrends(
+      accuracyHistory: historicalData.map((e) => e.accuracy).toList(),
+      timeHistory: historicalData.map((e) => e.averageTime).toList(),
+      streakHistory: historicalData.map((e) => e.streak).toList(),
+    );
   }
 
-  Future<void> _saveHistoricalData() async {
-    // Save historical data to shared preferences
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setStringList(
-      'performance_accuracy_history',
-      state.accuracyHistory.map((e) => e.toString()).toList(),
+  Future<void> _saveHistoricalData(double accuracy, int avgTime, int streak) async {
+    final dataPoint = PerformanceDataPoint(
+      timestamp: DateTime.now(),
+      accuracy: accuracy,
+      averageTime: avgTime,
+      streak: streak,
     );
-    await prefs.setStringList(
-      'performance_time_history',
-      state.timeHistory.map((e) => e.toString()).toList(),
-    );
-    await prefs.setStringList(
-      'performance_streak_history',
-      state.streakHistory.map((e) => e.toString()).toList(),
-    );
+    await _isarService.savePerformanceData(dataPoint);
   }
 }
 

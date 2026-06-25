@@ -40,8 +40,8 @@ class _CampaignPuzzleScreenState extends ConsumerState<CampaignPuzzleScreen> {
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: [
-              theme.colorScheme.primary.withValues(alpha: 0.3),
-              theme.scaffoldBackgroundColor,
+              theme.colorScheme.primary.withValues(alpha: 0.15),
+              theme.colorScheme.surface,
             ],
           ),
         ),
@@ -51,7 +51,7 @@ class _CampaignPuzzleScreenState extends ConsumerState<CampaignPuzzleScreen> {
               _buildHeader(context, chapter),
               Expanded(
                 child: ListView.builder(
-                  padding: const EdgeInsets.all(16),
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                   itemCount: chapter.stages.length,
                   itemBuilder: (context, index) {
                     return _buildStageCard(
@@ -82,9 +82,9 @@ class _CampaignPuzzleScreenState extends ConsumerState<CampaignPuzzleScreen> {
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             colors: [
-              theme.colorScheme.primary,
               theme.colorScheme.primary.withValues(alpha: 0.8),
-              theme.scaffoldBackgroundColor,
+              theme.colorScheme.primary.withValues(alpha: 0.4),
+              theme.colorScheme.surface,
             ],
           ),
         ),
@@ -93,44 +93,49 @@ class _CampaignPuzzleScreenState extends ConsumerState<CampaignPuzzleScreen> {
             children: [
               const Spacer(),
               Container(
-                padding: const EdgeInsets.all(32),
+                padding: const EdgeInsets.all(28),
                 margin: const EdgeInsets.all(24),
                 decoration: BoxDecoration(
-                  color: theme.brightness == Brightness.light
-                      ? theme.colorScheme.surface.withValues(alpha: 0.9)
-                      : Colors.white.withValues(alpha: 0.1),
+                  color: theme.colorScheme.surface.withValues(alpha: 0.95),
                   borderRadius: BorderRadius.circular(
                     AppDesignTokens.radiusXLarge,
                   ),
+                  border: Border.all(
+                    color: theme.colorScheme.primary.withValues(alpha: 0.2),
+                    width: 1.5,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.1),
+                      blurRadius: 20,
+                      offset: const Offset(0, 10),
+                    ),
+                  ],
                 ),
                 child: Column(
                   children: [
                     Text(
-                      'Chapter ${chapter.chapterNumber}',
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        color: theme.brightness == Brightness.light
-                            ? theme.colorScheme.onSurface.withValues(alpha: 0.7)
-                            : Colors.white70,
-                        letterSpacing: 2,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      chapter.title,
-                      style: theme.textTheme.headlineLarge?.copyWith(
-                        color: theme.brightness == Brightness.light
-                            ? theme.colorScheme.onSurface
-                            : Colors.white,
+                      'CHAPTER ${chapter.chapterNumber}',
+                      style: theme.textTheme.labelLarge?.copyWith(
+                        color: theme.colorScheme.primary,
+                        letterSpacing: 3,
                         fontWeight: FontWeight.bold,
                       ),
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      chapter.title,
+                      style: theme.textTheme.headlineMedium?.copyWith(
+                        color: theme.colorScheme.onSurface,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: 24),
                     Container(
                       padding: const EdgeInsets.all(20),
                        decoration: BoxDecoration(
-                         color: theme.brightness == Brightness.light
-                             ? theme.colorScheme.surfaceContainerHighest
-                             : Colors.white.withValues(alpha: 0.15),
+                         color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
                          borderRadius: BorderRadius.circular(
                            AppDesignTokens.radiusLarge,
                          ),
@@ -138,9 +143,7 @@ class _CampaignPuzzleScreenState extends ConsumerState<CampaignPuzzleScreen> {
                       child: Text(
                         chapter.storyline,
                          style: theme.textTheme.bodyLarge?.copyWith(
-                           color: theme.brightness == Brightness.light
-                               ? theme.colorScheme.onSurface
-                               : Colors.white,
+                           color: theme.colorScheme.onSurface,
                            height: 1.6,
                          ),
                         textAlign: TextAlign.center,
@@ -148,11 +151,11 @@ class _CampaignPuzzleScreenState extends ConsumerState<CampaignPuzzleScreen> {
                     ),
                     const SizedBox(height: 32),
                     Text(
-                      '${chapter.stages.length} puzzles await',
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: theme.brightness == Brightness.light
-                            ? theme.colorScheme.onSurface.withValues(alpha: 0.7)
-                            : Colors.white70,
+                      '${chapter.stages.length} PUZZLES AWAIT',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                        letterSpacing: 1.5,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
                   ],
@@ -170,15 +173,17 @@ class _CampaignPuzzleScreenState extends ConsumerState<CampaignPuzzleScreen> {
                       });
                     },
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.white,
-                      foregroundColor: theme.colorScheme.primary,
-                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      backgroundColor: theme.colorScheme.primary,
+                      foregroundColor: theme.colorScheme.onPrimary,
+                      padding: const EdgeInsets.symmetric(vertical: 18),
+                      elevation: 4,
                     ),
                     child: const Text(
                       'Begin Chapter',
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
+                        letterSpacing: 0.5,
                       ),
                     ),
                   ),
@@ -195,28 +200,31 @@ class _CampaignPuzzleScreenState extends ConsumerState<CampaignPuzzleScreen> {
     final theme = Theme.of(context);
 
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
       child: Row(
         children: [
           IconButton(
             onPressed: () => Navigator.pop(context),
-            icon: const Icon(Icons.arrow_back),
-            color: Colors.white,
+            icon: const Icon(Icons.arrow_back_ios_new),
+            color: theme.colorScheme.onSurface,
+            iconSize: 20,
           ),
           Expanded(
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 Text(
                   chapter.title,
                   style: theme.textTheme.titleLarge?.copyWith(
-                    color: Colors.white,
+                    color: theme.colorScheme.onSurface,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
                 Text(
                   'Chapter ${chapter.chapterNumber}',
                   style: theme.textTheme.bodySmall?.copyWith(
-                    color: Colors.white70,
+                    color: theme.colorScheme.onSurfaceVariant,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
               ],
@@ -225,23 +233,25 @@ class _CampaignPuzzleScreenState extends ConsumerState<CampaignPuzzleScreen> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(
-              color: Colors.amber.withValues(alpha: 0.2),
+              color: Colors.amber.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: Colors.amber.withValues(alpha: 0.5)),
             ),
             child: Row(
               children: [
-                const Icon(Icons.star, color: Colors.amber, size: 16),
-                const SizedBox(width: 4),
+                const Icon(Icons.stars_rounded, color: Colors.amber, size: 18),
+                const SizedBox(width: 6),
                 Text(
                   '${chapter.earnedStars}/${chapter.totalStars}',
-                  style: const TextStyle(
-                    color: Colors.amber,
+                  style: theme.textTheme.labelLarge?.copyWith(
+                    color: Colors.amber.shade800,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
               ],
             ),
           ),
+          const SizedBox(width: 8),
         ],
       ),
     );
@@ -260,9 +270,12 @@ class _CampaignPuzzleScreenState extends ConsumerState<CampaignPuzzleScreen> {
       decoration: BoxDecoration(
         color: theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(AppDesignTokens.radiusLarge),
+        border: Border.all(
+          color: theme.colorScheme.outline.withValues(alpha: 0.1),
+        ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.1),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -276,21 +289,21 @@ class _CampaignPuzzleScreenState extends ConsumerState<CampaignPuzzleScreen> {
           child: Row(
             children: [
               Container(
-                width: 60,
-                height: 60,
+                width: 64,
+                height: 64,
                 decoration: BoxDecoration(
                   color: isLocked
-                      ? Colors.grey.withValues(alpha: 0.2)
-                      : theme.colorScheme.primary.withValues(alpha: 0.2),
-                  borderRadius: BorderRadius.circular(16),
+                      ? theme.colorScheme.onSurface.withValues(alpha: 0.05)
+                      : theme.colorScheme.primaryContainer.withValues(alpha: 0.4),
+                  borderRadius: BorderRadius.circular(20),
                 ),
                 child: Center(
                   child: isLocked
-                      ? const Icon(Icons.lock, color: Colors.grey)
+                      ? Icon(Icons.lock_outline, color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.5))
                       : Icon(
                           _getTypeIcon(stage.type),
                           color: theme.colorScheme.primary,
-                          size: 28,
+                          size: 32,
                         ),
                 ),
               ),
@@ -303,35 +316,27 @@ class _CampaignPuzzleScreenState extends ConsumerState<CampaignPuzzleScreen> {
                       stage.title,
                       style: theme.textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.bold,
-                        color: isLocked ? Colors.grey : null,
+                        color: isLocked ? theme.colorScheme.onSurface.withValues(alpha: 0.4) : theme.colorScheme.onSurface,
                       ),
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      _getTypeLabel(stage.type),
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: Colors.grey,
+                      _getTypeLabel(stage.type).toUpperCase(),
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                        letterSpacing: 1.1,
                       ),
                     ),
                     const SizedBox(height: 8),
                     Row(
-                      children: [
-                        Icon(
-                          Icons.star,
-                          size: 16,
-                          color: stage.stars > 0 ? Colors.amber : Colors.grey,
-                        ),
-                        Icon(
-                          Icons.star,
-                          size: 16,
-                          color: stage.stars > 1 ? Colors.amber : Colors.grey,
-                        ),
-                        Icon(
-                          Icons.star,
-                          size: 16,
-                          color: stage.stars > 2 ? Colors.amber : Colors.grey,
-                        ),
-                      ],
+                      children: List.generate(3, (starIndex) {
+                        final isEarned = stage.stars > starIndex;
+                        return Icon(
+                          isEarned ? Icons.star_rounded : Icons.star_outline_rounded,
+                          size: 18,
+                          color: isEarned ? Colors.amber : theme.colorScheme.outline.withValues(alpha: 0.3),
+                        );
+                      }),
                     ),
                   ],
                 ),
@@ -339,30 +344,23 @@ class _CampaignPuzzleScreenState extends ConsumerState<CampaignPuzzleScreen> {
               if (isLocked)
                 Container(
                   padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 6,
+                    horizontal: 10,
+                    vertical: 4,
                   ),
                   decoration: BoxDecoration(
-                    color: Colors.grey.withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(12),
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.05),
+                    borderRadius: BorderRadius.circular(10),
                   ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(Icons.lock, color: Colors.grey, size: 14),
-                      const SizedBox(width: 4),
-                      Text(
-                        '${stage.difficulty}*',
-                        style: const TextStyle(
-                          color: Colors.grey,
-                          fontSize: 12,
-                        ),
-                      ),
-                    ],
+                  child: Text(
+                    'LVL ${stage.difficulty}',
+                    style: theme.textTheme.labelSmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 )
               else
-                Icon(Icons.chevron_right, color: theme.colorScheme.primary),
+                Icon(Icons.chevron_right_rounded, color: theme.colorScheme.primary.withValues(alpha: 0.5)),
             ],
           ),
         ),

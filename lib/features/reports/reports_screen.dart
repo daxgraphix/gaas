@@ -373,20 +373,25 @@ class ReportsScreen extends ConsumerWidget {
                               ),
                               Row(
                                 children: [
-                                  Icon(Icons.star, size: 14, color: AppDesignTokens.neonYellow),
+                                  Icon(Icons.star_rounded, size: 16, color: Colors.amber),
                                   const SizedBox(width: 4),
                                   Text(
                                     '$totalStarsEarned',
-                                    style: const TextStyle(fontWeight: FontWeight.bold),
+                                    style: theme.textTheme.labelLarge?.copyWith(
+                                      fontWeight: FontWeight.bold,
+                                      color: theme.colorScheme.onSurface,
+                                    ),
                                   ),
                                   const SizedBox(width: 12),
-                                  Text('$completed/${levels.length}'),
+                                  Text(
+                                    '$completed/${levels.length}',
+                                    style: theme.textTheme.bodySmall,
+                                  ),
                                   const SizedBox(width: 8),
                                   Text(
                                     '($unlocked ${l10n.unlocked})',
-                                    style: TextStyle(
-                                      fontSize: 10,
-                                      color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
+                                    style: theme.textTheme.labelSmall?.copyWith(
+                                      color: theme.colorScheme.onSurfaceVariant,
                                     ),
                                   ),
                                 ],
@@ -396,10 +401,17 @@ class ReportsScreen extends ConsumerWidget {
                         );
                       }),
                     ] else ...[
-                      Center(child: Text(l10n.noProgressDataAvailable)),
+                      Center(
+                        child: Text(
+                          l10n.noProgressDataAvailable,
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ),
                     ],
                     const SizedBox(height: 16),
-                    const Divider(height: 1, color: Colors.white10),
+                    Divider(height: 1, color: theme.colorScheme.outline.withValues(alpha: 0.1)),
                     const SizedBox(height: 16),
                     Text(
                       l10n.gameModeDistribution,

@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../../../core/providers.dart';
-import '../../../core/themes/app_themes.dart';
 import '../../../core/sound_manager.dart';
 import '../../../l10n/generated/app_localizations.dart';
 
@@ -222,14 +221,14 @@ class AvatarShopScreen extends ConsumerWidget {
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: [
-                    AppDesignTokens.neonYellow,
+                    theme.colorScheme.tertiary,
                     theme.colorScheme.primary,
                   ],
                 ),
                 borderRadius: BorderRadius.circular(6),
                 boxShadow: [
                   BoxShadow(
-                    color: AppDesignTokens.neonYellow.withValues(alpha: 0.4),
+                    color: theme.colorScheme.tertiary.withValues(alpha: 0.4),
                     blurRadius: 8,
                   ),
                 ],
@@ -442,9 +441,9 @@ class AvatarShopScreen extends ConsumerWidget {
       case 'epic':
         return [theme.colorScheme.tertiary, theme.colorScheme.primary];
       case 'legendary':
-        return [AppDesignTokens.neonYellow, theme.colorScheme.secondary];
+        return [theme.colorScheme.tertiary, theme.colorScheme.secondary];
       case 'mythic':
-        return [Colors.deepPurple, AppDesignTokens.neonPink];
+        return [theme.colorScheme.inversePrimary, theme.colorScheme.error];
       default:
         return [theme.colorScheme.surface, theme.colorScheme.surface.withValues(alpha: 0.7)];
     }
@@ -459,9 +458,9 @@ class AvatarShopScreen extends ConsumerWidget {
       case 'epic':
         return theme.colorScheme.tertiary;
       case 'legendary':
-        return AppDesignTokens.neonYellow;
+        return theme.colorScheme.tertiary;
       case 'mythic':
-        return Colors.deepPurple;
+        return theme.colorScheme.error;
       default:
         return theme.colorScheme.onSurface.withValues(alpha: 0.3);
     }

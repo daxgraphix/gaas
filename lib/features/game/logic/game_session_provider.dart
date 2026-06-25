@@ -739,12 +739,20 @@ class GameSessionNotifier extends StateNotifier<GameSession?> {
     if (state!.totalQuestions > 0) {
       final accuracy = (state!.correctAnswers / state!.totalQuestions) * 100;
       final avgTime = state!.totalQuestions > 0 ? (600 - state!.timeRemaining) ~/ state!.totalQuestions : 0; // Rough estimate
+      
+      // Record performance trends for completed sessions
+      // Note: Statistics repository can be used here if we decide to fetch more historical data
+      // final statsRepo = ref.read(statisticsRepositoryProvider);
+      // We use a future here, but we can't easily await in a synchronous method without making it async
+      // For now, let's use the current session's correct answers or hints as a proxy if we can't await
+      // Actually, many of these methods should be async.
+      
       final hintsUsed = state!.hintsUsed.values.where((used) => used).length;
 
       ref.read(performanceTrendsProvider.notifier).addDataPoint(
         accuracy,
         avgTime,
-        hintsUsed, // Using hints as streak proxy for now
+        state!.correctAnswers, // Use correct answers as a proxy for 'performance' until streak is properly tracked per session
       );
 
       // Also record session stats

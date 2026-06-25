@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import '../../core/themes/app_themes.dart';
 import '../../core/sound_manager.dart';
 import '../profile_setup/profile_setup_screen.dart';
 import '../../l10n/generated/app_localizations.dart';
@@ -20,14 +19,14 @@ class _OnboardingScreenState extends State<OnboardingScreen>
   late Animation<Alignment> _gradientAnimation;
   int _currentPage = 0;
 
-  List<OnboardingPageData> _getPages(AppLocalizations l10n) => [
+  List<OnboardingPageData> _getPages(AppLocalizations l10n, ThemeData theme) => [
     OnboardingPageData(
       title: l10n.appTitle,
       subtitle: l10n.coreConcept,
       description:
           'A gamified adaptive arithmetic system that personalizes math practice with instant feedback and rewarding progression.',
       icon: Icons.qr_code_scanner_rounded,
-      accentColor: AppDesignTokens.neonCyan,
+      accentColor: theme.colorScheme.primary,
     ),
     OnboardingPageData(
       title: 'ADVENTURE',
@@ -35,7 +34,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
       description:
           'Progress through chapter-based missions, unlock new stages, and build streaks as your skills evolve.',
       icon: Icons.track_changes_rounded,
-      accentColor: AppDesignTokens.neonPink,
+      accentColor: theme.colorScheme.error,
     ),
     OnboardingPageData(
       title: 'CHALLENGE',
@@ -43,7 +42,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
       description:
           'Jump into fast arcade modes, complete daily goals, and compete for top scores under pressure.',
       icon: Icons.bolt_rounded,
-      accentColor: AppDesignTokens.neonYellow,
+      accentColor: theme.colorScheme.tertiary,
     ),
     OnboardingPageData(
       title: 'PUZZLES',
@@ -51,7 +50,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
       description:
           'Solve crossword clues, arithmetic riddles, number sequences, and logic challenges in a single puzzle hub.',
       icon: Icons.psychology_rounded,
-      accentColor: AppDesignTokens.neonCyan,
+      accentColor: theme.colorScheme.secondary,
     ),
   ];
 
@@ -113,7 +112,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context)!;
-    final pages = _getPages(l10n);
+    final pages = _getPages(l10n, theme);
     final accent = pages[_currentPage].accentColor;
 
     return Scaffold(
@@ -131,9 +130,9 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                       ? Alignment.bottomRight
                       : Alignment.topLeft,
                   colors: [
-                    const Color(0xFF0A0A0A),
+                    theme.scaffoldBackgroundColor,
                     accent.withValues(alpha: 0.05),
-                    const Color(0xFF0A0A0A),
+                    theme.scaffoldBackgroundColor,
                   ],
                 ),
               ),
@@ -204,7 +203,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                 TextButton(
                   onPressed: _skip,
                   style: TextButton.styleFrom(
-                    backgroundColor: Colors.white.withValues(alpha: 0.05),
+                    backgroundColor: theme.colorScheme.onSurface.withValues(alpha: 0.05),
                     padding: const EdgeInsets.symmetric(
                       horizontal: 16,
                       vertical: 8,
@@ -255,16 +254,16 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                                 ? 'GET STARTED'
                                 : 'NEXT',
                             style: theme.textTheme.labelLarge?.copyWith(
-                              color: Colors.black, // High contrast
+                              color: accent.computeLuminance() > 0.5 ? Colors.black : Colors.white,
                               fontWeight: FontWeight.w900,
                               letterSpacing: 2,
                             ),
                           ),
                           const SizedBox(width: 12),
-                          const Icon(
+                          Icon(
                             Icons.arrow_forward_rounded,
                             size: 20,
-                            color: Colors.black,
+                            color: accent.computeLuminance() > 0.5 ? Colors.black : Colors.white,
                           ),
                         ],
                       ),
@@ -362,7 +361,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
           Text(
                 page.description,
                 style: theme.textTheme.bodyMedium?.copyWith(
-                  color: Colors.white.withValues(alpha: 0.4),
+                  color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
                   height: 1.8,
                   letterSpacing: 1,
                 ),

@@ -1,8 +1,10 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../accessibility/accessibility_settings.dart';
 
-enum AppThemeType { midnight }
+enum AppThemeType { midnight, solar, cyber }
 
 class AppDesignTokens {
   static const double radiusSmall = 8.0;
@@ -26,32 +28,36 @@ class AppDesignTokens {
   static const Duration animationNormal = Duration(milliseconds: 400);
   static const Duration animationSlow = Duration(milliseconds: 600);
 
-  // Modern Professional Dark Palette (Onyx & Slate)
-  static const Color primary = Color(0xFF6366F1); // Indigo 500
-  static const Color secondary = Color(0xFF38BDF8); // Sky 400
-  static const Color accent = Color(0xFFF43F5E); // Rose 500
-  static const Color background = Color(0xFF030712); // Gray 950 (Deep Obsidian)
-  static const Color surface = Color(0xFF111827); // Gray 900
-  static const Color surfaceLighter = Color(0xFF1F2937); // Gray 800
-  
-  static const Color textPrimary = Color(0xFFF8FAFC); // Gray 50
-  static const Color textSecondary = Color(0xFF94A3B8); // Gray 400
-  static const Color textMuted = Color(0xFF475569); // Gray 600
+  // Midnight Theme (Deep Obsidian) - Dark Mode
+  static const Color midnightPrimary = Color(0xFF6366F1); // Indigo 500
+  static const Color midnightSecondary = Color(0xFF0EA5E9); // Sky 500
+  static const Color midnightBackground = Color(0xFF030712);
+  static const Color midnightSurface = Color(0xFF111827);
+  static const Color midnightOnSurface = Color(0xFFF8FAFC);
+  static const Color midnightOnSurfaceVariant = Color(0xFF94A3B8);
+
+  // Solar Theme (Warm Sunlight) - Light Mode
+  static const Color solarPrimary = Color(0xFFC2410C); // Orange 700 - Slightly bolder for visibility
+  static const Color solarSecondary = Color(0xFF92400E); // Amber 800
+  static const Color solarBackground = Color(0xFFFEFCE8); // Light yellow tint (Yellow 50)
+  static const Color solarSurface = Color(0xFFFFFFFF);
+  static const Color solarOnSurface = Color(0xFF0F172A); // Slate 900
+  static const Color solarOnSurfaceVariant = Color(0xFF334155); // Slate 700 (Better contrast)
+
+  // Cyber Theme (High Contrast Neon) - Dark Mode
+  static const Color cyberPrimary = Color(0xFF22C55E); // Green 500
+  static const Color cyberSecondary = Color(0xFF06B6D4); // Cyan 500
+  static const Color cyberBackground = Color(0xFF000000);
+  static const Color cyberSurface = Color(0xFF0F172A);
+  static const Color cyberOnSurface = Color(0xFFF0FDF4);
 
   static const Color success = Color(0xFF10B981);
   static const Color warning = Color(0xFFF59E0B);
   static const Color error = Color(0xFFEF4444);
 
-  // Legacy compatibility for refactoring
-  static const Color techBlack = Color(0xFF030712);
-  static const Color neonYellow = Color(0xFFF59E0B);
-  static const Color neonPink = Color(0xFFF43F5E);
-  static const Color neonGreen = Color(0xFF10B981);
-  static const Color brightBlue = Color(0xFF38BDF8);
-  static const Color neonOrange = Color(0xFFF59E0B);
-  static const Color neonPurple = Color(0xFF6366F1);
-  static const Color neonCyan = Color(0xFF06B6D4);
-  static const Color techGrey = Color(0xFF1E293B);
+  static Color textPrimary(BuildContext context) => Theme.of(context).colorScheme.onSurface;
+  static Color textSecondary(BuildContext context) => Theme.of(context).colorScheme.onSurfaceVariant;
+  static Color textMuted(BuildContext context) => Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.4);
 
   static const Color surfaceVariant = Color(0xFF334155);
   static const Color outlineVariant = Color(0xFF475569);
@@ -73,29 +79,163 @@ class AppThemes {
     switch (type) {
       case AppThemeType.midnight:
         return _darkOnyxTheme;
+      case AppThemeType.solar:
+        return _solarTheme;
+      case AppThemeType.cyber:
+        return _cyberTheme;
     }
   }
+
+  static final ThemeData _solarTheme = ThemeData(
+    useMaterial3: true,
+    brightness: Brightness.light,
+    colorScheme: ColorScheme.fromSeed(
+      seedColor: AppDesignTokens.solarPrimary,
+      brightness: Brightness.light,
+      primary: AppDesignTokens.solarPrimary,
+      onPrimary: Colors.white,
+      primaryContainer: const Color(0xFFFEF3C7),
+      onPrimaryContainer: const Color(0xFF78350F), // Darker for better contrast
+      secondary: AppDesignTokens.solarSecondary,
+      onSecondary: Colors.white,
+      secondaryContainer: const Color(0xFFFFEDD5),
+      onSecondaryContainer: const Color(0xFF7C2D12),
+      surface: AppDesignTokens.solarSurface,
+      onSurface: AppDesignTokens.solarOnSurface,
+      surfaceContainerHighest: const Color(0xFFF1F5F9),
+      onSurfaceVariant: AppDesignTokens.solarOnSurfaceVariant,
+      outline: AppDesignTokens.solarOnSurfaceVariant.withValues(alpha: 0.5), // Increased opacity
+      error: AppDesignTokens.error,
+    ),
+    scaffoldBackgroundColor: AppDesignTokens.solarBackground,
+    cardTheme: CardThemeData(
+      elevation: 2,
+      color: AppDesignTokens.solarSurface,
+      shadowColor: Colors.black.withValues(alpha: 0.1),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppDesignTokens.radiusMedium),
+        side: BorderSide(color: Colors.black.withValues(alpha: 0.1)), // Increased contrast
+      ),
+    ),
+    appBarTheme: const AppBarTheme(
+      elevation: 0,
+      centerTitle: true,
+      backgroundColor: Colors.transparent,
+      foregroundColor: AppDesignTokens.solarOnSurface,
+      iconTheme: IconThemeData(color: AppDesignTokens.solarOnSurface),
+      titleTextStyle: TextStyle(
+        fontSize: 18,
+        fontWeight: FontWeight.w700,
+        letterSpacing: 1.2,
+        color: AppDesignTokens.solarOnSurface,
+      ),
+    ),
+    elevatedButtonTheme: ElevatedButtonThemeData(
+      style: ElevatedButton.styleFrom(
+        backgroundColor: AppDesignTokens.solarPrimary,
+        foregroundColor: Colors.white,
+        elevation: 2,
+        padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 16),
+        minimumSize: const Size(0, 56),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppDesignTokens.radiusMedium),
+        ),
+      ),
+    ),
+    inputDecorationTheme: InputDecorationTheme(
+      filled: true,
+      fillColor: const Color(0xFFF8FAFC),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(AppDesignTokens.radiusMedium),
+        borderSide: BorderSide.none,
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(AppDesignTokens.radiusMedium),
+        borderSide: BorderSide(color: Colors.black.withValues(alpha: 0.1)),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(AppDesignTokens.radiusMedium),
+        borderSide: const BorderSide(color: AppDesignTokens.solarPrimary, width: 2),
+      ),
+      hintStyle: const TextStyle(color: AppDesignTokens.solarOnSurfaceVariant),
+    ),
+    navigationBarTheme: NavigationBarThemeData(
+      elevation: 8,
+      backgroundColor: AppDesignTokens.solarSurface,
+      indicatorColor: AppDesignTokens.solarPrimary.withValues(alpha: 0.1),
+      labelTextStyle: WidgetStateProperty.resolveWith((states) {
+        final isSelected = states.contains(WidgetState.selected);
+        return TextStyle(
+          fontSize: 12,
+          fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+          color: isSelected ? AppDesignTokens.solarPrimary : AppDesignTokens.solarOnSurfaceVariant,
+        );
+      }),
+      iconTheme: WidgetStateProperty.resolveWith((states) {
+        final isSelected = states.contains(WidgetState.selected);
+        return IconThemeData(
+          color: isSelected ? AppDesignTokens.solarPrimary : AppDesignTokens.solarOnSurfaceVariant,
+          size: 24,
+        );
+      }),
+    ),
+    textTheme: _buildTextTheme(
+      AppDesignTokens.solarOnSurface,
+      AppDesignTokens.solarOnSurfaceVariant,
+    ),
+  );
+
+  static final ThemeData _cyberTheme = ThemeData(
+    useMaterial3: true,
+    brightness: Brightness.dark,
+    colorScheme: ColorScheme.fromSeed(
+      seedColor: AppDesignTokens.cyberPrimary,
+      brightness: Brightness.dark,
+      primary: AppDesignTokens.cyberPrimary,
+      onPrimary: Colors.black,
+      secondary: AppDesignTokens.cyberSecondary,
+      onSecondary: Colors.white,
+      surface: AppDesignTokens.cyberSurface,
+      onSurface: AppDesignTokens.cyberOnSurface,
+      error: AppDesignTokens.error,
+    ),
+    scaffoldBackgroundColor: AppDesignTokens.cyberBackground,
+    cardTheme: CardThemeData(
+      elevation: 0,
+      color: AppDesignTokens.cyberSurface,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppDesignTokens.radiusMedium),
+        side: BorderSide(color: AppDesignTokens.cyberPrimary.withValues(alpha: 0.3), width: 1),
+      ),
+    ),
+    textTheme: _buildTextTheme(
+      AppDesignTokens.cyberOnSurface,
+      AppDesignTokens.cyberPrimary.withValues(alpha: 0.7),
+    ),
+  );
 
   static final ThemeData _darkOnyxTheme = ThemeData(
     useMaterial3: true,
     brightness: Brightness.dark,
     colorScheme: ColorScheme.fromSeed(
-      seedColor: AppDesignTokens.primary,
+      seedColor: AppDesignTokens.midnightPrimary,
       brightness: Brightness.dark,
-      primary: AppDesignTokens.primary,
+      primary: AppDesignTokens.midnightPrimary,
       onPrimary: Colors.white,
-      secondary: AppDesignTokens.secondary,
+      secondary: AppDesignTokens.midnightSecondary,
       onSecondary: Colors.white,
-      surface: AppDesignTokens.surface,
-      onSurface: AppDesignTokens.textPrimary,
-      surfaceContainerHighest: AppDesignTokens.surfaceLighter,
+      surface: AppDesignTokens.midnightSurface,
+      onSurface: AppDesignTokens.midnightOnSurface,
+      surfaceContainerHighest: const Color(0xFF1F2937),
+      onSurfaceVariant: AppDesignTokens.midnightOnSurfaceVariant,
       error: AppDesignTokens.error,
-      outline: AppDesignTokens.textMuted.withValues(alpha: 0.2),
+      outline: AppDesignTokens.midnightOnSurfaceVariant.withValues(alpha: 0.3),
     ),
-    scaffoldBackgroundColor: AppDesignTokens.background,
+    scaffoldBackgroundColor: AppDesignTokens.midnightBackground,
     cardTheme: CardThemeData(
       elevation: 0,
-      color: AppDesignTokens.surface,
+      color: AppDesignTokens.midnightSurface,
       clipBehavior: Clip.antiAlias,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(AppDesignTokens.radiusMedium),
@@ -106,17 +246,17 @@ class AppThemes {
       elevation: 0,
       centerTitle: true,
       backgroundColor: Colors.transparent,
-      foregroundColor: AppDesignTokens.textPrimary,
+      foregroundColor: AppDesignTokens.midnightOnSurface,
       titleTextStyle: TextStyle(
         fontSize: 18,
         fontWeight: FontWeight.w700,
         letterSpacing: 1.2,
-        color: AppDesignTokens.textPrimary,
+        color: AppDesignTokens.midnightOnSurface,
       ),
     ),
     elevatedButtonTheme: ElevatedButtonThemeData(
       style: ElevatedButton.styleFrom(
-        backgroundColor: AppDesignTokens.primary,
+        backgroundColor: AppDesignTokens.midnightPrimary,
         foregroundColor: Colors.white,
         elevation: 0,
         padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 16),
@@ -133,13 +273,13 @@ class AppThemes {
     ),
     outlinedButtonTheme: OutlinedButtonThemeData(
       style: OutlinedButton.styleFrom(
-        foregroundColor: AppDesignTokens.textPrimary,
+        foregroundColor: AppDesignTokens.midnightOnSurface,
         padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 16),
         minimumSize: const Size(0, 56),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppDesignTokens.radiusMedium),
         ),
-        side: BorderSide(color: AppDesignTokens.primary.withValues(alpha: 0.5), width: 1.5),
+        side: BorderSide(color: AppDesignTokens.midnightPrimary.withValues(alpha: 0.5), width: 1.5),
         textStyle: const TextStyle(
           fontSize: 16,
           fontWeight: FontWeight.w600,
@@ -148,7 +288,7 @@ class AppThemes {
     ),
     inputDecorationTheme: InputDecorationTheme(
       filled: true,
-      fillColor: AppDesignTokens.surfaceLighter.withValues(alpha: 0.5),
+      fillColor: const Color(0xFF1F2937).withValues(alpha: 0.5),
       contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(AppDesignTokens.radiusMedium),
@@ -160,33 +300,33 @@ class AppThemes {
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(AppDesignTokens.radiusMedium),
-        borderSide: const BorderSide(color: AppDesignTokens.primary, width: 2),
+        borderSide: const BorderSide(color: AppDesignTokens.midnightPrimary, width: 2),
       ),
-      hintStyle: const TextStyle(color: AppDesignTokens.textMuted),
+      hintStyle: const TextStyle(color: AppDesignTokens.midnightOnSurfaceVariant),
     ),
     navigationBarTheme: NavigationBarThemeData(
       elevation: 0,
-      backgroundColor: AppDesignTokens.surface,
-      indicatorColor: AppDesignTokens.primary.withValues(alpha: 0.15),
+      backgroundColor: AppDesignTokens.midnightSurface,
+      indicatorColor: AppDesignTokens.midnightPrimary.withValues(alpha: 0.15),
       labelTextStyle: WidgetStateProperty.resolveWith((states) {
         final isSelected = states.contains(WidgetState.selected);
         return TextStyle(
           fontSize: 12,
           fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-          color: isSelected ? AppDesignTokens.primary : AppDesignTokens.textSecondary,
+          color: isSelected ? AppDesignTokens.midnightPrimary : AppDesignTokens.midnightOnSurfaceVariant,
         );
       }),
       iconTheme: WidgetStateProperty.resolveWith((states) {
         final isSelected = states.contains(WidgetState.selected);
         return IconThemeData(
-          color: isSelected ? AppDesignTokens.primary : AppDesignTokens.textSecondary,
+          color: isSelected ? AppDesignTokens.midnightPrimary : AppDesignTokens.midnightOnSurfaceVariant,
           size: 24,
         );
       }),
     ),
     textTheme: _buildTextTheme(
-      AppDesignTokens.textPrimary,
-      AppDesignTokens.textSecondary,
+      AppDesignTokens.midnightOnSurface,
+      AppDesignTokens.midnightOnSurfaceVariant,
     ),
   );
 
@@ -286,13 +426,21 @@ class AppThemes {
     switch (type) {
       case AppThemeType.midnight:
         return 'Midnight';
+      case AppThemeType.solar:
+        return 'Solar';
+      case AppThemeType.cyber:
+        return 'Cyber';
     }
   }
 
   static String getThemeDescription(AppThemeType type) {
     switch (type) {
       case AppThemeType.midnight:
-        return 'Dark & Sleek';
+        return 'Deep obsidian & neon';
+      case AppThemeType.solar:
+        return 'Warm sunlight & paper';
+      case AppThemeType.cyber:
+        return 'High contrast matrix';
     }
   }
 
@@ -300,18 +448,26 @@ class AppThemes {
     switch (type) {
       case AppThemeType.midnight:
         return Icons.dark_mode;
+      case AppThemeType.solar:
+        return Icons.light_mode;
+      case AppThemeType.cyber:
+        return Icons.grid_view;
     }
   }
 
   static Color getThemeColor(AppThemeType type) {
     switch (type) {
       case AppThemeType.midnight:
-        return const Color(0xFF8B5CF6);
+        return AppDesignTokens.midnightPrimary;
+      case AppThemeType.solar:
+        return AppDesignTokens.solarPrimary;
+      case AppThemeType.cyber:
+        return AppDesignTokens.cyberPrimary;
     }
   }
 }
 
-class GlassmorphicContainer extends StatelessWidget {
+class GlassmorphicContainer extends ConsumerWidget {
   final Widget child;
   final double? width;
   final double? height;
@@ -338,9 +494,12 @@ class GlassmorphicContainer extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
+    final reduceTransparency = ref.watch(
+      accessibilitySettingsProvider.select((s) => s.reduceTransparency),
+    );
 
     final containerChild = Container(
       width: width,
@@ -351,12 +510,14 @@ class GlassmorphicContainer extends StatelessWidget {
         color:
             backgroundColor ??
             (isDark
-                ? Colors.white.withValues(alpha: opacity)
-                : theme.colorScheme.surface.withValues(alpha: 0.9)),
+                ? Colors.white.withValues(alpha: reduceTransparency ? 0.2 : opacity)
+                : theme.colorScheme.surface.withValues(
+                  alpha: reduceTransparency ? 1.0 : (opacity > 0.5 ? opacity : 0.8),
+                )),
         border: Border.all(
           color: isDark
               ? Colors.white.withValues(alpha: 0.2)
-              : theme.colorScheme.outline.withValues(alpha: 0.3),
+              : AppDesignTokens.textPrimary(context).withValues(alpha: 0.3),
           width: 1,
         ),
         boxShadow: [
@@ -381,7 +542,7 @@ class GlassmorphicContainer extends StatelessWidget {
           )
         : containerChild;
 
-    if (useFrostedEffect) {
+    if (useFrostedEffect && !reduceTransparency) {
       result = ClipRRect(
         borderRadius: BorderRadius.circular(borderRadius),
         child: BackdropFilter(
@@ -398,7 +559,7 @@ class GlassmorphicContainer extends StatelessWidget {
   }
 }
 
-class PremiumGlassOverlay extends StatelessWidget {
+class PremiumGlassOverlay extends ConsumerWidget {
   final Widget child;
   final EdgeInsetsGeometry? padding;
   final double borderRadius;
@@ -411,9 +572,45 @@ class PremiumGlassOverlay extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
+    final reduceTransparency = ref.watch(
+      accessibilitySettingsProvider.select((s) => s.reduceTransparency),
+    );
+
+    final decoration = BoxDecoration(
+      borderRadius: BorderRadius.circular(borderRadius),
+      gradient: LinearGradient(
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+        colors: isDark
+            ? [
+                Colors.white.withValues(alpha: reduceTransparency ? 0.25 : 0.15),
+                Colors.white.withValues(alpha: reduceTransparency ? 0.15 : 0.05),
+              ]
+            : [
+                Colors.white.withValues(alpha: reduceTransparency ? 1.0 : 0.95),
+                Color(0xFFF0FDFA).withValues(
+                  alpha: reduceTransparency ? 1.0 : 0.8,
+                ), // Light mint
+              ],
+      ),
+      border: Border.all(
+        color: isDark
+            ? Colors.white.withValues(alpha: 0.2)
+            : AppDesignTokens.textPrimary(context).withValues(alpha: 0.1), // Light blue
+        width: 1.5,
+      ),
+    );
+
+    if (reduceTransparency) {
+      return Container(
+        padding: padding ?? const EdgeInsets.all(24),
+        decoration: decoration,
+        child: child,
+      );
+    }
 
     return ClipRRect(
       borderRadius: BorderRadius.circular(borderRadius),
@@ -424,28 +621,7 @@ class PremiumGlassOverlay extends StatelessWidget {
         ),
         child: Container(
           padding: padding ?? const EdgeInsets.all(24),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(borderRadius),
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: isDark
-                  ? [
-                      Colors.white.withValues(alpha: 0.15),
-                      Colors.white.withValues(alpha: 0.05),
-                    ]
-                  : [
-                      Colors.white.withValues(alpha: 0.95),
-                      Color(0xFFF0FDFA).withValues(alpha: 0.8), // Light mint
-                    ],
-            ),
-            border: Border.all(
-              color: isDark
-                  ? Colors.white.withValues(alpha: 0.2)
-                  : Color(0xFFE0F2FE).withValues(alpha: 0.6), // Light blue
-              width: 1.5,
-            ),
-          ),
+          decoration: decoration,
           child: child,
         ),
       ),
@@ -737,7 +913,7 @@ class _PremiumCardState extends State<PremiumCard> {
                       widget.borderColor ??
                       (isDark
                           ? Colors.white.withValues(alpha: 0.1)
-                          : theme.colorScheme.outline.withValues(alpha: 0.3)),
+                          : AppDesignTokens.textPrimary(context).withValues(alpha: 0.2)),
                   width: 1,
                 ),
                 boxShadow: [

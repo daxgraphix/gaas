@@ -29,12 +29,12 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
         centerTitle: true,
         actions: [
           IconButton(
-            icon: const Icon(Icons.history, color: AppDesignTokens.neonCyan),
+            icon: Icon(Icons.history, color: theme.colorScheme.primary),
             onPressed: _showHistory,
             tooltip: l10n.calculationHistory,
           ),
           IconButton(
-            icon: const Icon(Icons.memory, color: AppDesignTokens.neonCyan),
+            icon: Icon(Icons.memory, color: theme.colorScheme.primary),
             onPressed: _showMemory,
             tooltip: l10n.memory,
           ),
@@ -49,9 +49,9 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                   colors: [
-                    AppDesignTokens.techBlack,
-                    AppDesignTokens.techGrey.withValues(alpha: 0.55),
-                    AppDesignTokens.techBlack,
+                    theme.scaffoldBackgroundColor,
+                    theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+                    theme.scaffoldBackgroundColor,
                   ],
                 ),
               ),
@@ -98,7 +98,7 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
                       child: Text(
                         entry,
                         style: theme.textTheme.bodySmall?.copyWith(
-                          color: AppDesignTokens.neonCyan.withValues(alpha: 0.6),
+                          color: theme.colorScheme.primary.withValues(alpha: 0.6),
                           fontFamily: 'monospace',
                           fontSize: 12,
                         ),
@@ -114,13 +114,13 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
             Container(
               padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
               decoration: BoxDecoration(
-                color: AppDesignTokens.neonCyan.withValues(alpha: 0.08),
+                color: theme.colorScheme.primary.withValues(alpha: 0.08),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Text(
                 _expression,
                 style: theme.textTheme.bodyLarge?.copyWith(
-                  color: AppDesignTokens.neonCyan.withValues(alpha: 0.8),
+                  color: theme.colorScheme.primary.withValues(alpha: 0.8),
                   fontFamily: 'monospace',
                 ),
                 maxLines: 1,
@@ -137,11 +137,11 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
                 _display,
                 style: theme.textTheme.displayMedium?.copyWith(
                   fontWeight: FontWeight.w900,
-                  color: AppDesignTokens.neonCyan,
+                  color: theme.colorScheme.primary,
                   fontFamily: 'monospace',
                   shadows: [
                     Shadow(
-                      color: AppDesignTokens.neonCyan.withValues(alpha: 0.5),
+                      color: theme.colorScheme.primary.withValues(alpha: 0.5),
                       blurRadius: 15,
                     ),
                   ],
@@ -236,20 +236,20 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
     bool isWide = false,
   }) {
     final borderColor = isClear
-        ? AppDesignTokens.neonPink
+        ? theme.colorScheme.error
         : isEquals
-            ? AppDesignTokens.neonCyan
+            ? theme.colorScheme.primary
             : isOperator
-                ? AppDesignTokens.neonYellow
-                : AppDesignTokens.neonCyan.withValues(alpha: 0.3);
+                ? theme.colorScheme.secondary
+                : theme.colorScheme.outline.withValues(alpha: 0.3);
 
     final textColor = isClear
-        ? AppDesignTokens.neonPink
+        ? theme.colorScheme.error
         : isEquals
             ? theme.colorScheme.onPrimary
             : isOperator
-                ? AppDesignTokens.neonYellow
-                : AppDesignTokens.neonCyan;
+                ? theme.colorScheme.secondary
+                : AppDesignTokens.textPrimary(context);
 
     return Expanded(
       flex: isWide ? 2 : 1,
@@ -257,7 +257,9 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
         padding: const EdgeInsets.all(4),
         child: PremiumAnimatedButton(
           onPressed: () => _onButtonPressed(label),
-          backgroundColor: isEquals ? AppDesignTokens.neonCyan : AppDesignTokens.techGrey,
+          backgroundColor: isEquals 
+              ? theme.colorScheme.primary 
+              : theme.colorScheme.surfaceContainerHighest,
           borderColor: borderColor,
           borderRadius: 8,
           padding: EdgeInsets.zero,

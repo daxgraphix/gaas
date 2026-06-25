@@ -39,8 +39,9 @@ class _TutorialOverlayState extends State<TutorialOverlay> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Material(
-      color: const Color(0xFF121212).withValues(alpha: 0.95),
+      color: theme.colorScheme.surface.withValues(alpha: 0.95),
       child: SafeArea(
         child: Column(
           children: [
@@ -63,8 +64,8 @@ class _TutorialOverlayState extends State<TutorialOverlay> {
                       children: [
                         Text(
                           widget.title.toUpperCase(),
-                          style: const TextStyle(
-                            color: Colors.white,
+                          style: TextStyle(
+                            color: theme.colorScheme.onSurface,
                             fontSize: 14,
                             letterSpacing: 4,
                             fontWeight: FontWeight.w300,
@@ -74,8 +75,8 @@ class _TutorialOverlayState extends State<TutorialOverlay> {
                         const SizedBox(height: 48),
                         Text(
                           widget.steps[index].toUpperCase(),
-                          style: const TextStyle(
-                            color: Colors.white70,
+                          style: TextStyle(
+                            color: theme.colorScheme.onSurfaceVariant,
                             fontSize: 18,
                             letterSpacing: 1.5,
                             fontWeight: FontWeight.w200,
@@ -96,17 +97,17 @@ class _TutorialOverlayState extends State<TutorialOverlay> {
                 children: [
                   TextButton(
                     onPressed: widget.onSkip,
-                    child: const Text(
+                    child: Text(
                       'SKIP',
                       style: TextStyle(
-                        color: Colors.white24,
+                        color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
                         letterSpacing: 2,
                         fontSize: 12,
                         fontWeight: FontWeight.w300,
                       ),
                     ),
                   ),
-                  _buildNextButton(),
+                  _buildNextButton(theme),
                 ],
               ),
             ),
@@ -116,7 +117,7 @@ class _TutorialOverlayState extends State<TutorialOverlay> {
     );
   }
 
-  Widget _buildNextButton() {
+  Widget _buildNextButton(ThemeData theme) {
     return OutlinedButton(
       onPressed: () {
         HapticManager.instance.mediumImpact();
@@ -130,14 +131,14 @@ class _TutorialOverlayState extends State<TutorialOverlay> {
         }
       },
       style: OutlinedButton.styleFrom(
-        side: const BorderSide(color: Colors.white38, width: 0.5),
+        side: BorderSide(color: theme.colorScheme.outline, width: 0.5),
         shape: const RoundedRectangleBorder(),
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
       ),
       child: Text(
         _currentPage < widget.steps.length - 1 ? 'NEXT' : 'START',
-        style: const TextStyle(
-          color: Colors.white,
+        style: TextStyle(
+          color: theme.colorScheme.onSurface,
           letterSpacing: 2,
           fontSize: 12,
           fontWeight: FontWeight.w300,
@@ -159,6 +160,7 @@ class PuzzleTimer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     final minutes = remainingSeconds ~/ 60;
     final seconds = remainingSeconds % 60;
     final timeString =
@@ -169,22 +171,26 @@ class PuzzleTimer extends StatelessWidget {
       decoration: BoxDecoration(
         border: Border.all(
           color: isWarning
-              ? Colors.redAccent.withValues(alpha: 0.5)
-              : Colors.white10,
+              ? theme.colorScheme.error.withValues(alpha: 0.5)
+              : theme.colorScheme.outline.withValues(alpha: 0.2),
           width: 0.5,
         ),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(Icons.timer_outlined, size: 14, color: Colors.white38),
+          Icon(
+            Icons.timer_outlined,
+            size: 14,
+            color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
+          ),
           const SizedBox(width: 8),
           Text(
             timeString,
             style: TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.w200,
-              color: isWarning ? Colors.redAccent : Colors.white70,
+              color: isWarning ? theme.colorScheme.error : theme.colorScheme.onSurfaceVariant,
               letterSpacing: 1,
               fontFeatures: const [FontFeature.tabularFigures()],
             ),
@@ -207,8 +213,11 @@ class HintButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isAvailable = hintsRemaining > 0;
+
     return InkWell(
-      onTap: hintsRemaining > 0
+      onTap: isAvailable
           ? () {
               HapticManager.instance.lightImpact();
               onTap();
@@ -218,7 +227,9 @@ class HintButton extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
           border: Border.all(
-            color: hintsRemaining > 0 ? Colors.white24 : Colors.white10,
+            color: isAvailable
+                ? theme.colorScheme.primary.withValues(alpha: 0.5)
+                : theme.colorScheme.outline.withValues(alpha: 0.2),
             width: 0.5,
           ),
         ),
@@ -228,7 +239,9 @@ class HintButton extends StatelessWidget {
             Icon(
               Icons.lightbulb_outline,
               size: 14,
-              color: hintsRemaining > 0 ? Colors.white70 : Colors.white10,
+              color: isAvailable
+                  ? theme.colorScheme.primary
+                  : theme.colorScheme.onSurface.withValues(alpha: 0.2),
             ),
             const SizedBox(width: 8),
             Text(
@@ -237,7 +250,9 @@ class HintButton extends StatelessWidget {
                 fontSize: 10,
                 letterSpacing: 1,
                 fontWeight: FontWeight.w300,
-                color: hintsRemaining > 0 ? Colors.white70 : Colors.white10,
+                color: isAvailable
+                    ? theme.colorScheme.onSurface
+                    : theme.colorScheme.onSurface.withValues(alpha: 0.2),
               ),
             ),
           ],

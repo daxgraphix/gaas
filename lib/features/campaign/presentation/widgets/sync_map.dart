@@ -26,7 +26,7 @@ class SyncMap extends StatelessWidget {
           child: Stack(
             alignment: Alignment.topCenter,
             children: [
-              _buildConnectionLines(),
+              _buildConnectionLines(context),
               _buildLevelNodes(),
             ],
           ),
@@ -35,10 +35,10 @@ class SyncMap extends StatelessWidget {
     );
   }
 
-  Widget _buildConnectionLines() {
+  Widget _buildConnectionLines(BuildContext context) {
     return CustomPaint(
       size: const Size(600, 30 * 120.0), // 30 levels * spacing
-      painter: _MapPathPainter(levelCount: 30),
+      painter: _MapPathPainter(levelCount: 30, theme: Theme.of(context)),
     );
   }
 
@@ -98,7 +98,7 @@ class _SyncNode extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final accentColor = isUnlocked ? theme.colorScheme.primary : AppDesignTokens.textMuted.withValues(alpha: 0.3);
+    final accentColor = isUnlocked ? theme.colorScheme.primary : AppDesignTokens.textMuted(context).withValues(alpha: 0.3);
     
     return GestureDetector(
       onTap: isUnlocked ? onTap : null,
@@ -128,14 +128,14 @@ class _SyncNode extends StatelessWidget {
                 alignment: Alignment.center,
                 children: [
                   if (!isUnlocked)
-                    Icon(Icons.lock, color: AppDesignTokens.textMuted.withValues(alpha: 0.5), size: 24),
+                    Icon(Icons.lock, color: AppDesignTokens.textMuted(context).withValues(alpha: 0.5), size: 24),
                   if (isUnlocked)
                     Text(
                       level.toString(),
                       style: TextStyle(
                         fontSize: 22,
                         fontWeight: FontWeight.bold,
-                        color: theme.colorScheme.onSurface,
+                        color: AppDesignTokens.textPrimary(context),
                       ),
                     ),
                 ],
@@ -150,7 +150,7 @@ class _SyncNode extends StatelessWidget {
             children: List.generate(3, (i) => Icon(
               Icons.star,
               size: 14,
-              color: i < stars ? AppDesignTokens.warning : AppDesignTokens.textMuted.withValues(alpha: 0.2),
+              color: i < stars ? AppDesignTokens.warning : AppDesignTokens.textMuted(context).withValues(alpha: 0.2),
             )),
           ),
         ],
@@ -161,13 +161,14 @@ class _SyncNode extends StatelessWidget {
 
 class _MapPathPainter extends CustomPainter {
   final int levelCount;
+  final ThemeData theme;
 
-  _MapPathPainter({required this.levelCount});
+  _MapPathPainter({required this.levelCount, required this.theme});
 
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = AppDesignTokens.textMuted.withValues(alpha: 0.1)
+      ..color = theme.colorScheme.onSurface.withValues(alpha: 0.1)
       ..strokeWidth = 4
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round;
@@ -198,7 +199,7 @@ class _MapPathPainter extends CustomPainter {
 
     // Draw secondary "glow" path
     final glowPaint = Paint()
-      ..color = AppDesignTokens.primary.withValues(alpha: 0.05)
+      ..color = theme.colorScheme.primary.withValues(alpha: 0.05)
       ..strokeWidth = 8
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round

@@ -55,7 +55,7 @@ class ArcadeScreen extends ConsumerWidget {
                 ref.read(soundManagerProvider).playClick();
                 _showOperationDialog(context, ref, GameMode.duel);
               },
-              AppDesignTokens.neonYellow,
+              theme.colorScheme.tertiary,
             ),
             _buildArcadeListItem(
               context,
@@ -65,7 +65,7 @@ class ArcadeScreen extends ConsumerWidget {
                 ref.read(soundManagerProvider).playClick();
                 _showOperationDialog(context, ref, GameMode.flash);
               },
-              AppDesignTokens.neonPink,
+              theme.colorScheme.error,
             ),
             const SizedBox(height: 32),
             _buildSectionHeader(l10n.activeChallenges, theme),
@@ -98,7 +98,7 @@ class ArcadeScreen extends ConsumerWidget {
                 ref.read(soundManagerProvider).playClick();
                 _showOperationDialog(context, ref, GameMode.marathon);
               },
-              AppDesignTokens.neonPink,
+              theme.colorScheme.error,
             ),
           ],
         ),
@@ -156,14 +156,14 @@ class ArcadeScreen extends ConsumerWidget {
                     title,
                     style: theme.textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.bold,
-                      color: AppDesignTokens.textPrimary,
+                      color: theme.colorScheme.onSurface,
                     ),
                   ),
                   const SizedBox(height: 4),
                   Text(
                     subtitle,
                     style: theme.textTheme.bodySmall?.copyWith(
-                      color: AppDesignTokens.textSecondary,
+                      color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
                     ),
                   ),
                 ],
@@ -172,7 +172,7 @@ class ArcadeScreen extends ConsumerWidget {
             Icon(
               Icons.chevron_right,
               size: 20,
-              color: AppDesignTokens.textMuted,
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.3),
             ),
           ],
         ),

@@ -29,10 +29,10 @@ class _PracticeScreenState extends ConsumerState<PracticeScreen> {
   int _questionCount = 15;
 
   final List<Map<String, dynamic>> _operations = [
-    {'id': 'addition', 'name': 'ADDITION', 'symbol': '+', 'color': AppDesignTokens.neonGreen, 'icon': Icons.add},
-    {'id': 'subtraction', 'name': 'SUBTRACTION', 'symbol': '-', 'color': AppDesignTokens.brightBlue, 'icon': Icons.remove},
-    {'id': 'multiplication', 'name': 'MULTIPLICATION', 'symbol': '×', 'color': AppDesignTokens.neonOrange, 'icon': Icons.close},
-    {'id': 'division', 'name': 'DIVISION', 'symbol': '÷', 'color': AppDesignTokens.neonPurple, 'icon': Icons.call_split},
+    {'id': 'addition', 'name': 'ADDITION', 'symbol': '+', 'token': 'primary', 'icon': Icons.add},
+    {'id': 'subtraction', 'name': 'SUBTRACTION', 'symbol': '-', 'token': 'secondary', 'icon': Icons.add},
+    {'id': 'multiplication', 'name': 'MULTIPLICATION', 'symbol': '×', 'token': 'tertiary', 'icon': Icons.close},
+    {'id': 'division', 'name': 'DIVISION', 'symbol': '÷', 'token': 'error', 'icon': Icons.call_split},
   ];
 
   @override
@@ -98,7 +98,7 @@ class _PracticeScreenState extends ConsumerState<PracticeScreen> {
         const SizedBox(height: 32),
         _buildSectionHeader(l10n.numberRange),
         const SizedBox(height: 24),
-        _buildRangeSlider(),
+        _buildRangeSlider(theme),
         const SizedBox(height: 32),
         _buildSectionHeader(l10n.configurations),
         const SizedBox(height: 16),
@@ -124,7 +124,7 @@ class _PracticeScreenState extends ConsumerState<PracticeScreen> {
         Text(
           l10n.timeLimit.toUpperCase(),
           style: theme.textTheme.labelSmall?.copyWith(
-            color: AppDesignTokens.textSecondary,
+            color: AppDesignTokens.textSecondary(context),
             letterSpacing: 2,
             fontWeight: FontWeight.w700,
           ),
@@ -142,7 +142,7 @@ class _PracticeScreenState extends ConsumerState<PracticeScreen> {
         Text(
           l10n.questionsCount.toUpperCase(),
           style: theme.textTheme.labelSmall?.copyWith(
-            color: AppDesignTokens.textSecondary,
+            color: AppDesignTokens.textSecondary(context),
             letterSpacing: 2,
             fontWeight: FontWeight.w700,
           ),
@@ -160,7 +160,7 @@ class _PracticeScreenState extends ConsumerState<PracticeScreen> {
         fontSize: ResponsiveDesign.getFontSize(context, 10),
         fontWeight: FontWeight.w300,
         letterSpacing: 2,
-        color: Colors.white24,
+        color: AppDesignTokens.textMuted(context),
       ),
     );
   }
@@ -168,7 +168,15 @@ class _PracticeScreenState extends ConsumerState<PracticeScreen> {
   Widget _buildOperationTile(Map<String, dynamic> op, AppLocalizations l10n) {
     final isSelected = _selectedOperation == op['id'];
     final theme = Theme.of(context);
-    final color = op['color'] as Color;
+    
+    final Color color = switch (op['token']) {
+      'primary' => theme.colorScheme.primary,
+      'secondary' => theme.colorScheme.secondary,
+      'tertiary' => theme.colorScheme.tertiary,
+      'error' => theme.colorScheme.error,
+      _ => theme.colorScheme.primary,
+    };
+
     final isDesktop = ResponsiveDesign.isDesktop(context);
     final title = switch (op['id']) {
       'addition' => l10n.addition,
@@ -229,7 +237,7 @@ class _PracticeScreenState extends ConsumerState<PracticeScreen> {
                   Text(
                     subtitle,
                     style: theme.textTheme.bodySmall?.copyWith(
-                      color: AppDesignTokens.textSecondary,
+                      color: AppDesignTokens.textSecondary(context),
                     ),
                     overflow: TextOverflow.ellipsis,
                     maxLines: 1,
@@ -251,7 +259,7 @@ class _PracticeScreenState extends ConsumerState<PracticeScreen> {
       .slideX(begin: 0.1, end: 0);
   }
 
-  Widget _buildRangeSlider() {
+  Widget _buildRangeSlider(ThemeData theme) {
     return SizedBox(
       height: 60,
       child: Column(
@@ -263,7 +271,7 @@ class _PracticeScreenState extends ConsumerState<PracticeScreen> {
               Expanded(
                 child: Text(
                   'RANGE: $_minNumber - $_maxNumber',
-                  style: const TextStyle(color: Colors.white70, fontSize: 12, letterSpacing: 1),
+                  style: TextStyle(color: AppDesignTokens.textSecondary(context), fontSize: 12, letterSpacing: 1),
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
@@ -276,8 +284,8 @@ class _PracticeScreenState extends ConsumerState<PracticeScreen> {
               min: 1,
               max: 100,
               divisions: 99,
-              activeColor: Colors.white38,
-              inactiveColor: Colors.white10,
+              activeColor: theme.colorScheme.primary.withValues(alpha: 0.5),
+              inactiveColor: theme.colorScheme.primary.withValues(alpha: 0.1),
               onChanged: (values) {
                 setState(() {
                   _minNumber = values.start.round();
@@ -307,12 +315,12 @@ class _PracticeScreenState extends ConsumerState<PracticeScreen> {
                 children: [
                   Text(
                     title,
-                    style: const TextStyle(color: Colors.white70, fontSize: 13, letterSpacing: 1),
+                    style: TextStyle(color: AppDesignTokens.textSecondary(context), fontSize: 13, letterSpacing: 1),
                   ),
                   const SizedBox(height: 2),
                   Text(
                     subtitle,
-                    style: const TextStyle(color: Colors.white24, fontSize: 11),
+                    style: TextStyle(color: AppDesignTokens.textMuted(context), fontSize: 11),
                   ),
                 ],
               ),
@@ -320,10 +328,6 @@ class _PracticeScreenState extends ConsumerState<PracticeScreen> {
             Switch(
               value: value,
               onChanged: onChanged,
-              activeThumbColor: Colors.white70,
-              activeTrackColor: Colors.white10,
-              inactiveThumbColor: Colors.white10,
-              inactiveTrackColor: Colors.black,
             ),
           ],
         ),
@@ -368,7 +372,7 @@ class _PracticeScreenState extends ConsumerState<PracticeScreen> {
                   child: Text(
                     time == 0 ? '∞' : '${time}s',
                     style: TextStyle(
-                      color: isSelected ? theme.colorScheme.primary : theme.colorScheme.onSurface,
+                      color: isSelected ? theme.colorScheme.primary : AppDesignTokens.textPrimary(context),
                       fontWeight: isSelected ? FontWeight.w700 : FontWeight.w400,
                     ),
                   ),
@@ -380,7 +384,7 @@ class _PracticeScreenState extends ConsumerState<PracticeScreen> {
           Text(
             _timeLimit == 0 ? 'No time limit' : '$_timeLimit seconds per question',
             style: theme.textTheme.bodySmall?.copyWith(
-              color: AppDesignTokens.textSecondary,
+              color: AppDesignTokens.textSecondary(context),
             ),
           ),
         ],
@@ -417,7 +421,7 @@ class _PracticeScreenState extends ConsumerState<PracticeScreen> {
                   child: Text(
                     count.toString(),
                     style: TextStyle(
-                      color: isSelected ? theme.colorScheme.primary : theme.colorScheme.onSurface,
+                      color: isSelected ? theme.colorScheme.primary : AppDesignTokens.textPrimary(context),
                       fontWeight: isSelected ? FontWeight.w700 : FontWeight.w400,
                       fontSize: 14,
                     ),
@@ -430,7 +434,7 @@ class _PracticeScreenState extends ConsumerState<PracticeScreen> {
           Text(
             '$_questionCount questions per session',
             style: theme.textTheme.bodySmall?.copyWith(
-              color: AppDesignTokens.textSecondary,
+              color: AppDesignTokens.textSecondary(context),
             ),
           ),
         ],

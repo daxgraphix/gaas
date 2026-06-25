@@ -602,7 +602,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
             value,
             style: theme.textTheme.titleLarge?.copyWith(
               fontWeight: FontWeight.bold,
-              color: AppDesignTokens.textPrimary,
+              color: theme.colorScheme.onSurface,
             ),
             textAlign: TextAlign.center,
           ),
@@ -610,7 +610,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
           Text(
             title,
             style: theme.textTheme.labelSmall?.copyWith(
-              color: AppDesignTokens.textSecondary,
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
             ),
             textAlign: TextAlign.center,
           ),
@@ -1051,7 +1051,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                   title,
                   style: theme.textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.bold,
-                    color: AppDesignTokens.textPrimary,
+                    color: theme.colorScheme.onSurface,
                   ),
                 ),
               ],

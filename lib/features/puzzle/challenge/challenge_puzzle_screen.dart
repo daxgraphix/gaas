@@ -57,15 +57,10 @@ class _ChallengePuzzleScreenState extends ConsumerState<ChallengePuzzleScreen> {
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: theme.brightness == Brightness.light
-                ? [
-                    theme.colorScheme.primary.withValues(alpha: 0.1),
-                    theme.scaffoldBackgroundColor,
-                  ]
-                : [
-                    Colors.red.withValues(alpha: 0.3),
-                    theme.scaffoldBackgroundColor,
-                  ],
+            colors: [
+              theme.colorScheme.primary.withValues(alpha: 0.15),
+              theme.colorScheme.surface,
+            ],
           ),
         ),
         child: SafeArea(
@@ -74,7 +69,7 @@ class _ChallengePuzzleScreenState extends ConsumerState<ChallengePuzzleScreen> {
               _buildHeader(context),
               Expanded(
                 child: SingleChildScrollView(
-                  padding: const EdgeInsets.all(16),
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -83,8 +78,9 @@ class _ChallengePuzzleScreenState extends ConsumerState<ChallengePuzzleScreen> {
                       _buildDifficultySelector(context),
                       const SizedBox(height: 24),
                       _buildLeaderboard(context, challengeState),
-                      const SizedBox(height: 24),
+                      const SizedBox(height: 32),
                       _buildStartButton(context),
+                      const SizedBox(height: 24),
                     ],
                   ),
                 ),
@@ -100,23 +96,26 @@ class _ChallengePuzzleScreenState extends ConsumerState<ChallengePuzzleScreen> {
     final theme = Theme.of(context);
 
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
       child: Row(
         children: [
           IconButton(
             onPressed: () => Navigator.pop(context),
-            icon: const Icon(Icons.arrow_back),
-            color: Colors.white,
+            icon: const Icon(Icons.arrow_back_ios_new),
+            color: theme.colorScheme.onSurface,
+            iconSize: 20,
           ),
           Expanded(
             child: Text(
               'Challenge Mode',
               style: theme.textTheme.titleLarge?.copyWith(
-                color: Colors.white,
+                color: AppDesignTokens.textPrimary(context),
                 fontWeight: FontWeight.bold,
               ),
+              textAlign: TextAlign.center,
             ),
           ),
+          const SizedBox(width: 48), // Spacer for balance
         ],
       ),
     );
@@ -126,28 +125,38 @@ class _ChallengePuzzleScreenState extends ConsumerState<ChallengePuzzleScreen> {
     final theme = Theme.of(context);
 
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(AppDesignTokens.radiusLarge),
+        border: Border.all(color: theme.colorScheme.outline.withValues(alpha: 0.1)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Challenge Type',
-            style: theme.textTheme.titleMedium?.copyWith(
+            'CHALLENGE TYPE',
+            style: theme.textTheme.labelLarge?.copyWith(
               fontWeight: FontWeight.bold,
+              color: theme.colorScheme.primary,
+              letterSpacing: 1.2,
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 20),
           Row(
             children: [
-              _buildTypeChip('daily', 'Daily', Icons.today),
+              _buildTypeChip('daily', 'Daily', Icons.today_rounded),
               const SizedBox(width: 12),
-              _buildTypeChip('speed', 'Speed', Icons.speed),
+              _buildTypeChip('speed', 'Speed', Icons.speed_rounded),
               const SizedBox(width: 12),
-              _buildTypeChip('endless', 'Endless', Icons.all_inclusive),
+              _buildTypeChip('endless', 'Endless', Icons.all_inclusive_rounded),
             ],
           ),
         ],
@@ -166,18 +175,20 @@ class _ChallengePuzzleScreenState extends ConsumerState<ChallengePuzzleScreen> {
             _selectedChallenge = type;
           });
         },
-        borderRadius: BorderRadius.circular(12),
-        child: Container(
-          padding: const EdgeInsets.all(12),
+        borderRadius: BorderRadius.circular(16),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
           decoration: BoxDecoration(
             color: isSelected
-                ? theme.colorScheme.primary.withValues(alpha: 0.2)
-                : Colors.transparent,
-            borderRadius: BorderRadius.circular(12),
+                ? theme.colorScheme.primary.withValues(alpha: 0.1)
+                : theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+            borderRadius: BorderRadius.circular(16),
             border: Border.all(
               color: isSelected
                   ? theme.colorScheme.primary
-                  : theme.colorScheme.outline,
+                  : Colors.transparent,
+              width: 1.5,
             ),
           ),
           child: Column(
@@ -186,17 +197,16 @@ class _ChallengePuzzleScreenState extends ConsumerState<ChallengePuzzleScreen> {
                 icon,
                 color: isSelected
                     ? theme.colorScheme.primary
-                    : theme.colorScheme.onSurface,
+                    : theme.colorScheme.onSurfaceVariant,
               ),
-              const SizedBox(height: 4),
+              const SizedBox(height: 8),
               Text(
                 label,
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: isSelected ? FontWeight.bold : null,
+                style: theme.textTheme.labelMedium?.copyWith(
+                  fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
                   color: isSelected
                       ? theme.colorScheme.primary
-                      : theme.colorScheme.onSurface,
+                      : AppDesignTokens.textSecondary(context),
                 ),
               ),
             ],
@@ -210,21 +220,31 @@ class _ChallengePuzzleScreenState extends ConsumerState<ChallengePuzzleScreen> {
     final theme = Theme.of(context);
 
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(AppDesignTokens.radiusLarge),
+        border: Border.all(color: theme.colorScheme.outline.withValues(alpha: 0.1)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Difficulty',
-            style: theme.textTheme.titleMedium?.copyWith(
+            'DIFFICULTY',
+            style: theme.textTheme.labelLarge?.copyWith(
               fontWeight: FontWeight.bold,
+              color: theme.colorScheme.primary,
+              letterSpacing: 1.2,
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 20),
           Row(
             children: [
               _buildDifficultyChip(1),
@@ -266,27 +286,23 @@ class _ChallengePuzzleScreenState extends ConsumerState<ChallengePuzzleScreen> {
           });
         },
         borderRadius: BorderRadius.circular(12),
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 12),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          padding: const EdgeInsets.symmetric(vertical: 14),
           decoration: BoxDecoration(
             color: isSelected
-                ? theme.colorScheme.primary.withValues(alpha: 0.2)
-                : Colors.transparent,
+                ? theme.colorScheme.primary
+                : theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(
-              color: isSelected
-                  ? theme.colorScheme.primary
-                  : theme.colorScheme.outline,
-            ),
           ),
           child: Center(
             child: Text(
               label,
-              style: TextStyle(
-                fontWeight: isSelected ? FontWeight.bold : null,
+              style: theme.textTheme.labelLarge?.copyWith(
+                fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
                 color: isSelected
-                    ? theme.colorScheme.primary
-                    : theme.colorScheme.onSurface,
+                    ? theme.colorScheme.onPrimary
+                    : AppDesignTokens.textSecondary(context),
               ),
             ),
           ),
@@ -301,54 +317,59 @@ class _ChallengePuzzleScreenState extends ConsumerState<ChallengePuzzleScreen> {
       ..sort((a, b) => b.value.compareTo(a.value));
 
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(AppDesignTokens.radiusLarge),
+        border: Border.all(color: theme.colorScheme.outline.withValues(alpha: 0.1)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Icon(Icons.leaderboard, color: Colors.amber),
-              const SizedBox(width: 8),
+              Icon(Icons.leaderboard_rounded, color: Colors.amber.shade700, size: 24),
+              const SizedBox(width: 12),
               Text(
-                'Leaderboard',
-                style: theme.textTheme.titleMedium?.copyWith(
+                'LEADERBOARD',
+                style: theme.textTheme.labelLarge?.copyWith(
                   fontWeight: FontWeight.bold,
+                  color: AppDesignTokens.textPrimary(context),
+                  letterSpacing: 1.2,
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 20),
           ...sortedLeaderboard.take(5).toList().asMap().entries.map<Widget>((
             entry,
           ) {
             final index = entry.key;
             final e = entry.value;
+            final isTopThree = index < 3;
+            
             return Container(
-              padding: const EdgeInsets.symmetric(vertical: 8),
+              padding: const EdgeInsets.symmetric(vertical: 12),
               decoration: BoxDecoration(
                 border: Border(
                   bottom: BorderSide(
-                    color: theme.colorScheme.outline.withValues(alpha: 0.2),
+                    color: theme.colorScheme.outline.withValues(alpha: 0.05),
                   ),
                 ),
               ),
               child: Row(
                 children: [
                   Container(
-                    width: 28,
-                    height: 28,
+                    width: 32,
+                    height: 32,
                     decoration: BoxDecoration(
                       color: index == 0
-                          ? Colors.amber
+                          ? Colors.amber.withValues(alpha: 0.2)
                           : index == 1
-                          ? Colors.grey
+                          ? Colors.blueGrey.withValues(alpha: 0.1)
                           : index == 2
-                          ? Colors.orange
-                          : theme.colorScheme.surface,
+                          ? Colors.orange.withValues(alpha: 0.1)
+                          : Colors.transparent,
                       shape: BoxShape.circle,
                     ),
                     child: Center(
@@ -356,22 +377,32 @@ class _ChallengePuzzleScreenState extends ConsumerState<ChallengePuzzleScreen> {
                         '${index + 1}',
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
-                          color: index < 3
-                              ? Colors.white
-                              : theme.colorScheme.onSurface,
+                          color: index == 0
+                              ? Colors.amber.shade800
+                              : index == 1
+                              ? Colors.blueGrey
+                              : index == 2
+                              ? Colors.orange.shade800
+                              : AppDesignTokens.textSecondary(context),
                         ),
                       ),
                     ),
                   ),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: 16),
                   Expanded(
-                    child: Text(e.key, style: theme.textTheme.bodyMedium),
+                    child: Text(
+                      e.key, 
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        fontWeight: isTopThree ? FontWeight.w600 : FontWeight.normal,
+                        color: AppDesignTokens.textPrimary(context),
+                      ),
+                    ),
                   ),
                   Text(
                     '${e.value}',
-                    style: theme.textTheme.bodyMedium?.copyWith(
+                    style: theme.textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.bold,
-                      color: index == 0 ? Colors.amber : null,
+                      color: index == 0 ? Colors.amber.shade800 : theme.colorScheme.primary,
                     ),
                   ),
                 ],
@@ -384,6 +415,7 @@ class _ChallengePuzzleScreenState extends ConsumerState<ChallengePuzzleScreen> {
   }
 
   Widget _buildStartButton(BuildContext context) {
+    final theme = Theme.of(context);
     int timeLimit;
     switch (_selectedChallenge) {
       case 'speed':
@@ -401,18 +433,20 @@ class _ChallengePuzzleScreenState extends ConsumerState<ChallengePuzzleScreen> {
       child: ElevatedButton(
         onPressed: () => _startChallenge(timeLimit),
         style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.red,
-          foregroundColor: Colors.white,
-          padding: const EdgeInsets.symmetric(vertical: 16),
+          backgroundColor: theme.colorScheme.primary,
+          foregroundColor: theme.colorScheme.onPrimary,
+          padding: const EdgeInsets.symmetric(vertical: 18),
+          elevation: 4,
+          shadowColor: theme.colorScheme.primary.withValues(alpha: 0.4),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.play_arrow),
-            const SizedBox(width: 8),
+            const Icon(Icons.play_arrow_rounded, size: 28),
+            const SizedBox(width: 12),
             Text(
-              'Start ${_getChallengeLabel()} Challenge',
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              'START ${_getChallengeLabel().toUpperCase()}',
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, letterSpacing: 1.0),
             ),
           ],
         ),
@@ -442,6 +476,7 @@ class _ChallengePuzzleScreenState extends ConsumerState<ChallengePuzzleScreen> {
   }
 
   Widget _buildChallengeView(BuildContext context, ChallengeModeState state) {
+    final theme = Theme.of(context);
     final isWarning = state.remainingSeconds <= 30;
 
     return Scaffold(
@@ -452,9 +487,9 @@ class _ChallengePuzzleScreenState extends ConsumerState<ChallengePuzzleScreen> {
             end: Alignment.bottomCenter,
             colors: [
               isWarning
-                  ? Colors.red.withValues(alpha: 0.3)
-                  : Colors.orange.withValues(alpha: 0.3),
-              Theme.of(context).scaffoldBackgroundColor,
+                  ? theme.colorScheme.error.withValues(alpha: 0.2)
+                  : theme.colorScheme.primary.withValues(alpha: 0.1),
+              theme.colorScheme.surface,
             ],
           ),
         ),
@@ -475,7 +510,7 @@ class _ChallengePuzzleScreenState extends ConsumerState<ChallengePuzzleScreen> {
     final isWarning = state.remainingSeconds <= 30;
 
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
       child: Row(
         children: [
           IconButton(
@@ -484,23 +519,25 @@ class _ChallengePuzzleScreenState extends ConsumerState<ChallengePuzzleScreen> {
               ref.read(challengeModeProvider.notifier).endChallenge();
               Navigator.pop(context);
             },
-            icon: const Icon(Icons.close),
-            color: Colors.white,
+            icon: const Icon(Icons.close_rounded),
+            color: AppDesignTokens.textPrimary(context),
           ),
           Expanded(
             child: Column(
               children: [
                 Text(
-                  _getChallengeLabel(),
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    color: Colors.white70,
+                  _getChallengeLabel().toUpperCase(),
+                  style: theme.textTheme.labelMedium?.copyWith(
+                    color: AppDesignTokens.textSecondary(context),
+                    letterSpacing: 1.2,
+                    fontWeight: FontWeight.bold,
                   ),
                 ),
                 Text(
-                  'Score: ${state.score}',
+                  'SCORE: ${state.score}',
                   style: theme.textTheme.headlineSmall?.copyWith(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
+                    color: AppDesignTokens.textPrimary(context),
+                    fontWeight: FontWeight.w900,
                   ),
                 ),
               ],
@@ -510,30 +547,33 @@ class _ChallengePuzzleScreenState extends ConsumerState<ChallengePuzzleScreen> {
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             decoration: BoxDecoration(
               color: isWarning
-                  ? Colors.red.withValues(alpha: 0.3)
-                  : Colors.white.withValues(alpha: 0.2),
+                  ? theme.colorScheme.error.withValues(alpha: 0.15)
+                  : theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
               borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color: isWarning ? theme.colorScheme.error : theme.colorScheme.outline.withValues(alpha: 0.2),
+              ),
             ),
             child: Row(
               children: [
                 Icon(
-                  Icons.timer,
-                  color: isWarning ? Colors.red : Colors.white,
+                  Icons.timer_outlined,
+                  color: isWarning ? theme.colorScheme.error : theme.colorScheme.primary,
                   size: 20,
                 ),
                 const SizedBox(width: 8),
                 Text(
                   _formatTime(state.remainingSeconds),
-                  style: TextStyle(
-                    fontSize: 20,
+                  style: theme.textTheme.titleLarge?.copyWith(
                     fontWeight: FontWeight.bold,
-                    color: isWarning ? Colors.red : Colors.white,
+                    color: isWarning ? theme.colorScheme.error : theme.colorScheme.primary,
                     fontFeatures: const [FontFeature.tabularFigures()],
                   ),
                 ),
               ],
             ),
           ),
+          const SizedBox(width: 8),
         ],
       ),
     );
@@ -549,34 +589,36 @@ class _ChallengePuzzleScreenState extends ConsumerState<ChallengePuzzleScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Text(
-              'Select Puzzle Type',
-              style: theme.textTheme.titleLarge?.copyWith(
+              'SELECT PUZZLE TYPE',
+              style: theme.textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.bold,
+                color: AppDesignTokens.textSecondary(context),
+                letterSpacing: 1.5,
               ),
             ),
-            const SizedBox(height: 32),
+            const SizedBox(height: 40),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
                 _buildPuzzleTypeCard(
                   context,
                   'Crossword',
-                  Icons.grid_on,
-                  Colors.blue,
+                  Icons.grid_on_rounded,
+                  theme.colorScheme.primary,
                   () => _launchPuzzle('crossword'),
                 ),
                 _buildPuzzleTypeCard(
                   context,
                   'Math',
-                  Icons.calculate,
-                  Colors.green,
+                  Icons.calculate_rounded,
+                  theme.colorScheme.secondary,
                   () => _launchPuzzle('arithmetic'),
                 ),
                 _buildPuzzleTypeCard(
                   context,
                   'Sequence',
-                  Icons.timeline,
-                  Colors.purple,
+                  Icons.timeline_rounded,
+                  theme.colorScheme.tertiary,
                   () => _launchPuzzle('sequence'),
                 ),
               ],
@@ -594,27 +636,33 @@ class _ChallengePuzzleScreenState extends ConsumerState<ChallengePuzzleScreen> {
     Color color,
     VoidCallback onTap,
   ) {
+    final theme = Theme.of(context);
+    
     return GestureDetector(
       onTap: onTap,
-      child: Container(
-        width: 100,
-        height: 100,
-        decoration: BoxDecoration(
-          color: color.withValues(alpha: 0.2),
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: color, width: 2),
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon, color: color, size: 40),
-            const SizedBox(height: 8),
-            Text(
-              label,
-              style: TextStyle(color: color, fontWeight: FontWeight.bold),
+      child: Column(
+        children: [
+          Container(
+            width: 88,
+            height: 88,
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(24),
+              border: Border.all(color: color.withValues(alpha: 0.3), width: 2),
             ),
-          ],
-        ),
+            child: Center(
+              child: Icon(icon, color: color, size: 40),
+            ),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            label,
+            style: theme.textTheme.labelLarge?.copyWith(
+              color: color,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ],
       ),
     );
   }

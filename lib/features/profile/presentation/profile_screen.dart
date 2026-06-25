@@ -8,6 +8,7 @@ import '../../../core/utils/responsive_utils.dart';
 import '../../../l10n/generated/app_localizations.dart';
 import '../../calculator/calculator_screen.dart';
 import '../../profile_setup/profile_setup_screen.dart';
+import '../../../core/accessibility/accessibility_settings.dart';
 import 'avatar_shop_screen.dart';
 
 class ProfileScreen extends ConsumerWidget {
@@ -197,16 +198,16 @@ class ProfileScreen extends ConsumerWidget {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(
+                Icon(
                   Icons.stars,
-                  color: AppDesignTokens.neonYellow,
+                  color: theme.colorScheme.tertiary,
                   size: 20,
                 ),
                 const SizedBox(width: 8),
                 Text(
                   '${user?.totalPoints ?? 0} PTS',
                   style: theme.textTheme.titleMedium?.copyWith(
-                    color: AppDesignTokens.neonYellow,
+                    color: theme.colorScheme.tertiary,
                     fontWeight: FontWeight.w900,
                     letterSpacing: 1,
                   ),
@@ -243,7 +244,7 @@ class ProfileScreen extends ConsumerWidget {
                 error: (_, _) => '0',
               ),
               Icons.star,
-              AppDesignTokens.neonYellow,
+              theme.colorScheme.tertiary,
               theme,
             ),
             _buildStatItem(
@@ -341,7 +342,7 @@ class ProfileScreen extends ConsumerWidget {
             icon: Icons.storefront,
             title: 'Avatar Shop',
             subtitle: l10n.unlockNewAvatarsWithPoints,
-            color: AppDesignTokens.neonYellow,
+            color: theme.colorScheme.tertiary,
             theme: theme,
             onTap: () {
               Navigator.push(
@@ -440,6 +441,30 @@ class ProfileScreen extends ConsumerWidget {
                 ref.read(settingsProvider.notifier).toggleHaptics(value);
               },
               activeThumbColor: theme.colorScheme.error,
+            ),
+          ),
+          _buildMenuCard(
+            icon: Icons.blur_on,
+            title: 'Performance Mode',
+            subtitle: 'Reduce transparency',
+            color: theme.colorScheme.primary,
+            theme: theme,
+            trailing: Consumer(
+              builder: (context, ref, _) {
+                final reduceTransparency = ref.watch(
+                  accessibilitySettingsProvider.select(
+                    (s) => s.reduceTransparency,
+                  ),
+                );
+                return Switch(
+                  value: reduceTransparency,
+                  onChanged: (value) {
+                    ref
+                        .read(accessibilitySettingsProvider.notifier)
+                        .setReduceTransparency(value);
+                  },
+                );
+              },
             ),
           ),
         ],
@@ -667,36 +692,59 @@ onTap: () {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text(l10n.selectTheme),
-        content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: AppThemeType.values.map((themeType) {
-              final isSelected = currentTheme == themeType;
-              return ListTile(
-                leading: Icon(
-                  _getThemeIcon(themeType),
-                  color: isSelected ? theme.colorScheme.primary : null,
-                ),
-                title: Text(AppThemes.getThemeName(themeType)),
-                selected: isSelected,
-                onTap: () {
-                  ref.read(themeProvider.notifier).setTheme(themeType);
-                  Navigator.pop(context);
-                },
-              );
-            }).toList(),
+        backgroundColor: theme.colorScheme.surface,
+        title: Text(
+          l10n.selectTheme,
+          style: TextStyle(
+            color: theme.colorScheme.primary,
+            fontWeight: FontWeight.bold,
           ),
         ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: AppThemeType.values.map((themeType) {
+            final isSelected = currentTheme == themeType;
+            final themeColor = AppThemes.getThemeColor(themeType);
+
+            return ListTile(
+              leading: Icon(
+                AppThemes.getThemeIcon(themeType),
+                color: isSelected ? theme.colorScheme.primary : themeColor,
+              ),
+              title: Text(
+                AppThemes.getThemeName(themeType),
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+              subtitle: Text(AppThemes.getThemeDescription(themeType)),
+              selected: isSelected,
+              selectedTileColor: theme.colorScheme.primary.withValues(alpha: 0.1),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              onTap: () {
+                ref.read(themeProvider.notifier).setTheme(themeType);
+                Navigator.pop(context);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      'Theme updated to ${AppThemes.getThemeName(themeType)}',
+                    ),
+                    duration: const Duration(seconds: 2),
+                    backgroundColor: theme.colorScheme.primary,
+                  ),
+                );
+              },
+            );
+          }).toList(),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(l10n.continueGame),
+          ),
+        ],
       ),
     );
-  }
-
-  IconData _getThemeIcon(AppThemeType type) {
-    switch (type) {
-      case AppThemeType.midnight:
-        return Icons.dark_mode;
-    }
   }
 
   IconData _getAvatarIcon(String shape) {

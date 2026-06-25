@@ -43,12 +43,27 @@ class GAASApp extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final currentTheme = ref.watch(themeProvider);
     final currentLocale = ref.watch(localeProvider);
+    final themeData = AdaptiveTheme.getAdaptiveTheme(context, currentTheme);
+
+    // Update system UI style based on theme brightness
+    if (Platform.isAndroid || Platform.isIOS) {
+      final isDark = themeData.brightness == Brightness.dark;
+      SystemChrome.setSystemUIOverlayStyle(
+        SystemUiOverlayStyle(
+          statusBarColor: Colors.transparent,
+          statusBarIconBrightness: isDark ? Brightness.light : Brightness.dark,
+          statusBarBrightness: isDark ? Brightness.dark : Brightness.light,
+          systemNavigationBarColor: themeData.scaffoldBackgroundColor,
+          systemNavigationBarIconBrightness: isDark ? Brightness.light : Brightness.dark,
+        ),
+      );
+    }
 
     return MaterialApp(
       key: ValueKey(currentLocale.code),
       title: 'GAAS',
       debugShowCheckedModeBanner: false,
-      theme: AdaptiveTheme.getAdaptiveTheme(context, currentTheme),
+      theme: themeData,
       locale: Locale(currentLocale.code),
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,

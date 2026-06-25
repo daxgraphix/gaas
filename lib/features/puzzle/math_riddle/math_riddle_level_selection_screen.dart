@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/providers.dart';
-import '../../../core/themes/app_themes.dart';
 import '../../../core/sound_manager.dart';
 import '../../../data/models/level_progress.dart';
 import '../../../data/models/math_riddle.dart';
@@ -161,7 +160,7 @@ class _MathRiddleLevelSelectionScreenState extends ConsumerState<MathRiddleLevel
           : null,
       child: Container(
         decoration: BoxDecoration(
-          color: isUnlocked ? theme.colorScheme.surface : AppDesignTokens.techBlack,
+          color: isUnlocked ? theme.colorScheme.surface : theme.colorScheme.surface.withValues(alpha: 0.1),
           border: Border.all(
             color: isUnlocked ? accentColor : theme.colorScheme.outline.withValues(alpha: 0.3),
             width: 2,
@@ -182,7 +181,7 @@ class _MathRiddleLevelSelectionScreenState extends ConsumerState<MathRiddleLevel
               Text(
                 level.toString(),
                 style: theme.textTheme.headlineSmall?.copyWith(
-                  color: isUnlocked ? color : Colors.white10,
+                  color: isUnlocked ? color : theme.colorScheme.onSurface.withValues(alpha: 0.1),
                   fontWeight: FontWeight.bold,
                 ),
               ),
@@ -190,13 +189,13 @@ class _MathRiddleLevelSelectionScreenState extends ConsumerState<MathRiddleLevel
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                 decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.1),
+                  color: isUnlocked ? color.withValues(alpha: 0.1) : theme.colorScheme.onSurface.withValues(alpha: 0.05),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
                   difficulty,
                   style: TextStyle(
-                    color: isUnlocked ? color : Colors.white10,
+                    color: isUnlocked ? color : theme.colorScheme.onSurface.withValues(alpha: 0.2),
                     fontSize: 10,
                     fontWeight: FontWeight.w600,
                   ),
@@ -208,14 +207,14 @@ class _MathRiddleLevelSelectionScreenState extends ConsumerState<MathRiddleLevel
                   children: List.generate(3, (i) => Icon(
                     Icons.star,
                     size: 10,
-                    color: i < stars ? AppDesignTokens.neonYellow : Colors.white10,
+                    color: i < stars ? theme.colorScheme.tertiary : theme.colorScheme.onSurface.withValues(alpha: 0.1),
                   )),
                 ),
               if (!isUnlocked)
-                const Icon(
+                Icon(
                   Icons.lock,
                   size: 16,
-                  color: Colors.white38,
+                  color: theme.colorScheme.onSurface.withValues(alpha: 0.38),
                 ),
             ],
           ),

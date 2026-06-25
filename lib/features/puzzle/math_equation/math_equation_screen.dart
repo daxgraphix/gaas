@@ -177,7 +177,7 @@ class _MathEquationScreenState extends ConsumerState<MathEquationScreen> with Ti
           child: Container(
             height: 4,
             decoration: BoxDecoration(
-              color: theme.colorScheme.surface,
+              color: theme.colorScheme.surfaceContainerHighest,
               borderRadius: BorderRadius.circular(2),
             ),
             child: FractionallySizedBox(
@@ -219,10 +219,9 @@ class _MathEquationScreenState extends ConsumerState<MathEquationScreen> with Ti
         children: [
           Positioned.fill(
             child: Opacity(
-              opacity: 0.05,
-              child: Image.network(
-                'https://www.transparenttextures.com/patterns/carbon-fibre.png',
-                repeat: ImageRepeat.repeat,
+              opacity: theme.brightness == Brightness.dark ? 0.05 : 0.02,
+              child: Container(
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.1),
               ),
             ),
           ),
@@ -268,13 +267,13 @@ class _MathEquationScreenState extends ConsumerState<MathEquationScreen> with Ti
                     color: isSelected
                         ? theme.colorScheme.primary.withValues(alpha: 0.08)
                         : isAnswered
-                            ? (isCorrect ? Colors.green.withValues(alpha: 0.08) : Colors.red.withValues(alpha: 0.08))
+                            ? (isCorrect ? theme.colorScheme.primary.withValues(alpha: 0.08) : theme.colorScheme.error.withValues(alpha: 0.08))
                             : theme.colorScheme.surface,
                     border: Border.all(
                       color: isSelected
                           ? theme.colorScheme.primary.withValues(alpha: 0.8)
                           : isAnswered
-                              ? (isCorrect ? Colors.green.withValues(alpha: 0.6) : Colors.red.withValues(alpha: 0.6))
+                              ? (isCorrect ? theme.colorScheme.primary.withValues(alpha: 0.6) : theme.colorScheme.error.withValues(alpha: 0.6))
                               : theme.colorScheme.outline.withValues(alpha: 0.2),
                       width: isSelected ? 2 : 1.5,
                     ),
@@ -289,14 +288,14 @@ class _MathEquationScreenState extends ConsumerState<MathEquationScreen> with Ti
                         )
                       else if (isAnswered && isCorrect)
                         BoxShadow(
-                          color: Colors.green.withValues(alpha: 0.2),
+                          color: theme.colorScheme.primary.withValues(alpha: 0.2),
                           blurRadius: 8,
                           spreadRadius: 1,
                           offset: const Offset(0, 2),
                         )
                       else if (isAnswered && !isCorrect)
                         BoxShadow(
-                          color: Colors.red.withValues(alpha: 0.2),
+                          color: theme.colorScheme.error.withValues(alpha: 0.2),
                           blurRadius: 8,
                           spreadRadius: 1,
                           offset: const Offset(0, 2),
@@ -360,11 +359,11 @@ class _MathEquationScreenState extends ConsumerState<MathEquationScreen> with Ti
                           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                           decoration: BoxDecoration(
                             color: isCorrect
-                                ? Colors.green.withValues(alpha: 0.15)
-                                : Colors.red.withValues(alpha: 0.15),
+                                ? theme.colorScheme.primary.withValues(alpha: 0.15)
+                                : theme.colorScheme.error.withValues(alpha: 0.15),
                             borderRadius: BorderRadius.circular(20),
                             border: Border.all(
-                              color: isCorrect ? Colors.green.withValues(alpha: 0.4) : Colors.red.withValues(alpha: 0.4),
+                              color: isCorrect ? theme.colorScheme.primary.withValues(alpha: 0.4) : theme.colorScheme.error.withValues(alpha: 0.4),
                               width: 1.5,
                             ),
                           ),
@@ -376,7 +375,7 @@ class _MathEquationScreenState extends ConsumerState<MathEquationScreen> with Ti
                                 style: TextStyle(
                                   fontSize: 16,
                                   fontFamily: 'monospace',
-                                  color: isCorrect ? Colors.green.shade700 : Colors.red.shade700,
+                                  color: isCorrect ? theme.colorScheme.primary : theme.colorScheme.error,
                                   fontWeight: FontWeight.w600,
                                 ),
                               ),
@@ -384,7 +383,7 @@ class _MathEquationScreenState extends ConsumerState<MathEquationScreen> with Ti
                               Icon(
                                 isCorrect ? Icons.check_circle : Icons.cancel,
                                 size: 18,
-                                color: isCorrect ? Colors.green.shade700 : Colors.red.shade700,
+                                color: isCorrect ? theme.colorScheme.primary : theme.colorScheme.error,
                               ),
                             ],
                           ),

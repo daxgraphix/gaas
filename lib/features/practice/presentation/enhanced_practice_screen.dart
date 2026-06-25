@@ -53,9 +53,9 @@ class _EnhancedPracticeScreenState extends ConsumerState<EnhancedPracticeScreen>
             end: Alignment.bottomRight,
             colors: theme.brightness == Brightness.light
                 ? [
-                    const Color(0xFFF8FAFC), // Very light gray
-                    const Color(0xFFE0F2FE), // Light sky blue
-                    const Color(0xFFF0FDFA), // Light mint
+                    theme.colorScheme.surface,
+                    theme.colorScheme.primary.withValues(alpha: 0.05),
+                    theme.colorScheme.secondary.withValues(alpha: 0.05),
                   ]
                 : [
                     theme.colorScheme.primary.withValues(alpha: 0.15),

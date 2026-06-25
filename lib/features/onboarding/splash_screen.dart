@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/providers.dart';
-import '../../core/themes/app_themes.dart';
 import '../../core/sound_manager.dart';
 import '../../shared/widgets/main_navigation_scaffold.dart';
 import '../profile_setup/profile_setup_screen.dart';
@@ -183,9 +182,9 @@ Future<void> _ensureBasicState() async {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    final bg = AppDesignTokens.background;
-    final primary = AppDesignTokens.primary;
-    final secondary = AppDesignTokens.secondary;
+    final bg = theme.scaffoldBackgroundColor;
+    final primary = theme.colorScheme.primary;
+    final secondary = theme.colorScheme.secondary;
 
     return Scaffold(
       backgroundColor: bg,
@@ -251,7 +250,7 @@ Future<void> _ensureBasicState() async {
                       Text(
                         'GAAS',
                         style: theme.textTheme.displayMedium?.copyWith(
-                          color: AppDesignTokens.textPrimary,
+                          color: theme.colorScheme.onSurface,
                           letterSpacing: 18,
                           fontWeight: FontWeight.w700,
                         ),

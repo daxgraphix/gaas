@@ -38,7 +38,7 @@ class AchievementsScreen extends ConsumerWidget {
                     final isUnlocked = achievementState.unlockedAchievements.any(
                       (a) => a.achievementId == achievement.id,
                     );
-                    return _buildAchievementEntry(achievement, isUnlocked, index, theme);
+                    return _buildAchievementEntry(achievement, isUnlocked, index, theme, context);
                   }, childCount: allAchievements.length),
                 ),
               ),
@@ -73,7 +73,7 @@ class AchievementsScreen extends ConsumerWidget {
           child: Icon(
             Icons.arrow_back_ios_new,
             size: 16,
-            color: theme.colorScheme.onSurface,
+            color: AppDesignTokens.textPrimary(context),
           ),
         ),
         onPressed: () => Navigator.pop(context),
@@ -159,7 +159,7 @@ class AchievementsScreen extends ConsumerWidget {
                             style: TextStyle(
                               fontSize: 12,
                               letterSpacing: 2,
-                              color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+                              color: AppDesignTokens.textSecondary(context).withValues(alpha: 0.7),
                               fontWeight: FontWeight.w600,
                             ),
                           ),
@@ -198,7 +198,7 @@ class AchievementsScreen extends ConsumerWidget {
                                   decoration: BoxDecoration(
                                     gradient: LinearGradient(
                                       colors: [
-                                        AppDesignTokens.neonGreen,
+                                        theme.colorScheme.secondary,
                                         theme.colorScheme.primary,
                                       ],
                                     ),
@@ -218,7 +218,7 @@ class AchievementsScreen extends ConsumerWidget {
                               '${reward.pointsToNextLevel} XP to NEXT LEVEL',
                               style: TextStyle(
                                 fontSize: 11,
-                                color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                                color: AppDesignTokens.textSecondary(context).withValues(alpha: 0.6),
                                 fontWeight: FontWeight.w500,
                               ),
                             ),
@@ -241,6 +241,7 @@ class AchievementsScreen extends ConsumerWidget {
     bool isUnlocked,
     int index,
     ThemeData theme,
+    BuildContext context,
   ) {
     final color = _getRarityColor(achievement.rarity, theme);
 
@@ -335,7 +336,7 @@ class AchievementsScreen extends ConsumerWidget {
                               style: TextStyle(
                                 fontSize: 10,
                                 fontWeight: FontWeight.bold,
-                                color: isUnlocked ? color : theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                                color: isUnlocked ? color : AppDesignTokens.textSecondary(context).withValues(alpha: 0.6),
                                 letterSpacing: 0.5,
                               ),
                             ),
@@ -366,8 +367,8 @@ class AchievementsScreen extends ConsumerWidget {
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
                           color: isUnlocked
-                              ? theme.colorScheme.onSurface
-                              : theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                              ? AppDesignTokens.textPrimary(context)
+                              : AppDesignTokens.textSecondary(context).withValues(alpha: 0.5),
                         ),
                       ),
                       const SizedBox(height: 4),
@@ -376,8 +377,8 @@ class AchievementsScreen extends ConsumerWidget {
                         style: TextStyle(
                           fontSize: 14,
                           color: isUnlocked
-                              ? theme.colorScheme.onSurface.withValues(alpha: 0.7)
-                              : theme.colorScheme.onSurface.withValues(alpha: 0.4),
+                              ? AppDesignTokens.textSecondary(context).withValues(alpha: 0.7)
+                              : AppDesignTokens.textSecondary(context).withValues(alpha: 0.4),
                           height: 1.4,
                         ),
                       ),
@@ -394,7 +395,7 @@ class AchievementsScreen extends ConsumerWidget {
                             style: TextStyle(
                               fontSize: 10,
                               fontWeight: FontWeight.bold,
-                              color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                              color: AppDesignTokens.textSecondary(context).withValues(alpha: 0.6),
                               letterSpacing: 1,
                             ),
                           ),
@@ -467,9 +468,9 @@ class AchievementsScreen extends ConsumerWidget {
       case AchievementRarity.rare:
         return theme.colorScheme.primary;
       case AchievementRarity.epic:
-        return theme.colorScheme.tertiary;
+        return theme.colorScheme.primary.withValues(alpha: 0.8);
       case AchievementRarity.legendary:
-        return AppDesignTokens.neonYellow;
+        return theme.colorScheme.tertiary;
     }
   }
 }

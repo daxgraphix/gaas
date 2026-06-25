@@ -56,7 +56,7 @@ class MainNavigationScaffold extends ConsumerWidget {
 
   Widget _buildGlobalBackground(ThemeData theme) {
     return Container(
-      color: AppDesignTokens.background,
+      color: theme.scaffoldBackgroundColor,
       child: Stack(
         children: [
           Positioned(

@@ -33,7 +33,7 @@ dependencies:
   printing: ^5.12.0
 
   # Utilities
-  path_provider: ^2.1.5
+  path_provider: ^2.1.6
   uuid: ^4.5.1
 
   # Audio
@@ -47,10 +47,14 @@ dependencies:
   cupertino_icons: ^1.0.8
 
   intl: any
+  isar: ^3.1.0+1
+  isar_flutter_libs: ^3.1.0+1
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^6.0.0
+  isar_generator: ^3.1.0+1
+  build_runner: ^2.4.13
   # Removed isar_generator dependency
 
 flutter:

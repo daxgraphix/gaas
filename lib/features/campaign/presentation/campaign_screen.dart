@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../core/themes/app_themes.dart';
 import '../../../core/providers.dart';
 import '../../../l10n/generated/app_localizations.dart';
 import '../../game/logic/game_session_provider.dart';
@@ -84,7 +83,7 @@ class _CampaignScreenState extends ConsumerState<CampaignScreen>
         children: [
           Positioned.fill(
             child: Container(
-              color: AppDesignTokens.background,
+              color: theme.scaffoldBackgroundColor,
               child: Stack(
                 children: [
                   Positioned(

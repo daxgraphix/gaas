@@ -1,8 +1,10 @@
+import 'dart:math' as math;
 import 'dart:async';
 import 'package:flutter/material.dart';
 import '../../l10n/generated/app_localizations.dart';
 import '../math_engine/math_engine.dart';
 import '../game_adaptability/dynamic_difficulty_system.dart';
+import '../math_engine/math_riddle_engine.dart';
 
 class GameFlowOptimizer {
   static final Map<String, Completer<void>> _loadingCompleters = {};
@@ -46,7 +48,7 @@ class GameFlowOptimizer {
   static Future<void> preloadRiddles({
     required List<String> operations,
     required int level,
-    int count = 5,
+    int count = 10,
   }) async {
     final key = 'riddles_${operations.join(',')}_$level';
 
@@ -58,12 +60,41 @@ class GameFlowOptimizer {
     _loadingCompleters[key] = completer;
 
     try {
+      final List<dynamic> riddles = [];
+      final random = math.Random();
+
+      for (int i = 0; i < count; i++) {
+        final operation = operations[random.nextInt(operations.length)];
+        
+        // This is a simplified version of generating mixed types
+        // In a real scenario, we might want to map these to MathRiddleEngine methods
+        if (operation == 'arithmetic') {
+          riddles.add(MathRiddleEngine.generateArithmeticProblem(level));
+        } else if (operation == 'word') {
+          riddles.add(MathRiddleEngine.generateWordProblem(level));
+        } else if (operation == 'sequence') {
+          riddles.add(MathRiddleEngine.generateNumberSequence(level));
+        } else if (operation == 'logic') {
+          riddles.add(MathRiddleEngine.generateLogicChallenge(level));
+        }
+      }
+
+      _preloadCache[key] = riddles;
       completer.complete();
     } catch (e) {
       completer.completeError(e);
     }
 
     return completer.future;
+  }
+
+  // Get preloaded riddles
+  static List<dynamic>? getPreloadedRiddles({
+    required List<String> operations,
+    required int level,
+  }) {
+    final key = 'riddles_${operations.join(',')}_$level';
+    return _preloadCache[key] as List<dynamic>?;
   }
 
   // Get preloaded questions

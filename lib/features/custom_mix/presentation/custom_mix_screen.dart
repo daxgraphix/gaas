@@ -1,9 +1,12 @@
+import 'dart:math' as math;
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../../../core/providers.dart';
 import '../../../core/sound_manager.dart';
 import '../../../core/themes/app_themes.dart';
+import '../../../core/utils/game_flow_optimizer.dart';
 import '../../../data/models/math_riddle.dart';
 import '../../../l10n/generated/app_localizations.dart';
 
@@ -56,14 +59,19 @@ class _CustomMixScreenState extends ConsumerState<CustomMixScreen>
             Navigator.pop(context);
           },
         ),
-        title: Text(
-          l10n.customMixArithmetic,
-          style: TextStyle(
-            fontSize: 12,
-            letterSpacing: 1,
-            fontWeight: FontWeight.w400,
-            fontFamily: 'monospace',
-            color: theme.colorScheme.primary,
+        title: GestureDetector(
+          onLongPress: () {
+            _runStressTest();
+          },
+          child: Text(
+            l10n.customMixArithmetic,
+            style: TextStyle(
+              fontSize: 12,
+              letterSpacing: 1,
+              fontWeight: FontWeight.w400,
+              fontFamily: 'monospace',
+              color: theme.colorScheme.primary,
+            ),
           ),
         ),
         centerTitle: true,
@@ -300,7 +308,17 @@ class _CustomMixScreenState extends ConsumerState<CustomMixScreen>
                   divisions: 29,
                   onChanged: (value) {
                     HapticManager.instance.lightImpact();
-                    ref.read(customMixArithmeticProvider.notifier).setDifficulty(value.round());
+                    final difficulty = value.round();
+                    ref.read(customMixArithmeticProvider.notifier).setDifficulty(difficulty);
+                    
+                    // Preload questions for this difficulty
+                    if (state.selectedOperations.isNotEmpty) {
+                      GameFlowOptimizer.preloadQuestions(
+                        operation: state.selectedOperations.first.name,
+                        level: difficulty,
+                        count: 15,
+                      );
+                    }
                   },
                 ),
               ),
@@ -372,71 +390,164 @@ class _CustomMixScreenState extends ConsumerState<CustomMixScreen>
         ),
         if (state.reactionMessage != null) ...[
           const SizedBox(height: 16),
-          AnimatedBuilder(
-            animation: _scaleAnimation,
-            builder: (context, child) {
-              return Transform.scale(
-                scale: _scaleAnimation.value,
-                child: Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                  decoration: BoxDecoration(
-                    color: state.lastAnswerCorrect == true
-                        ? Colors.greenAccent.withValues(alpha: 0.2)
-                        : Colors.redAccent.withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: state.lastAnswerCorrect == true ? Colors.greenAccent : Colors.redAccent,
-                      width: 1,
-                    ),
-                  ),
-                  child: Text(
-                    state.reactionMessage!,
-                    style: TextStyle(
-                      color: state.lastAnswerCorrect == true ? Colors.greenAccent : Colors.redAccent,
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      fontFamily: 'monospace',
-                      letterSpacing: 1,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-              );
-            },
-          ).animate().fadeIn(duration: 300.ms).shake(),
+          _buildReaction(state),
         ],
         const SizedBox(height: 24),
         if (state.currentQuestion != null)
           _buildQuestion(state.currentQuestion!, state, theme),
         if (state.questionAnswered) ...[
           const SizedBox(height: 20),
-          Container(
+          _buildNextButton(theme),
+        ],
+        const SizedBox(height: 24),
+        _buildActionButtons(state, theme),
+      ],
+    );
+  }
+
+  Widget _buildReaction(CustomMixArithmeticState state) {
+    final theme = Theme.of(context);
+    return AnimatedBuilder(
+      animation: _scaleAnimation,
+      builder: (context, child) {
+        return Transform.scale(
+          scale: _scaleAnimation.value,
+          child: Container(
             width: double.infinity,
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
             decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [theme.colorScheme.secondary, theme.colorScheme.tertiary],
+              color: state.lastAnswerCorrect == true
+                  ? Colors.greenAccent.withValues(alpha: 0.2)
+                  : Colors.redAccent.withValues(alpha: 0.2),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: state.lastAnswerCorrect == true ? Colors.greenAccent : Colors.redAccent,
+                width: 1,
               ),
+            ),
+            child: Text(
+              state.reactionMessage!,
+              style: TextStyle(
+                color: state.lastAnswerCorrect == true ? Colors.greenAccent : Colors.redAccent,
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                fontFamily: 'monospace',
+                letterSpacing: 1,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ),
+        );
+      },
+    )
+    .animate(target: state.reactionMessage != null ? 1 : 0)
+    .fadeIn(duration: 300.ms)
+    .scale(begin: const Offset(0.8, 0.8), end: const Offset(1, 1), curve: Curves.elasticOut)
+    .shake(hz: 4, curve: state.lastAnswerCorrect == true ? Curves.easeInOut : Curves.bounceIn)
+    .then()
+    .custom(
+      duration: 1000.ms,
+      builder: (context, value, child) => state.lastAnswerCorrect == true 
+        ? RepaintBoundary(child: CustomPaint(painter: ParticlePainter(theme: theme, progress: value), child: child))
+        : child,
+    );
+  }
+
+  Widget _buildNextButton(ThemeData theme) {
+    return Container(
+      width: double.infinity,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [theme.colorScheme.secondary, theme.colorScheme.tertiary],
+        ),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: ElevatedButton.icon(
+        onPressed: () {
+          HapticManager.instance.lightImpact();
+          ref.read(customMixArithmeticProvider.notifier).nextQuestion();
+        },
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.transparent,
+          shadowColor: Colors.transparent,
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ),
+        icon: const Icon(Icons.arrow_forward, color: Colors.white),
+        label: Text(
+          l10n.nextQuestion,
+          style: const TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.bold,
+            letterSpacing: 1,
+            fontFamily: 'monospace',
+          ),
+        ),
+      ),
+    ).animate().slideY(begin: 0.2, end: 0, duration: 400.ms, curve: Curves.easeOutCubic).fadeIn();
+  }
+
+  Widget _buildActionButtons(CustomMixArithmeticState state, ThemeData theme) {
+    return Row(
+      children: [
+        if (state.canUndo)
+          Expanded(
+            child: Container(
+              margin: const EdgeInsets.only(right: 8),
+              decoration: BoxDecoration(
+                color: Colors.orangeAccent.withValues(alpha: 0.8),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: ElevatedButton.icon(
+                onPressed: () {
+                  HapticManager.instance.lightImpact();
+                  ref.read(customMixArithmeticProvider.notifier).undoLastAnswer();
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.transparent,
+                  shadowColor: Colors.transparent,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                icon: const Icon(Icons.undo, size: 18, color: Colors.white),
+                label: const Text(
+                  'UNDO',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 1,
+                    fontFamily: 'monospace',
+                  ),
+                ),
+              ),
+            ),
+          ).animate().fadeIn().scale(),
+        Expanded(
+          child: Container(
+            margin: EdgeInsets.only(left: state.canUndo ? 0 : 8, right: 8),
+            decoration: BoxDecoration(
+              color: theme.colorScheme.secondary.withValues(alpha: 0.8),
               borderRadius: BorderRadius.circular(12),
             ),
             child: ElevatedButton.icon(
-              onPressed: () {
-                HapticManager.instance.lightImpact();
-                ref.read(customMixArithmeticProvider.notifier).nextQuestion();
-              },
+              onPressed: () => _showHint(),
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.transparent,
                 shadowColor: Colors.transparent,
-                padding: const EdgeInsets.symmetric(vertical: 16),
+                padding: const EdgeInsets.symmetric(vertical: 14),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
               ),
-              icon: const Icon(Icons.arrow_forward, color: Colors.white),
-              label: Text(
-                l10n.nextQuestion,
+              icon: const Icon(Icons.lightbulb, size: 18, color: Colors.white70),
+              label: const Text(
+                'HINT',
                 style: TextStyle(
-                  fontSize: 14,
+                  fontSize: 12,
                   fontWeight: FontWeight.bold,
                   letterSpacing: 1,
                   fontFamily: 'monospace',
@@ -444,108 +555,39 @@ class _CustomMixScreenState extends ConsumerState<CustomMixScreen>
               ),
             ),
           ),
-        ],
-        const SizedBox(height: 24),
-        Row(
-          children: [
-            if (state.canUndo)
-              Expanded(
-                child: Container(
-                  margin: const EdgeInsets.only(right: 8),
-                  decoration: BoxDecoration(
-                    color: Colors.orangeAccent.withValues(alpha: 0.8),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: ElevatedButton.icon(
-                    onPressed: () {
-                      HapticManager.instance.lightImpact();
-                      ref.read(customMixArithmeticProvider.notifier).undoLastAnswer();
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.transparent,
-                      shadowColor: Colors.transparent,
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                    icon: const Icon(Icons.undo, size: 18, color: Colors.white),
-                    label: Text(
-                      'UNDO',
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: 1,
-                        fontFamily: 'monospace',
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            Expanded(
-              child: Container(
-                margin: EdgeInsets.only(left: state.canUndo ? 0 : 8, right: 8),
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.secondary.withValues(alpha: 0.8),
+        ),
+        Expanded(
+          child: Container(
+            margin: const EdgeInsets.only(left: 8),
+            decoration: BoxDecoration(
+              color: Colors.redAccent.withValues(alpha: 0.8),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: ElevatedButton.icon(
+              onPressed: () {
+                HapticManager.instance.mediumImpact();
+                ref.read(customMixArithmeticProvider.notifier).endMix();
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.transparent,
+                shadowColor: Colors.transparent,
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: ElevatedButton.icon(
-                  onPressed: () => _showHint(),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.transparent,
-                    shadowColor: Colors.transparent,
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                  icon: const Icon(Icons.lightbulb, size: 18, color: Colors.white70),
-                  label: Text(
-                    'HINT',
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 1,
-                      fontFamily: 'monospace',
-                    ),
-                  ),
+              ),
+              icon: const Icon(Icons.close, size: 18, color: Colors.white),
+              label: const Text(
+                'END',
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 1,
+                  fontFamily: 'monospace',
                 ),
               ),
             ),
-            Expanded(
-              child: Container(
-                margin: const EdgeInsets.only(left: 8),
-                decoration: BoxDecoration(
-                  color: Colors.redAccent.withValues(alpha: 0.8),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: ElevatedButton.icon(
-                  onPressed: () {
-                    HapticManager.instance.mediumImpact();
-                    ref.read(customMixArithmeticProvider.notifier).endMix();
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.transparent,
-                    shadowColor: Colors.transparent,
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                  icon: const Icon(Icons.close, size: 18, color: Colors.white),
-                  label: Text(
-                    'END',
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 1,
-                      fontFamily: 'monospace',
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ],
+          ),
         ),
       ],
     );
@@ -704,6 +746,25 @@ class _CustomMixScreenState extends ConsumerState<CustomMixScreen>
     );
   }
 
+  void _runStressTest() {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('DEBUG: Starting Particle Stress Test (10x rapid bursts)'),
+        duration: Duration(seconds: 2),
+      ),
+    );
+    
+    int count = 0;
+    Timer.periodic(const Duration(milliseconds: 150), (timer) {
+      if (!mounted || count >= 10) {
+        timer.cancel();
+        return;
+      }
+      _reactionController.forward(from: 0);
+      count++;
+    });
+  }
+
   void _showHint() {
     final theme = Theme.of(context);
     final state = ref.read(customMixArithmeticProvider);
@@ -856,4 +917,50 @@ class _CustomMixScreenState extends ConsumerState<CustomMixScreen>
         return '÷';
     }
   }
+}
+
+class ParticlePainter extends CustomPainter {
+  final ThemeData theme;
+  final double progress;
+
+  // Pre-calculate particles for performance
+  static final List<_ParticlePoint> _particles = List.generate(30, (i) {
+    final random = math.Random(i + 42);
+    return _ParticlePoint(
+      angle: random.nextDouble() * 2 * math.pi,
+      speed: 40 + random.nextDouble() * 120,
+      size: 1.5 + random.nextDouble() * 2.5,
+    );
+  });
+  
+  ParticlePainter({required this.theme, required this.progress});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    if (progress <= 0 || progress >= 1) return;
+    
+    final paint = Paint()
+      ..color = theme.colorScheme.primary.withValues(alpha: (1 - progress).clamp(0, 1))
+      ..style = PaintingStyle.fill;
+      
+    final center = Offset(size.width / 2, size.height / 2);
+    
+    for (final p in _particles) {
+      final radius = p.size * (1 - progress);
+      final x = center.dx + math.cos(p.angle) * p.speed * progress;
+      final y = center.dy + math.sin(p.angle) * p.speed * progress;
+      
+      canvas.drawCircle(Offset(x, y), radius, paint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant ParticlePainter oldDelegate) => oldDelegate.progress != progress;
+}
+
+class _ParticlePoint {
+  final double angle;
+  final double speed;
+  final double size;
+  _ParticlePoint({required this.angle, required this.speed, required this.size});
 }

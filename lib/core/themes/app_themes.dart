@@ -104,7 +104,7 @@ class AppThemes {
       onSurface: AppDesignTokens.solarOnSurface,
       surfaceContainerHighest: const Color(0xFFF1F5F9),
       onSurfaceVariant: AppDesignTokens.solarOnSurfaceVariant,
-      outline: AppDesignTokens.solarOnSurfaceVariant.withValues(alpha: 0.5), // Increased opacity
+      outline: AppDesignTokens.solarOnSurfaceVariant.withValues(alpha: 0.6), // Increased contrast for borders
       error: AppDesignTokens.error,
     ),
     scaffoldBackgroundColor: AppDesignTokens.solarBackground,
@@ -114,7 +114,7 @@ class AppThemes {
       shadowColor: Colors.black.withValues(alpha: 0.1),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(AppDesignTokens.radiusMedium),
-        side: BorderSide(color: Colors.black.withValues(alpha: 0.1)), // Increased contrast
+        side: BorderSide(color: Colors.black.withValues(alpha: 0.15)), // Increased contrast
       ),
     ),
     appBarTheme: const AppBarTheme(
@@ -195,7 +195,7 @@ class AppThemes {
       primary: AppDesignTokens.cyberPrimary,
       onPrimary: Colors.black,
       secondary: AppDesignTokens.cyberSecondary,
-      onSecondary: Colors.white,
+      onSecondary: Colors.black,
       surface: AppDesignTokens.cyberSurface,
       onSurface: AppDesignTokens.cyberOnSurface,
       error: AppDesignTokens.error,
@@ -206,12 +206,12 @@ class AppThemes {
       color: AppDesignTokens.cyberSurface,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(AppDesignTokens.radiusMedium),
-        side: BorderSide(color: AppDesignTokens.cyberPrimary.withValues(alpha: 0.3), width: 1),
+        side: BorderSide(color: AppDesignTokens.cyberPrimary.withValues(alpha: 0.5), width: 1.5),
       ),
     ),
     textTheme: _buildTextTheme(
       AppDesignTokens.cyberOnSurface,
-      AppDesignTokens.cyberPrimary.withValues(alpha: 0.7),
+      AppDesignTokens.cyberPrimary.withValues(alpha: 0.8),
     ),
   );
 
@@ -224,13 +224,13 @@ class AppThemes {
       primary: AppDesignTokens.midnightPrimary,
       onPrimary: Colors.white,
       secondary: AppDesignTokens.midnightSecondary,
-      onSecondary: Colors.white,
+      onSecondary: Colors.black, // Dark text on Sky 500 for WCAG
       surface: AppDesignTokens.midnightSurface,
       onSurface: AppDesignTokens.midnightOnSurface,
       surfaceContainerHighest: const Color(0xFF1F2937),
       onSurfaceVariant: AppDesignTokens.midnightOnSurfaceVariant,
       error: AppDesignTokens.error,
-      outline: AppDesignTokens.midnightOnSurfaceVariant.withValues(alpha: 0.3),
+      outline: AppDesignTokens.midnightOnSurfaceVariant.withValues(alpha: 0.4),
     ),
     scaffoldBackgroundColor: AppDesignTokens.midnightBackground,
     cardTheme: CardThemeData(

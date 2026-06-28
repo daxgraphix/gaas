@@ -51,6 +51,9 @@ class _SplashScreenState extends ConsumerState<SplashScreen> with TickerProvider
     
     await _initializeServices();
     
+    // Play startup sound once initialized
+    SoundManager.instance.playStartupSound(); 
+
     final elapsed = DateTime.now().difference(bootStart);
     if (elapsed < const Duration(seconds: 2)) {
       await Future.delayed(const Duration(seconds: 2) - elapsed);

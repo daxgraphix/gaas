@@ -49,6 +49,7 @@ class MathRiddleState {
   final int level;
   final int questionIndex;
   final int correctAnswers;
+  final int currentStreak;
   final int totalQuestions;
   final int hintsUsed;
   final List<dynamic> allChallenges;
@@ -65,6 +66,7 @@ class MathRiddleState {
     this.level = 1,
     this.questionIndex = 0,
     this.correctAnswers = 0,
+    this.currentStreak = 0,
     this.totalQuestions = 20,
     this.hintsUsed = 0,
     this.allChallenges = const [],
@@ -82,6 +84,7 @@ class MathRiddleState {
     int? level,
     int? questionIndex,
     int? correctAnswers,
+    int? currentStreak,
     int? totalQuestions,
     int? hintsUsed,
     List<dynamic>? allChallenges,
@@ -98,6 +101,7 @@ class MathRiddleState {
       level: level ?? this.level,
       questionIndex: questionIndex ?? this.questionIndex,
       correctAnswers: correctAnswers ?? this.correctAnswers,
+      currentStreak: currentStreak ?? this.currentStreak,
       totalQuestions: totalQuestions ?? this.totalQuestions,
       hintsUsed: hintsUsed ?? this.hintsUsed,
       allChallenges: allChallenges ?? this.allChallenges,

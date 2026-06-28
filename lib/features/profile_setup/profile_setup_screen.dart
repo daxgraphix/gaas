@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/providers.dart';
 import '../../l10n/generated/app_localizations.dart';
-import '../home/presentation/home_screen.dart';
+import '../../shared/widgets/main_navigation_scaffold.dart';
 
 class ProfileSetupScreen extends ConsumerStatefulWidget {
   final bool isInitialSetup;
@@ -97,7 +97,7 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
 
       Navigator.of(
         context,
-      ).pushReplacement(MaterialPageRoute(builder: (_) => const HomeScreen()));
+      ).pushReplacement(MaterialPageRoute(builder: (_) => const MainNavigationScaffold()));
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(

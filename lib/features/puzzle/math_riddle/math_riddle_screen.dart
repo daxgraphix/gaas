@@ -5,6 +5,8 @@ import 'dart:async';
 import 'dart:math';
 import '../../../core/providers.dart';
 import '../../../core/sound_manager.dart';
+import '../../../core/utils/game_flow_optimizer.dart';
+import '../../../core/game_adaptability/dynamic_difficulty_system.dart';
 import '../../../data/models/math_riddle.dart';
 import '../../../l10n/generated/app_localizations.dart';
 
@@ -133,6 +135,7 @@ class _MathRiddleScreenState extends ConsumerState<MathRiddleScreen> with Single
       ),
       body: Column(
         children: [
+          _buildPerformanceFeedback(state, theme),
           Expanded(
             child: Center(
               child: AnimatedBuilder(
@@ -153,6 +156,34 @@ class _MathRiddleScreenState extends ConsumerState<MathRiddleScreen> with Single
           _buildNumpad(state),
         ],
       ),
+    );
+  }
+
+  Widget _buildPerformanceFeedback(MathRiddleState state, ThemeData theme) {
+    if (state.questionIndex <= 1) return const SizedBox.shrink();
+
+    final accuracy = state.questionIndex > 1
+        ? state.correctAnswers / (state.questionIndex - 1)
+        : 0.0;
+
+    final message = GameDynamicsController.getEncouragementMessage(
+      accuracy: accuracy,
+      streak: state.currentStreak,
+      totalQuestions: state.questionIndex - 1,
+    );
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+      color: theme.colorScheme.primaryContainer.withValues(alpha: 0.3),
+      child: Text(
+        message,
+        style: theme.textTheme.bodySmall?.copyWith(
+          color: theme.colorScheme.primary,
+          fontWeight: FontWeight.bold,
+        ),
+        textAlign: TextAlign.center,
+      ).animate(key: ValueKey(message)).fadeIn().slideY(begin: -0.2, end: 0),
     );
   }
 
@@ -401,9 +432,22 @@ class _MathRiddleScreenState extends ConsumerState<MathRiddleScreen> with Single
               onPressed: () {
                 HapticManager.instance.mediumImpact();
                 if (_answerController.text.isNotEmpty) {
+                  final previousCorrect = state.correctAnswers;
                   ref.read(mathRiddleProvider.notifier).submitAnswer();
                   final newState = ref.read(mathRiddleProvider);
-                  if (!newState.isCorrect) {
+                  
+                  if (newState.isCorrect || newState.correctAnswers > previousCorrect) {
+                     // Add dynamic score
+                     final difficultyLevel = DifficultyLevel.values[((widget.difficulty - 1) ~/ 10).clamp(0, 2)];
+                     final points = GameDynamicsController.calculateDynamicScore(
+                       isCorrect: true,
+                       basePoints: state.currentRiddle?.basePoints ?? 10,
+                       currentStreak: newState.currentStreak,
+                       responseTime: state.timeSpentSeconds * 1000.0,
+                       difficulty: difficultyLevel,
+                     );
+                     ref.read(userSessionProvider.notifier).addPoints(points);
+                  } else {
                     _showIncorrectFeedback();
                   }
                   _answerController.clear();

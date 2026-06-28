@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/providers.dart';
 import '../../../core/themes/app_themes.dart';
 import '../../../core/sound_manager.dart';
+import '../../../core/utils/game_flow_optimizer.dart';
 import '../crossword/crossword_screen.dart';
 import '../math_riddle/math_riddle_screen.dart';
 import '../../../data/models/math_riddle.dart';
@@ -668,11 +669,20 @@ class _ChallengePuzzleScreenState extends ConsumerState<ChallengePuzzleScreen> {
   }
 
   void _launchPuzzle(String type) {
+    // Preload for challenge mode
     if (type == 'crossword') {
+       GameFlowOptimizer.preloadQuestions(
+        operation: 'crossword',
+        level: _selectedDifficulty,
+        count: 5,
+      );
       Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (_) => const CrosswordScreen(isChallengeMode: true),
+          builder: (_) => CrosswordScreen(
+            isChallengeMode: true,
+            level: _selectedDifficulty,
+          ),
         ),
       ).then((_) {
         ref.read(challengeModeProvider.notifier).addScore(100);
@@ -681,10 +691,21 @@ class _ChallengePuzzleScreenState extends ConsumerState<ChallengePuzzleScreen> {
       final riddleType = type == 'sequence'
           ? MathRiddleType.numberSequence
           : MathRiddleType.arithmetic;
+      
+      final operation = type == 'sequence' ? 'sequence' : 'arithmetic';
+      GameFlowOptimizer.preloadRiddles(
+        operations: [operation],
+        level: _selectedDifficulty,
+        count: 20,
+      );
+
       Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (_) => MathRiddleScreen(riddleType: riddleType),
+          builder: (_) => MathRiddleScreen(
+            riddleType: riddleType,
+            difficulty: _selectedDifficulty,
+          ),
         ),
       ).then((_) {
         ref.read(challengeModeProvider.notifier).addScore(100);

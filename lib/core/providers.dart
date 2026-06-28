@@ -20,6 +20,7 @@ import '../core/notification_service.dart';
 
 import '../core/performance/isar_service.dart';
 import '../core/performance/performance_models.dart';
+import '../core/utils/game_flow_optimizer.dart';
 
 final dbProvider = FutureProvider<DatabaseService>((ref) async {
   return await DatabaseService.instance;
@@ -472,8 +473,7 @@ class UserSessionNotifier extends StateNotifier<UserSession?> {
     final repo = ref.read(userRepositoryProvider);
     await repo.updatePoints(points);
     if (state != null) {
-      state!.totalPoints += points;
-      state = state;
+      state = state!.copyWith(totalPoints: state!.totalPoints + points);
     }
   }
 
@@ -482,34 +482,25 @@ class UserSessionNotifier extends StateNotifier<UserSession?> {
     if (state!.totalPoints < cost) return false;
 
     final currentAvatars =
-        (state!.unlockedAvatars ?? ['circle', 'square', 'star']);
+        List<String>.from(state!.unlockedAvatars ?? ['circle', 'square', 'star']);
     if (currentAvatars.contains(avatarShape)) return true; // Already unlocked
 
     final repo = ref.read(userRepositoryProvider);
 
-    state!.totalPoints -= cost;
     currentAvatars.add(avatarShape);
-    state!.unlockedAvatars = currentAvatars;
+    final updatedUser = state!.copyWith(
+      totalPoints: state!.totalPoints - cost,
+      unlockedAvatars: currentAvatars,
+    );
 
-    await repo.updateUserSession(state!);
-    state = state;
+    await repo.updateUserSession(updatedUser);
+    state = updatedUser;
     return true;
   }
 
   Future<void> equipAvatar(String avatarId) async {
     if (state == null) return;
-    final updatedUser = UserSession(
-      name: state!.name,
-      avatarShape: avatarId,
-      avatarColor: state!.avatarColor,
-      theme: state!.theme,
-      language: state!.language,
-      totalPoints: state!.totalPoints,
-      createdAt: state!.createdAt,
-      lastPlayedAt: state!.lastPlayedAt,
-      unlockedAvatars: state!.unlockedAvatars,
-      loginStreak: state!.loginStreak,
-    )..id = state!.id;
+    final updatedUser = state!.copyWith(avatarShape: avatarId);
 
     final repo = ref.read(userRepositoryProvider);
     await repo.updateUserSession(updatedUser);
@@ -1431,44 +1422,88 @@ class MathRiddleNotifier extends StateNotifier<MathRiddleState> {
 
   void loadArithmeticProblem(int difficulty) {
     const questionCount = 20;
-    final riddles = List.generate(questionCount, (i) => MathRiddleEngine.generateArithmeticProblem(difficulty));
+    
+    // Attempt to fetch from preloaded cache
+    final cached = GameFlowOptimizer.getPreloadedRiddles(
+      operations: ['arithmetic'],
+      level: difficulty,
+    );
+
+    final List<dynamic> riddles = (cached != null && cached.isNotEmpty)
+        ? cached
+        : List.generate(questionCount, (i) => MathRiddleEngine.generateArithmeticProblem(difficulty));
+
     state = state.copyWith(
-      currentRiddle: riddles.isNotEmpty ? riddles[0] : null,
+      currentRiddle: riddles.isNotEmpty && riddles[0] is MathRiddle ? riddles[0] as MathRiddle : null,
       allChallenges: riddles,
       level: difficulty,
-      totalQuestions: questionCount,
+      totalQuestions: riddles.length,
       questionIndex: 1,
     );
   }
 
   void loadWordProblem(int difficulty) {
     const questionCount = 20;
-    final riddles = List.generate(questionCount, (i) => MathRiddleEngine.generateWordProblem(difficulty));
+
+    final cached = GameFlowOptimizer.getPreloadedRiddles(
+      operations: ['word'],
+      level: difficulty,
+    );
+
+    final List<dynamic> riddles = (cached != null && cached.isNotEmpty)
+        ? cached
+        : List.generate(questionCount, (i) => MathRiddleEngine.generateWordProblem(difficulty));
+
     state = state.copyWith(
-      currentRiddle: riddles.isNotEmpty ? riddles[0] : null,
+      currentRiddle: riddles.isNotEmpty && riddles[0] is MathRiddle ? riddles[0] as MathRiddle : null,
       allChallenges: riddles,
       level: difficulty,
-      totalQuestions: questionCount,
+      totalQuestions: riddles.length,
       questionIndex: 1,
     );
   }
 
   void loadNumberSequence(int difficulty) {
     const questionCount = 20;
-    final sequences = List.generate(questionCount, (i) => MathRiddleEngine.generateNumberSequence(difficulty));
+
+    final cached = GameFlowOptimizer.getPreloadedRiddles(
+      operations: ['sequence'],
+      level: difficulty,
+    );
+
+    final List<dynamic> sequences = (cached != null && cached.isNotEmpty)
+        ? cached
+        : List.generate(questionCount, (i) => MathRiddleEngine.generateNumberSequence(difficulty));
+
     state = state.copyWith(
-      currentSequence: sequences.isNotEmpty ? sequences[0] : null,
+      currentSequence: sequences.isNotEmpty && sequences[0] is NumberSequence ? sequences[0] as NumberSequence : null,
       allChallenges: sequences,
       level: difficulty,
-      totalQuestions: questionCount,
+      totalQuestions: sequences.length,
       questionIndex: 1,
     );
   }
 
   Future<void> loadLogicChallenge(int difficulty) async {
     const questionCount = 20;
-    final challenges = <LogicMathChallenge>[];
 
+    final cached = GameFlowOptimizer.getPreloadedRiddles(
+      operations: ['logic'],
+      level: difficulty,
+    );
+
+    if (cached != null && cached.isNotEmpty) {
+      state = state.copyWith(
+        currentLogic: cached[0] is LogicMathChallenge ? cached[0] as LogicMathChallenge : null,
+        allChallenges: cached,
+        level: difficulty,
+        totalQuestions: cached.length,
+        questionIndex: 1,
+      );
+      return;
+    }
+
+    final challenges = <LogicMathChallenge>[];
     for (int i = 0; i < questionCount; i++) {
       if (difficulty >= 2) {
         final logic = await MathVisualEngine.generateVisualLogicChallenge(difficulty);
@@ -2816,7 +2851,17 @@ class CustomMixArithmeticNotifier extends StateNotifier<CustomMixArithmeticState
       questionAnswered: true,
     );
 
+    // Batch analytics updates - don't record every single question immediately 
+    // to reduce UI thread load during rapid input.
+    // Instead, we only update total questions answered for now, 
+    // and record the full session data when it ends.
+    if (state.questionsCompleted % 5 == 0) {
+       _syncBatchAnalytics();
+    }
+  }
 
+  void _syncBatchAnalytics() {
+    // Optional: Sync intermediate progress to a more persistent store if needed
   }
 
   void endMix() {

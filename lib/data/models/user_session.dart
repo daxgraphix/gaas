@@ -28,6 +28,34 @@ class UserSession {
   })  : createdAt = createdAt ?? DateTime.now(),
         lastPlayedAt = lastPlayedAt ?? DateTime.now();
 
+  UserSession copyWith({
+    String? id,
+    String? name,
+    String? avatarShape,
+    String? avatarColor,
+    String? theme,
+    String? language,
+    int? totalPoints,
+    DateTime? createdAt,
+    DateTime? lastPlayedAt,
+    int? loginStreak,
+    List<String>? unlockedAvatars,
+  }) {
+    return UserSession(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      avatarShape: avatarShape ?? this.avatarShape,
+      avatarColor: avatarColor ?? this.avatarColor,
+      theme: theme ?? this.theme,
+      language: language ?? this.language,
+      totalPoints: totalPoints ?? this.totalPoints,
+      createdAt: createdAt ?? this.createdAt,
+      lastPlayedAt: lastPlayedAt ?? this.lastPlayedAt,
+      loginStreak: loginStreak ?? this.loginStreak,
+      unlockedAvatars: unlockedAvatars ?? this.unlockedAvatars,
+    );
+  }
+
   Map<String, dynamic> toJson() {
     return {
       'id': id,

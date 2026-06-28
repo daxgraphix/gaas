@@ -77,6 +77,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
 
   void _nextPage(List<OnboardingPageData> pages) {
     HapticManager.instance.selectionClick();
+    SoundManager.instance.playClick();
     if (_currentPage < pages.length - 1) {
       _pageController.nextPage(
         duration: const Duration(milliseconds: 600),
@@ -89,6 +90,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
 
   void _skip() {
     HapticManager.instance.lightImpact();
+    SoundManager.instance.playClick();
     _completeOnboarding();
   }
 

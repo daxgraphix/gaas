@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/providers.dart';
 import '../../../core/themes/app_themes.dart';
+import '../../../core/utils/game_flow_optimizer.dart';
 import '../crossword/crossword_screen.dart';
 import '../math_riddle/math_riddle_screen.dart';
 import '../../../data/models/math_riddle.dart';
@@ -369,6 +370,13 @@ class _CampaignPuzzleScreenState extends ConsumerState<CampaignPuzzleScreen> {
   }
 
   void _navigateToPuzzle(PuzzleStageState stage, int index) {
+    // Preload next question in background
+    GameFlowOptimizer.preloadRiddles(
+      operations: [_getOperationString(stage.type)],
+      level: stage.difficulty,
+      count: 20,
+    );
+
     switch (stage.type) {
       case 'crossword':
         Navigator.push(
@@ -443,6 +451,21 @@ class _CampaignPuzzleScreenState extends ConsumerState<CampaignPuzzleScreen> {
         return MathRiddleType.logicChallenge;
       default:
         return MathRiddleType.arithmetic;
+    }
+  }
+
+  String _getOperationString(String type) {
+    switch (type) {
+      case 'arithmetic':
+        return 'arithmetic';
+      case 'wordProblem':
+        return 'word';
+      case 'sequence':
+        return 'sequence';
+      case 'logic':
+        return 'logic';
+      default:
+        return 'arithmetic';
     }
   }
 }

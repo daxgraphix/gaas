@@ -80,7 +80,7 @@ Future<void> updateHighScore(String operationId, int level, int score) async {
     await database.saveLevelProgress(progress);
 
     // Unlock next level only if score >= 35 (out of 45)
-    if (score >= 35 && level < 30) {
+    if (score >= 35 && level < 100) {
       var nextLevel = await getProgress(operationId, level + 1);
       if (nextLevel == null || !nextLevel.isUnlocked) {
         await unlockLevel(operationId, level + 1);
@@ -118,16 +118,15 @@ Future<void> updateHighScore(String operationId, int level, int score) async {
     var progress = await getProgress(operationId, level);
     
     if (progress != null) {
-      if (stars > progress.stars) {
-        progress = LevelProgress(
-          id: progress.id,
-          operationId: operationId,
-          level: level,
-          stars: stars,
-          highScore: score > progress.highScore ? score : progress.highScore,
-          isUnlocked: true,
-        );
-      }
+      // Always preserve isUnlocked: true if it was already unlocked
+      progress = LevelProgress(
+        id: progress.id,
+        operationId: operationId,
+        level: level,
+        stars: stars > progress.stars ? stars : progress.stars,
+        highScore: score > progress.highScore ? score : progress.highScore,
+        isUnlocked: true, // Replaying a level keeps it unlocked
+      );
     } else {
       progress = LevelProgress(
         operationId: operationId,
@@ -141,10 +140,21 @@ Future<void> updateHighScore(String operationId, int level, int score) async {
     final database = await db;
     await database.saveLevelProgress(progress);
 
-    if (level < 30) {
-      var nextLevel = await getProgress(operationId, level + 1);
-      if (nextLevel == null || !nextLevel.isUnlocked) {
-        await unlockLevel(operationId, level + 1);
+    if (level < 100) {
+      // Requirement to unlock next level: current level must have at least 1 star.
+      // We also check total stars to ensure the linear (level-1)*2 requirement is met.
+      if (stars > 0) {
+        final totalStars = await getTotalStars();
+        // The requirement for Level (L+1) is L*2 stars.
+        // E.g., to unlock Level 11, you need 10*2 = 20 stars.
+        final starsNeeded = level * 2;
+        
+        if (totalStars >= starsNeeded) {
+          var nextLevel = await getProgress(operationId, level + 1);
+          if (nextLevel == null || !nextLevel.isUnlocked) {
+            await unlockLevel(operationId, level + 1);
+          }
+        }
       }
     }
   }
@@ -157,8 +167,8 @@ Future<void> updateHighScore(String operationId, int level, int score) async {
       'division',
       'arithmetic',
       'logic',
-      'crossword',
       'math_riddle',
+      'cross_numbers',
     ];
     for (final op in operations) {
       final existing = await getProgress(op, 1);

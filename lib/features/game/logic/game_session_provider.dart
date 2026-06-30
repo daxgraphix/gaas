@@ -45,6 +45,7 @@ class GameSession {
   final bool isBossLevel;
   final VisualCountingData? currentVisualData;
   final List<Map<String, dynamic>> pendingStats;
+  final int? ghostScore;
 
   GameSession({
     required this.mode,
@@ -71,6 +72,7 @@ class GameSession {
     this.isBossLevel = false,
     this.currentVisualData,
     this.pendingStats = const [],
+    this.ghostScore,
   });
 
   MathQuestion? get currentQuestion {
@@ -105,6 +107,7 @@ class GameSession {
     bool? isBossLevel,
     VisualCountingData? currentVisualData,
     List<Map<String, dynamic>>? pendingStats,
+    int? ghostScore,
   }) {
     return GameSession(
       mode: mode ?? this.mode,
@@ -129,6 +132,7 @@ class GameSession {
       isBossLevel: isBossLevel ?? this.isBossLevel,
       currentVisualData: currentVisualData ?? this.currentVisualData,
       pendingStats: pendingStats ?? this.pendingStats,
+      ghostScore: ghostScore ?? this.ghostScore,
     );
   }
 }
@@ -162,7 +166,10 @@ final gameSessionProvider =
     });
 
 class GameSessionNotifier extends StateNotifier<GameSession?> {
-  static const int campaignPassThreshold = 35;
+  static int getCampaignPassThreshold(int totalQuestions) {
+    // Require 70% to pass
+    return (totalQuestions * 0.7).ceil();
+  }
   final Ref ref;
   Timer? _timer;
   Timer? _duelTimer;
@@ -171,7 +178,7 @@ class GameSessionNotifier extends StateNotifier<GameSession?> {
 
   GameSessionNotifier(this.ref) : super(null);
 
-  void startGame({
+  Future<void> startGame({
     required GameMode mode,
     required String operation,
     int level = 1,
@@ -181,7 +188,7 @@ class GameSessionNotifier extends StateNotifier<GameSession?> {
     int totalQuestions = 45,
     int? timeLimit,
     List<MathQuestion>? preloadedQuestions,
-  }) {
+  }) async {
     _timer?.cancel();
     _duelTimer?.cancel();
 
@@ -189,9 +196,12 @@ class GameSessionNotifier extends StateNotifier<GameSession?> {
     int timeRemaining = 60;
     int lives = 3;
 
-    if (mode == GameMode.campaign && level % 10 == 0) {
-      isBossLevel = true;
-      timeRemaining = 60; // Boss levels have a strict 60 second timer
+    if (mode == GameMode.campaign) {
+      timeRemaining = 0;
+      totalQuestions = level <= 50 ? 50 : 60;
+      if (level % 10 == 0) {
+        isBossLevel = true;
+      }
     } else if (mode == GameMode.scoreAttack) {
       timeRemaining = 60;
     } else if (mode == GameMode.speedDemon) {
@@ -209,10 +219,25 @@ class GameSessionNotifier extends StateNotifier<GameSession?> {
       lives = 999; // effectively infinite
     }
 
+    int? aiScore;
+    int? aiCorrectAnswers;
+    if (mode == GameMode.duel) {
+      aiScore = 0;
+      aiCorrectAnswers = 0;
+    }
+
+    int? ghostScore;
+    if (mode == GameMode.scoreAttack) {
+      final levelProgressRepo = ref.read(levelProgressRepositoryProvider);
+      ghostScore = await levelProgressRepo.getHighScore(operation, level);
+    }
+
+    final user = ref.read(userSessionProvider);
+    final skillRating = user?.skillRating ?? 1000;
+
     final questions = preloadedQuestions ?? <MathQuestion>[];
     
     if (questions.isEmpty) {
-      final generatedQuestions = <String>{};
       final isArcade =
           mode == GameMode.scoreAttack ||
           mode == GameMode.endless ||
@@ -222,39 +247,35 @@ class GameSessionNotifier extends StateNotifier<GameSession?> {
           mode == GameMode.mathMaster ||
           mode == GameMode.marathon;
 
-      for (int i = 0; i < totalQuestions; i++) {
-        MathQuestion q;
-        if (mode == GameMode.mathMaster) {
-          // Randomly pick an operation for each question
+      if (mode == GameMode.mathMaster) {
+        // We still generate sequentially if mathMaster needs specific mixed logic
+        // but it's better to use batching for better performance if possible
+        final generatedQuestions = <String>{};
+        for (int i = 0; i < totalQuestions; i++) {
           final ops = ['addition', 'subtraction', 'multiplication', 'division'];
           final randomOp = ops[_random.nextInt(ops.length)];
-          q = MathEngine.generateQuestion(
+          final q = MathEngine.generateQuestion(
             randomOp,
             level,
             isArcade: isArcade,
             excludeQuestions: generatedQuestions,
+            skillRating: skillRating,
           );
-        } else {
-          q = MathEngine.generateQuestion(
-            operation,
-            level,
-            isArcade: isArcade,
-            excludeQuestions: generatedQuestions,
-          );
+          generatedQuestions.add(q.displayString);
+          questions.add(q);
         }
-        generatedQuestions.add(q.displayString);
-        questions.add(q);
+      } else {
+        final batch = await MathEngine.generateQuestionsBatch(
+          operation,
+          level,
+          totalQuestions,
+          isArcade: isArcade,
+        );
+        questions.addAll(batch);
       }
       
       // Shuffle questions for random order
       questions.shuffle();
-    }
-
-    int? aiScore;
-    int? aiCorrectAnswers;
-    if (mode == GameMode.duel) {
-      aiScore = 0;
-      aiCorrectAnswers = 0;
     }
 
     state = GameSession(
@@ -272,11 +293,11 @@ class GameSessionNotifier extends StateNotifier<GameSession?> {
       aiCorrectAnswers: aiCorrectAnswers,
       isBossLevel: isBossLevel,
       currentVisualData: isVisualCounting ? _generateVisualCountingData(level) : null,
+      ghostScore: (ghostScore ?? 0) > 0 ? ghostScore : null,
     );
 
     if (mode == GameMode.scoreAttack ||
-        mode == GameMode.speedDemon ||
-        isBossLevel) {
+        mode == GameMode.speedDemon) {
       _startTimer();
     } else if (mode == GameMode.duel) {
       _startDuelMode();
@@ -683,12 +704,13 @@ class GameSessionNotifier extends StateNotifier<GameSession?> {
     }
 
     final isCampaign = state!.mode == GameMode.campaign;
-    final passed = state!.correctAnswers >= campaignPassThreshold;
+    final passed = state!.correctAnswers >= getCampaignPassThreshold(state!.totalQuestions);
 
     if (isCampaign) {
       final stars = _calculateStarsForCampaign(
         state!.correctAnswers,
         state!.totalQuestions,
+        state!.timeRemaining,
       );
 
       final levelProgressRepo = ref.read(levelProgressRepositoryProvider);
@@ -708,7 +730,18 @@ class GameSessionNotifier extends StateNotifier<GameSession?> {
 
       if (passed) {
         _unlockNextLevel(state!.operation, state!.level);
-        ref.read(userSessionProvider.notifier).addPoints(state!.score);
+        
+        int totalReward = state!.score;
+        // Boss Level Bonus
+        if (state!.isBossLevel) {
+          totalReward += 1000; // Large bonus for boss levels
+          NotificationService().showAchievementNotification(
+            'Chapter Completed!',
+            'You\'ve defeated the boss of Level ${state!.level}!',
+          );
+        }
+        
+        ref.read(userSessionProvider.notifier).addPoints(totalReward);
       }
     } else {
       if (state!.score > 0) {
@@ -740,13 +773,6 @@ class GameSessionNotifier extends StateNotifier<GameSession?> {
       final accuracy = (state!.correctAnswers / state!.totalQuestions) * 100;
       final avgTime = state!.totalQuestions > 0 ? (600 - state!.timeRemaining) ~/ state!.totalQuestions : 0; // Rough estimate
       
-      // Record performance trends for completed sessions
-      // Note: Statistics repository can be used here if we decide to fetch more historical data
-      // final statsRepo = ref.read(statisticsRepositoryProvider);
-      // We use a future here, but we can't easily await in a synchronous method without making it async
-      // For now, let's use the current session's correct answers or hints as a proxy if we can't await
-      // Actually, many of these methods should be async.
-      
       final hintsUsed = state!.hintsUsed.values.where((used) => used).length;
 
       ref.read(performanceTrendsProvider.notifier).addDataPoint(
@@ -762,6 +788,17 @@ class GameSessionNotifier extends StateNotifier<GameSession?> {
         avgTime,
         hintsUsed > 0,
       );
+
+      // Unify analytics recording
+      final durationSeconds = 600 - state!.timeRemaining;
+      ref.read(analyticsProvider.notifier).recordSession(
+        state!.operation,
+        durationSeconds,
+        state!.totalQuestions,
+        state!.correctAnswers,
+        hintsUsed,
+        mode: state!.mode.name,
+      );
     }
 
     state = state!.copyWith(
@@ -770,20 +807,26 @@ class GameSessionNotifier extends StateNotifier<GameSession?> {
     );
   }
 
-  int _calculateStarsForCampaign(int correct, int total) {
-    if (total != 45) {
-      // Fallback for non-standard sessions if any
-      final percentage = (correct / total) * 100;
-      if (percentage >= 95) return 3;
-      if (percentage >= 85) return 2;
-      if (percentage >= 75) return 1;
-      return 0;
+  int _calculateStarsForCampaign(int correct, int total, int timeRemaining) {
+    double percentage = (correct / total) * 100;
+    int stars = 0;
+
+    if (percentage >= 95) {
+      stars = 3;
+    } else if (percentage >= 85) {
+      stars = 2;
+    } else if (percentage >= 75) {
+      stars = 1;
     }
-    
-    if (correct >= 43) return 3;
-    if (correct >= 39) return 2;
-    if (correct >= 35) return 1;
-    return 0;
+
+    // Time Bonus: If the player is exceptionally fast (more than 20s remaining)
+    // and they were close to the next star tier, give them a boost.
+    if (timeRemaining > 20 && stars > 0 && stars < 3) {
+      if (percentage >= 90 && stars == 2) stars = 3;
+      if (percentage >= 80 && stars == 1) stars = 2;
+    }
+
+    return stars;
   }
 
   void _unlockNextLevel(String operation, int currentLevel) {
@@ -791,7 +834,7 @@ class GameSessionNotifier extends StateNotifier<GameSession?> {
       final levelProgressRepo = ref.read(levelProgressRepositoryProvider);
       final nextLevel = currentLevel + 1;
       
-      if (nextLevel <= 30) {
+      if (nextLevel <= 100) {
         levelProgressRepo.unlockLevel(operation, nextLevel);
       }
     } catch (e) {

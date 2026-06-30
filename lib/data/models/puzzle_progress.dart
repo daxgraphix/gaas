@@ -87,7 +87,7 @@ class PuzzleProgress {
   }
 }
 
-enum PuzzleType { crossword, mathRiddle, numberSequence, logicMath }
+enum PuzzleType { mathRiddle, logicMath }
 
 enum PuzzleDifficulty { easy, medium, hard, expert }
 

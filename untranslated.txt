@@ -1,1 +1,10 @@
-{}
+{
+  "sw": [
+    "accuracyTrend",
+    "temporalInvestmentLabel",
+    "difficultyLevelLabel",
+    "excellent",
+    "done",
+    "mathRiddles"
+  ]
+}

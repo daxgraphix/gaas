@@ -14,7 +14,7 @@ class ArcadeScreen extends ConsumerWidget {
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context)!;
     return Scaffold(
-      backgroundColor: Colors.transparent,
+      backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -360,10 +360,10 @@ class ArcadeScreen extends ConsumerWidget {
                     child: Wrap(
                       spacing: 8,
                       runSpacing: 8,
-                      children: List.generate(30, (index) {
+                      children: List.generate(100, (index) {
                         final level = index + 1;
-                        final difficulty = level <= 10 ? 'Easy' : level <= 20 ? 'Medium' : 'Hard';
-                        final color = level <= 10 ? Colors.green : level <= 20 ? Colors.orange : Colors.red;
+                        final difficulty = level <= 20 ? 'Easy' : level <= 50 ? 'Medium' : level <= 80 ? 'Hard' : 'Master';
+                        final color = level <= 20 ? Colors.green : level <= 50 ? Colors.orange : level <= 80 ? Colors.red : Colors.purple;
                         return ChoiceChip(
                           label: Column(
                             mainAxisSize: MainAxisSize.min,
@@ -416,7 +416,7 @@ class ArcadeScreen extends ConsumerWidget {
     );
   }
 
-  void _launchGame(BuildContext context, WidgetRef ref, String operation, GameMode mode, int level) {
+  Future<void> _launchGame(BuildContext context, WidgetRef ref, String operation, GameMode mode, int level) async {
     int totalQuestions = 60; // Increased base questions for more challenge
 
     if (mode == GameMode.scoreAttack) {
@@ -450,7 +450,7 @@ class ArcadeScreen extends ConsumerWidget {
       timeLimit = 60 + (level * 3); // Memory challenges get more time
     }
 
-    ref
+    await ref
         .read(gameSessionProvider.notifier)
         .startGame(
           mode: mode,
@@ -459,16 +459,18 @@ class ArcadeScreen extends ConsumerWidget {
           totalQuestions: totalQuestions,
           timeLimit: timeLimit,
         );
-    Navigator.push(
-      context,
-      PageRouteBuilder(
-        pageBuilder: (context, animation, secondaryAnimation) =>
-            const GameScreen(),
-        transitionsBuilder: (context, animation, secondaryAnimation, child) {
-          return FadeTransition(opacity: animation, child: child);
-        },
-        transitionDuration: const Duration(milliseconds: 400),
-      ),
-    );
+    if (context.mounted) {
+      Navigator.push(
+        context,
+        PageRouteBuilder(
+          pageBuilder: (context, animation, secondaryAnimation) =>
+              const GameScreen(),
+          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+            return FadeTransition(opacity: animation, child: child);
+          },
+          transitionDuration: const Duration(milliseconds: 400),
+        ),
+      );
+    }
   }
 }

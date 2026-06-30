@@ -20,16 +20,16 @@ class AvatarShopScreen extends ConsumerWidget {
     final totalStars = ref.watch(totalStarsProvider).value ?? 0;
 
     final availableAvatars = [
-      {'id': 'circle', 'name': 'Circle', 'cost': 0, 'icon': Icons.circle, 'rarity': 'common', 'effect': 'None'},
-      {'id': 'square', 'name': 'Square', 'cost': 0, 'icon': Icons.square, 'rarity': 'common', 'effect': 'None'},
-      {'id': 'star', 'name': 'Star', 'cost': 0, 'icon': Icons.star, 'rarity': 'common', 'effect': 'None'},
-      {'id': 'diamond', 'name': 'Diamond', 'cost': 500, 'icon': Icons.diamond, 'rarity': 'rare', 'effect': 'Glitter'},
-      {'id': 'shield', 'name': 'Shield', 'cost': 1000, 'icon': Icons.shield, 'rarity': 'epic', 'effect': 'Shield Aura'},
-      {'id': 'crown', 'name': 'Crown', 'cost': 2500, 'icon': Icons.emoji_events, 'rarity': 'legendary', 'effect': 'Royal Glow'},
-      {'id': 'ninja', 'name': 'Ninja', 'cost': 5000, 'icon': Icons.sports_martial_arts, 'rarity': 'epic', 'effect': 'Stealth'},
-      {'id': 'rocket', 'name': 'Rocket', 'cost': 10000, 'icon': Icons.rocket_launch, 'rarity': 'legendary', 'effect': 'Rocket Trail'},
-      {'id': 'dragon', 'name': 'Dragon', 'cost': 20000, 'icon': Icons.local_fire_department, 'rarity': 'mythic', 'effect': 'Fire Breath'},
-      {'id': 'phoenix', 'name': 'Phoenix', 'cost': 50000, 'icon': Icons.mood, 'rarity': 'mythic', 'effect': 'Rebirth Flame'},
+      {'id': 'circle', 'name': 'Circle', 'cost': 0, 'requiredStars': 0, 'requiredLevel': 1, 'icon': Icons.circle, 'rarity': 'common', 'effect': 'None'},
+      {'id': 'square', 'name': 'Square', 'cost': 0, 'requiredStars': 0, 'requiredLevel': 1, 'icon': Icons.square, 'rarity': 'common', 'effect': 'None'},
+      {'id': 'star', 'name': 'Star', 'cost': 0, 'requiredStars': 0, 'requiredLevel': 1, 'icon': Icons.star, 'rarity': 'common', 'effect': 'None'},
+      {'id': 'diamond', 'name': 'Diamond', 'cost': 500, 'requiredStars': 5, 'requiredLevel': 2, 'icon': Icons.diamond, 'rarity': 'rare', 'effect': 'Glitter'},
+      {'id': 'shield', 'name': 'Shield', 'cost': 1000, 'requiredStars': 15, 'requiredLevel': 5, 'icon': Icons.shield, 'rarity': 'epic', 'effect': 'Shield Aura'},
+      {'id': 'ninja', 'name': 'Ninja', 'cost': 5000, 'requiredStars': 30, 'requiredLevel': 10, 'icon': Icons.sports_martial_arts, 'rarity': 'epic', 'effect': 'Stealth'},
+      {'id': 'crown', 'name': 'Crown', 'cost': 2500, 'requiredStars': 50, 'requiredLevel': 15, 'icon': Icons.emoji_events, 'rarity': 'legendary', 'effect': 'Royal Glow'},
+      {'id': 'rocket', 'name': 'Rocket', 'cost': 10000, 'requiredStars': 75, 'requiredLevel': 20, 'icon': Icons.rocket_launch, 'rarity': 'legendary', 'effect': 'Rocket Trail'},
+      {'id': 'dragon', 'name': 'Dragon', 'cost': 20000, 'requiredStars': 100, 'requiredLevel': 25, 'icon': Icons.local_fire_department, 'rarity': 'mythic', 'effect': 'Fire Breath'},
+      {'id': 'phoenix', 'name': 'Phoenix', 'cost': 50000, 'requiredStars': 150, 'requiredLevel': 30, 'icon': Icons.mood, 'rarity': 'mythic', 'effect': 'Rebirth Flame'},
     ];
 
     final lockedCount = availableAvatars.where((a) => (a['cost'] as int) > user.totalPoints).length;
@@ -69,7 +69,7 @@ class AvatarShopScreen extends ConsumerWidget {
                     itemCount: availableAvatars.length,
                     itemBuilder: (context, index) {
                       final avatar = availableAvatars[index];
-                      return _buildAvatarCard(context, ref, user, avatar, theme, l10n);
+                      return _buildAvatarCard(context, ref, user, avatar, theme, l10n, totalStars);
                     },
                   ),
                 ),
@@ -82,40 +82,43 @@ class AvatarShopScreen extends ConsumerWidget {
   }
 
   Widget _buildHeader(BuildContext context, dynamic user, ThemeData theme, AppLocalizations l10n, int lockedCount, int totalStars) {
+    final canPop = Navigator.canPop(context);
     return Container(
       padding: const EdgeInsets.all(20),
       child: Column(
         children: [
           Row(
             children: [
-              IconButton(
-                icon: Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: theme.colorScheme.surface.withValues(alpha: 0.8),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: theme.colorScheme.outline.withValues(alpha: 0.3),
-                      width: 1,
+              if (canPop)
+                IconButton(
+                  icon: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.surface.withValues(alpha: 0.8),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: theme.colorScheme.outline.withValues(alpha: 0.3),
+                        width: 1,
+                      ),
+                    ),
+                    child: Icon(
+                      Icons.arrow_back_ios_new,
+                      color: theme.colorScheme.onSurface,
+                      size: 16,
                     ),
                   ),
-                  child: Icon(
-                    Icons.arrow_back_ios_new,
-                    color: theme.colorScheme.onSurface,
-                    size: 16,
-                  ),
+                  onPressed: () {
+                    HapticManager.instance.selectionClick();
+                    Navigator.pop(context);
+                  },
                 ),
-                onPressed: () {
-                  HapticManager.instance.selectionClick();
-                  Navigator.pop(context);
-                },
-              ),
+              if (canPop) const SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'AVATAR SHOP'.toUpperCase(),
+                      l10n.avatarShop.toUpperCase(),
                       style: TextStyle(
                         color: theme.colorScheme.onSurface,
                         fontSize: 14,
@@ -247,21 +250,83 @@ class AvatarShopScreen extends ConsumerWidget {
     Map<String, dynamic> avatar,
     ThemeData theme,
     AppLocalizations l10n,
+    int totalStars,
   ) {
     final isUnlocked =
         (user.unlockedAvatars ?? []).contains(avatar['id'] as String) ||
         (avatar['cost'] as int) == 0;
     final isEquipped = user.avatarShape == avatar['id'];
     final cost = avatar['cost'] as int;
+    final requiredStars = avatar['requiredStars'] as int;
+    final requiredLevel = avatar['requiredLevel'] as int;
+    final hasEnoughStars = totalStars >= requiredStars;
+    final hasEnoughLevel = (user.level ?? 1) >= requiredLevel;
     final canAfford = (user.totalPoints ?? 0) >= cost;
+    final isNewReward = !isUnlocked && hasEnoughStars && hasEnoughLevel;
 
     return GestureDetector(
-      onTap: isUnlocked && !isEquipped
-          ? () {
-              HapticManager.instance.selectionClick();
-              ref.read(userSessionProvider.notifier).equipAvatar(avatar['id'] as String);
+      onTap: () async {
+        HapticManager.instance.selectionClick();
+        if (isUnlocked) {
+          if (!isEquipped) {
+            ref.read(userSessionProvider.notifier).equipAvatar(avatar['id'] as String);
+          }
+        } else {
+          if (!hasEnoughStars || !hasEnoughLevel) {
+            String message = '';
+            if (!hasEnoughStars && !hasEnoughLevel) {
+              message = 'Requires Level $requiredLevel and $requiredStars stars!';
+            } else if (!hasEnoughStars) {
+              message = 'Requires $requiredStars stars to unlock!';
+            } else {
+              message = 'Requires Level $requiredLevel to unlock!';
             }
-          : null,
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(message)),
+            );
+            return;
+          }
+          if (canAfford) {
+            final confirmed = await showDialog<bool>(
+              context: context,
+              builder: (context) => AlertDialog(
+                backgroundColor: theme.colorScheme.surface,
+                surfaceTintColor: Colors.transparent,
+                title: Text('Unlock Avatar?'),
+                content: Text('Do you want to spend $cost points to unlock the ${avatar['name']} avatar?'),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(context, false),
+                    child: Text('CANCEL'),
+                  ),
+                  ElevatedButton(
+                    onPressed: () => Navigator.pop(context, true),
+                    child: Text('UNLOCK'),
+                  ),
+                ],
+              ),
+            );
+
+            if (confirmed == true) {
+              final success = await ref.read(userSessionProvider.notifier).unlockAvatar(
+                avatar['id'] as String,
+                cost,
+                requiredStars,
+                requiredLevel: requiredLevel,
+              );
+              if (success && context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('${avatar['name']} unlocked!')),
+                );
+              }
+            }
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Not enough points!')),
+            );
+          }
+        }
+      },
       child: Container(
         decoration: BoxDecoration(
           gradient: isEquipped
@@ -338,25 +403,62 @@ class AvatarShopScreen extends ConsumerWidget {
                               shape: BoxShape.circle,
                               color: Colors.black.withValues(alpha: 0.6),
                             ),
-                            child: const Icon(Icons.lock, size: 24, color: Colors.white38),
+                            child: Icon(
+                              !hasEnoughStars || !hasEnoughLevel ? Icons.lock : Icons.lock_open,
+                              size: 24,
+                              color: Colors.white38,
+                            ),
                           ),
                         ),
                     ],
                   ),
                   const SizedBox(height: 12),
-                  Text(
-                    (avatar['name'] as String).toUpperCase(),
-                    style: TextStyle(
-                      color: isEquipped
-                          ? theme.colorScheme.primary
-                          : theme.colorScheme.onSurface.withValues(alpha: 0.8),
-                      fontSize: 12,
-                      letterSpacing: 1,
-                      fontWeight: FontWeight.w600,
-                    ),
-                    textAlign: TextAlign.center,
-                    overflow: TextOverflow.ellipsis,
-                    maxLines: 1,
+                  Stack(
+                    clipBehavior: Clip.none,
+                    children: [
+                      Text(
+                        (avatar['name'] as String).toUpperCase(),
+                        style: TextStyle(
+                          color: isEquipped
+                              ? theme.colorScheme.primary
+                              : theme.colorScheme.onSurface.withValues(alpha: 0.8),
+                          fontSize: 12,
+                          letterSpacing: 1,
+                          fontWeight: FontWeight.w900,
+                        ),
+                        textAlign: TextAlign.center,
+                        overflow: TextOverflow.ellipsis,
+                        maxLines: 1,
+                      ),
+                      if (isNewReward)
+                        Positioned(
+                          top: -8,
+                          right: -12,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                            decoration: BoxDecoration(
+                              color: theme.colorScheme.error,
+                              borderRadius: BorderRadius.circular(4),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: theme.colorScheme.error.withValues(alpha: 0.4),
+                                  blurRadius: 4,
+                                ),
+                              ],
+                            ),
+                            child: const Text(
+                              'NEW',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 7,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ).animate(onPlay: (controller) => controller.repeat(reverse: true))
+                            .scale(end: const Offset(1.1, 1.1), duration: 600.ms)
+                            .shimmer(delay: 2.seconds, duration: 1.seconds),
+                        ),
+                    ],
                   ),
                   const SizedBox(height: 4),
                   Container(

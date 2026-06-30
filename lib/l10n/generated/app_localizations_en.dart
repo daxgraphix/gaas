@@ -48,7 +48,31 @@ class AppLocalizationsEn extends AppLocalizations {
   String get levelsCompleted => 'Levels Completed';
 
   @override
-  String get accuracy => 'ACCURACY';
+  String get commandCenter => 'COMMAND CENTER';
+
+  @override
+  String get quickResume => 'QUICK RESUME';
+
+  @override
+  String get todaysSession => 'Today\'s Session';
+
+  @override
+  String ptsToLevel(Object level, Object pts) {
+    return '$pts pts to Level $level';
+  }
+
+  @override
+  String timeLeftShort(Object hours, Object minutes) {
+    return '${hours}h ${minutes}m left';
+  }
+
+  @override
+  String levelUppercase(Object level) {
+    return 'LEVEL $level';
+  }
+
+  @override
+  String get accuracy => 'Accuracy';
 
   @override
   String get timePlayed => 'Time Played';
@@ -222,7 +246,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get operationMatrix => 'Operation Matrix';
 
   @override
-  String get difficultyLevel => 'DIFFICULTY_LEVEL';
+  String get difficultyLevel => 'Difficulty Level';
 
   @override
   String get initiateMixSequence => 'Start Mix';
@@ -276,7 +300,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get speedMetrics => 'Speed Metrics';
 
   @override
-  String get temporalInvestment => 'TEMPORAL_INVESTMENT';
+  String get temporalInvestment => 'Time Invested';
 
   @override
   String get realTimeAccuracy => 'Real Time Accuracy';
@@ -327,6 +351,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get logicRiddles => 'Logic Riddles';
 
   @override
+  String get crossNumbers => 'Cross Numbers';
+
+  @override
+  String get crossNumbersDesc => 'Solve cross number puzzles';
+
+  @override
   String get calculator => 'Calculator';
 
   @override
@@ -334,6 +364,19 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get avatarShop => 'Avatar Shop';
+
+  @override
+  String get focusMode => 'Focus Mode';
+
+  @override
+  String get focusModeDesc => 'Simplified UI for concentration';
+
+  @override
+  String get performanceMode => 'Performance Mode';
+
+  @override
+  String get performanceModeDesc =>
+      'Reduce transparency for better performance';
 
   @override
   String get visualTheme => 'Visual Theme';
@@ -435,6 +478,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get exportReport => 'Export Report';
 
   @override
+  String get accuracyTrend => 'ACCURACY';
+
+  @override
   String get streak => 'STREAK';
 
   @override
@@ -460,6 +506,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get unitsCleared => 'UNITS_CLEARED';
+
+  @override
+  String get temporalInvestmentLabel => 'TEMPORAL_INVESTMENT';
 
   @override
   String get status => 'STATUS';
@@ -534,6 +583,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get calculating => 'CALCULATING...';
 
   @override
+  String get difficultyLevelLabel => 'DIFFICULTY_LEVEL';
+
+  @override
   String get advanced => 'ADVANCED';
 
   @override
@@ -588,7 +640,30 @@ class AppLocalizationsEn extends AppLocalizations {
   String get divByZero => 'DIV BY ZERO';
 
   @override
-  String get readyToChallenge => '🎯 Ready to Challenge Yourself?';
+  String get allModes => 'All Modes';
+
+  @override
+  String get mathLearningProgress => 'Math Learning Progress';
+
+  @override
+  String get preparingPdf => 'Preparing PDF...';
+
+  @override
+  String get overview => 'Overview';
+
+  @override
+  String get myGaasProgressReport => 'My GAAS Progress Report';
+
+  @override
+  String get pdfSharedSuccessfully => 'PDF shared successfully!';
+
+  @override
+  String shareFailed(Object error) {
+    return 'Share failed: $error';
+  }
+
+  @override
+  String get readyToChallenge => '🎯 Ready to Challenge?';
 
   @override
   String get masterMathematicsDesc =>
@@ -663,6 +738,19 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get cancel => 'Cancel';
+
+  @override
+  String get chapter => 'CHAPTER';
+
+  @override
+  String chapterStarsProgress(Object stars, Object total) {
+    return '$stars / $total STARS';
+  }
+
+  @override
+  String lockedNeedStars(Object stars) {
+    return 'LOCKED - NEED $stars TOTAL STARS';
+  }
 
   @override
   String get solveLogicChallenges => 'Solve challenging logic puzzles';
@@ -902,9 +990,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get noGameSession => 'No game session';
 
   @override
-  String get crossword => 'Crossword';
-
-  @override
   String get playerLabel => 'Player';
 
   @override
@@ -942,12 +1027,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get skip => 'SKIP';
 
   @override
-  String get across => 'ACROSS';
-
-  @override
-  String get down => 'DOWN';
-
-  @override
   String get allChallengesComplete => 'All challenges complete!';
 
   @override
@@ -969,10 +1048,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get answerRevealed => 'Answer revealed!';
 
   @override
-  String get selectRiddleLevel => 'SELECT RIDDLE LEVEL';
+  String get excellent => 'Excellent!';
 
   @override
-  String get selectCrosswordLevel => 'SELECT CROSSWORD LEVEL';
+  String get done => 'Done';
+
+  @override
+  String get selectRiddleLevel => 'SELECT RIDDLE LEVEL';
 
   @override
   String get loadingGame => 'Loading game...';
@@ -1078,7 +1160,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get puzzlesTitle => 'PUZZLES';
 
   @override
-  String get crosswordsMathRiddles => 'Crosswords + Math Riddles';
+  String get mathRiddles => 'Math Riddles';
 
   @override
   String get firstVictory => 'First Victory';
@@ -1138,9 +1220,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get advancedSubtraction => 'Advanced Subtraction';
 
   @override
-  String get wordProblemsSubtraction => 'Word Problems - Subtraction';
-
-  @override
   String get multiplicationMastery => 'Multiplication Mastery';
 
   @override
@@ -1154,9 +1233,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get threeDigitMultiplication => 'Three Digit Multiplication';
-
-  @override
-  String get multiplicationWordProblems => 'Multiplication Word Problems';
 
   @override
   String get advancedMultiplication => 'Advanced Multiplication';
@@ -1178,9 +1254,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get threeDigitDivision => 'Three Digit Division';
-
-  @override
-  String get divisionWordProblems => 'Division Word Problems';
 
   @override
   String get longDivision => 'Long Division';

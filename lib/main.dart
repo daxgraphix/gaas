@@ -3,9 +3,13 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'dart:io' show Platform;
 import 'core/providers.dart';
+import 'core/themes/app_themes.dart';
 import 'core/utils/game_flow_optimizer.dart';
 import 'core/utils/responsive_utils.dart';
+import 'features/onboarding/onboarding_screen.dart';
 import 'features/onboarding/splash_screen.dart';
+import 'features/profile_setup/profile_setup_screen.dart';
+import 'shared/widgets/main_navigation_scaffold.dart';
 import 'l10n/generated/app_localizations.dart';
 
 void main() async {
@@ -36,38 +40,74 @@ void main() async {
   runApp(const ProviderScope(child: GAASApp()));
 }
 
-class GAASApp extends ConsumerWidget {
+class GAASApp extends ConsumerStatefulWidget {
   const GAASApp({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final currentTheme = ref.watch(themeProvider);
-    final currentLocale = ref.watch(localeProvider);
+  ConsumerState<GAASApp> createState() => _GAASAppState();
+}
+
+class _GAASAppState extends ConsumerState<GAASApp> {
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _updateSystemUI();
+  }
+
+  void _updateSystemUI() {
+    final currentTheme = ref.read(themeProvider);
     final themeData = AdaptiveTheme.getAdaptiveTheme(context, currentTheme);
 
-    // Update system UI style based on theme brightness
     if (Platform.isAndroid || Platform.isIOS) {
       final isDark = themeData.brightness == Brightness.dark;
+      final isSolar = currentTheme == AppThemeType.solar;
+      
       SystemChrome.setSystemUIOverlayStyle(
         SystemUiOverlayStyle(
           statusBarColor: Colors.transparent,
           statusBarIconBrightness: isDark ? Brightness.light : Brightness.dark,
           statusBarBrightness: isDark ? Brightness.dark : Brightness.light,
-          systemNavigationBarColor: themeData.scaffoldBackgroundColor,
+          systemNavigationBarColor: isSolar 
+              ? const Color(0xFF0F172A) 
+              : themeData.scaffoldBackgroundColor,
           systemNavigationBarIconBrightness: isDark ? Brightness.light : Brightness.dark,
+          systemNavigationBarDividerColor: Colors.transparent,
         ),
       );
     }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final currentTheme = ref.watch(themeProvider);
+    final currentLocale = ref.watch(localeProvider);
+    final startupState = ref.watch(startupProvider);
+    final themeData = AdaptiveTheme.getAdaptiveTheme(context, currentTheme);
+
+    // Update UI style when theme changes
+    ref.listen(themeProvider, (_, _) => _updateSystemUI());
+
+    Widget getHome() {
+      if (!startupState.isReady) {
+        return const SplashScreen();
+      }
+      if (startupState.needsIntro) {
+        return const OnboardingScreen();
+      }
+      if (startupState.needsProfileSetup) {
+        return const ProfileSetupScreen(isInitialSetup: false);
+      }
+      return const MainNavigationScaffold();
+    }
 
     return MaterialApp(
-      key: ValueKey(currentLocale.code),
       title: 'GAAS',
       debugShowCheckedModeBanner: false,
       theme: themeData,
       locale: Locale(currentLocale.code),
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
-      home: const SplashScreen(),
+      home: getHome(),
       builder: (context, child) {
         if (ResponsiveUtils.isWindows()) {
           return MediaQuery(

@@ -6,8 +6,7 @@ import '../../../core/providers.dart';
 import '../../../core/themes/app_themes.dart';
 import '../../../core/utils/responsive_utils.dart';
 import '../../../l10n/generated/app_localizations.dart';
-import '../../reports/reports_screen.dart';
-
+import '../../profile/presentation/avatar_shop_screen.dart';
 import '../../campaign/presentation/campaign_screen.dart';
 import '../../arcade/presentation/arcade_screen.dart';
 import '../../arcade/enhanced_challenge_screen.dart';
@@ -15,6 +14,7 @@ import '../../practice/presentation/practice_screen.dart';
 import '../../calculator/calculator_screen.dart';
 import '../../custom_mix/presentation/custom_mix_screen.dart';
 import '../../puzzle/math_riddle/math_riddle_level_selection_screen.dart';
+import '../../puzzle/cross_numbers/cross_numbers_level_selection_screen.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -71,7 +71,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                 : l10n.goodNight;
 
     return Scaffold(
-      backgroundColor: Colors.transparent,
+      backgroundColor: theme.scaffoldBackgroundColor,
       extendBody: true,
       appBar: _buildAdvancedAppBar(theme, greeting, l10n),
       body: _buildAdvancedBody(
@@ -124,7 +124,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  'COMMAND CENTER',
+                  l10n.commandCenter,
                   style: theme.textTheme.labelSmall?.copyWith(
                     fontWeight: FontWeight.w900,
                     letterSpacing: 2,
@@ -255,10 +255,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                 const SizedBox(height: 32),
                 _buildQuickPlayModule(theme, l10n), // New Quick Play Module
                 const SizedBox(height: 32),
-                _buildStatsOverview(
-                  theme, totalStars, completedLevels, totalTime, accuracy, l10n,
-                ).animate().fadeIn(duration: 600.ms, delay: 200.ms).slideY(begin: 0.1, end: 0),
-                const SizedBox(height: 32),
                 _buildSessionStats(theme, sessionStats, l10n),
                 const SizedBox(height: 32),
                 _buildQuickActions(theme, l10n),
@@ -329,7 +325,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'QUICK RESUME',
+                      l10n.quickResume,
                       style: theme.textTheme.labelSmall?.copyWith(
                         fontWeight: FontWeight.w900,
                         letterSpacing: 2,
@@ -338,7 +334,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      '${nextOp.toUpperCase()} LEVEL $nextLevel',
+                      '${nextOp.toUpperCase()} ${l10n.levelUppercase(nextLevel)}',
                       style: theme.textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.bold,
                       ),
@@ -362,68 +358,117 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
 
 
   Widget _buildWelcomeSection(ThemeData theme, AppLocalizations l10n) {
-    return PremiumGlassOverlay(
-      padding: const EdgeInsets.all(24),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
+    return Consumer(
+      builder: (context, ref, child) {
+        final user = ref.watch(userSessionProvider);
+        return PremiumGlassOverlay(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      l10n.welcomeBack,
-                      style: theme.textTheme.headlineSmall?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: theme.colorScheme.onSurface,
+              Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          l10n.welcomeBack,
+                          style: theme.textTheme.headlineSmall?.copyWith(
+                            fontWeight: FontWeight.bold,
+                            color: theme.colorScheme.onSurface,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        if (user != null)
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: theme.colorScheme.primary.withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Text(
+                              l10n.levelUppercase(user.level),
+                              style: TextStyle(
+                                color: theme.colorScheme.primary,
+                                fontWeight: FontWeight.w900,
+                                fontSize: 12,
+                                letterSpacing: 1,
+                              ),
+                            ),
+                          ),
+                        const SizedBox(height: 8),
+                        Text(
+                          l10n.masterMathematicsDesc,
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Hero(
+                    tag: 'app_logo_icon',
+                    child: Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.primary.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                          color: theme.colorScheme.primary.withValues(alpha: 0.2),
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: theme.colorScheme.primary.withValues(alpha: 0.2),
+                            blurRadius: 15,
+                            spreadRadius: -5,
+                          ),
+                        ],
+                      ),
+                      child: Icon(
+                        Icons.rocket_launch,
+                        color: theme.colorScheme.primary,
+                        size: 32,
                       ),
                     ),
-                    const SizedBox(height: 8),
+                  ).animate(onPlay: (controller) => controller.repeat(reverse: true))
+                      .shimmer(duration: 2000.ms, color: Colors.white.withValues(alpha: 0.2))
+                      .moveY(begin: -2, end: 2, duration: 1500.ms, curve: Curves.easeInOut),
+                ],
+              ),
+              if (user != null) ...[
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    Expanded(
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(4),
+                        child: LinearProgressIndicator(
+                          value: user.levelProgress,
+                          backgroundColor: theme.colorScheme.primary.withValues(alpha: 0.1),
+                          valueColor: AlwaysStoppedAnimation(theme.colorScheme.primary),
+                          minHeight: 8,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
                     Text(
-                      l10n.masterMathematicsDesc,
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+                      l10n.ptsToLevel(user.pointsToNextLevel, user.level + 1),
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
                   ],
                 ),
-              ),
-              const SizedBox(width: 16),
-              Hero(
-                tag: 'app_logo_icon',
-                child: Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: theme.colorScheme.primary.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(
-                      color: theme.colorScheme.primary.withValues(alpha: 0.2),
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: theme.colorScheme.primary.withValues(alpha: 0.2),
-                        blurRadius: 15,
-                        spreadRadius: -5,
-                      ),
-                    ],
-                  ),
-                  child: Icon(
-                    Icons.rocket_launch,
-                    color: theme.colorScheme.primary,
-                    size: 32,
-                  ),
-                ),
-              ).animate(onPlay: (controller) => controller.repeat(reverse: true))
-                  .shimmer(duration: 2000.ms, color: Colors.white.withValues(alpha: 0.2))
-                  .moveY(begin: -2, end: 2, duration: 1500.ms, curve: Curves.easeInOut),
+              ],
+              const SizedBox(height: 24),
+              _buildDailyProgressIndicator(theme),
             ],
           ),
-          const SizedBox(height: 24),
-          _buildDailyProgressIndicator(theme),
-        ],
-      ),
+        );
+      },
     ).animate().fadeIn(duration: 800.ms).slideY(begin: 0.2, end: 0, curve: Curves.easeOutCubic);
   }
 
@@ -495,129 +540,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
         .slideY(begin: 0.2, end: 0);
   }
 
-  Widget _buildStatsOverview(
-    ThemeData theme,
-    AsyncValue<int> totalStars,
-    AsyncValue<int> completedLevels,
-    AsyncValue<int> totalTime,
-    AsyncValue<double> accuracy,
-    AppLocalizations l10n,
-  ) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          l10n.yourProgress,
-          style: theme.textTheme.titleLarge?.copyWith(
-            fontWeight: FontWeight.bold,
-            color: theme.colorScheme.onSurface,
-          ),
-        ),
-        const SizedBox(height: 16),
-        Row(
-          children: [
-            Expanded(
-              child: _buildStatCard(
-                l10n.starsEarned,
-                totalStars.when(
-                  data: (v) => '$v ⭐',
-                  loading: () => '...',
-                  error: (_, _) => '0 ⭐',
-                ),
-                theme.colorScheme.primary,
-                Icons.star,
-                theme,
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: _buildStatCard(
-                l10n.levelsCompleted,
-                completedLevels.when(
-                  data: (v) => '$v 🎯',
-                  loading: () => '...',
-                  error: (_, _) => '0 🎯',
-                ),
-                theme.colorScheme.secondary,
-                Icons.flag,
-                theme,
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 12),
-        Row(
-          children: [
-            Expanded(
-              child: _buildStatCard(
-                l10n.timePlayed,
-                totalTime.when(
-                  data: (v) => '${(v / 60).toStringAsFixed(1)}h ⏰',
-                  loading: () => '...',
-                  error: (_, _) => '0h ⏰',
-                ),
-                theme.colorScheme.tertiary,
-                Icons.timer,
-                theme,
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: _buildStatCard(
-                l10n.accuracy,
-                accuracy.when(
-                  data: (v) => '${(v * 100).toStringAsFixed(1)}% 🎯',
-                  loading: () => '...',
-                  error: (_, _) => '0% 🎯',
-                ),
-                theme.colorScheme.error,
-                Icons.trending_up,
-                theme,
-              ),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
 
-  Widget _buildStatCard(String title, String value, Color color, IconData icon, ThemeData theme) {
-    return PremiumCard(
-      padding: const EdgeInsets.all(16),
-      borderColor: color.withValues(alpha: 0.2),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.1),
-              shape: BoxShape.circle,
-            ),
-            child: Icon(icon, color: color, size: 20),
-          ),
-          const SizedBox(height: 12),
-          Text(
-            value,
-            style: theme.textTheme.titleLarge?.copyWith(
-              fontWeight: FontWeight.bold,
-              color: theme.colorScheme.onSurface,
-            ),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 4),
-          Text(
-            title,
-            style: theme.textTheme.labelSmall?.copyWith(
-              color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
-            ),
-            textAlign: TextAlign.center,
-          ),
-        ],
-      ),
-    );
-  }
 
   Widget _buildSessionStats(ThemeData theme, SessionStats sessionStats, AppLocalizations l10n) {
     if (sessionStats.questionsAnswered == 0) return const SizedBox.shrink();
@@ -626,7 +549,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Today\'s Session',
+          l10n.todaysSession,
           style: theme.textTheme.titleLarge?.copyWith(
             fontWeight: FontWeight.bold,
             color: theme.colorScheme.onSurface,
@@ -638,7 +561,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
             Expanded(
               child: _buildSessionStatCard(
                 '${sessionStats.questionsAnswered}',
-                'Questions',
+                l10n.questions,
                 theme.colorScheme.primary,
                 theme,
               ),
@@ -647,7 +570,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
             Expanded(
               child: _buildSessionStatCard(
                 '${sessionStats.accuracy.toStringAsFixed(1)}%',
-                'Accuracy',
+                l10n.accuracy,
                 theme.colorScheme.secondary,
                 theme,
               ),
@@ -656,7 +579,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
             Expanded(
               child: _buildSessionStatCard(
                 '${sessionStats.timeSpent ~/ 60}m',
-                'Time',
+                l10n.time,
                 theme.colorScheme.tertiary,
                 theme,
               ),
@@ -716,7 +639,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
         Row(
           children: [
             Expanded(
-              child:               _buildActionButton(
+              child: _buildActionButton(
                 l10n.calculator,
                 Icons.calculate,
                 theme.colorScheme.primary,
@@ -726,11 +649,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
             ),
             const SizedBox(width: 12),
             Expanded(
-              child:               _buildActionButton(
-                l10n.reports,
-                Icons.bar_chart,
+              child: _buildActionButton(
+                l10n.avatarShop,
+                Icons.storefront_rounded,
                 theme.colorScheme.secondary,
-                () => _navigateToScreen(const ReportsScreen()),
+                () => _navigateToScreen(const AvatarShopScreen()),
                 theme,
               ),
             ),
@@ -892,7 +815,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                           ),
                           const SizedBox(width: 8),
                           Text(
-                            '${hoursLeft}h ${minutesLeft}m left',
+                            l10n.timeLeftShort(hoursLeft, minutesLeft),
                             style: theme.textTheme.bodySmall?.copyWith(
                               color: theme.colorScheme.onTertiaryContainer.withValues(alpha: 0.7),
                             ),
@@ -959,7 +882,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
             crossAxisSpacing: 16,
             childAspectRatio: 1.2,
           ),
-          itemCount: 5,
+          itemCount: 6,
           itemBuilder: (context, index) {
             final gameModes = [
               {
@@ -996,6 +919,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                 'icon': Icons.extension,
                 'color': theme.colorScheme.surfaceTint,
                 'screen': const MathRiddleLevelSelectionScreen(),
+              },
+              {
+                'title': l10n.crossNumbers,
+                'subtitle': l10n.crossNumbersDesc,
+                'icon': Icons.grid_4x4_rounded,
+                'color': Colors.deepOrange,
+                'screen': const CrossNumbersLevelSelectionScreen(),
               },
             ];
 

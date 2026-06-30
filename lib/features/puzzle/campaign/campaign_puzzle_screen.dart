@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/providers.dart';
 import '../../../core/themes/app_themes.dart';
 import '../../../core/utils/game_flow_optimizer.dart';
-import '../crossword/crossword_screen.dart';
 import '../math_riddle/math_riddle_screen.dart';
 import '../../../data/models/math_riddle.dart';
 
@@ -378,15 +377,7 @@ class _CampaignPuzzleScreenState extends ConsumerState<CampaignPuzzleScreen> {
     );
 
     switch (stage.type) {
-      case 'crossword':
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => CrosswordScreen(theme: stage.type)),
-        ).then((_) => _onPuzzleComplete(stage.id));
-        break;
       case 'arithmetic':
-      case 'wordProblem':
-      case 'sequence':
       case 'logic':
         Navigator.push(
           context,
@@ -407,14 +398,8 @@ class _CampaignPuzzleScreenState extends ConsumerState<CampaignPuzzleScreen> {
 
   IconData _getTypeIcon(String type) {
     switch (type) {
-      case 'crossword':
-        return Icons.grid_on;
       case 'arithmetic':
         return Icons.calculate;
-      case 'wordProblem':
-        return Icons.description;
-      case 'sequence':
-        return Icons.timeline;
       case 'logic':
         return Icons.extension;
       default:
@@ -424,14 +409,8 @@ class _CampaignPuzzleScreenState extends ConsumerState<CampaignPuzzleScreen> {
 
   String _getTypeLabel(String type) {
     switch (type) {
-      case 'crossword':
-        return 'Crossword';
       case 'arithmetic':
         return 'Arithmetic';
-      case 'wordProblem':
-        return 'Word Problem';
-      case 'sequence':
-        return 'Number Sequence';
       case 'logic':
         return 'Logic Challenge';
       default:
@@ -443,10 +422,6 @@ class _CampaignPuzzleScreenState extends ConsumerState<CampaignPuzzleScreen> {
     switch (type) {
       case 'arithmetic':
         return MathRiddleType.arithmetic;
-      case 'wordProblem':
-        return MathRiddleType.wordProblem;
-      case 'sequence':
-        return MathRiddleType.numberSequence;
       case 'logic':
         return MathRiddleType.logicChallenge;
       default:
@@ -458,10 +433,6 @@ class _CampaignPuzzleScreenState extends ConsumerState<CampaignPuzzleScreen> {
     switch (type) {
       case 'arithmetic':
         return 'arithmetic';
-      case 'wordProblem':
-        return 'word';
-      case 'sequence':
-        return 'sequence';
       case 'logic':
         return 'logic';
       default:

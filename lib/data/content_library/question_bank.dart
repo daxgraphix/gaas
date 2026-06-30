@@ -8,10 +8,7 @@ enum QuestionCategory {
   division,
   mixed,
   visualCounting,
-  wordProblems,
   logic,
-  fractions,
-  decimals,
 }
 
 enum QuestionDifficulty { beginner, easy, medium, hard, expert, master }
@@ -66,10 +63,7 @@ class QuestionBank {
     bank._loadDivisionQuestions();
     bank._loadMixedQuestions();
     bank._loadVisualCountingQuestions();
-    bank._loadWordProblems();
     bank._loadLogicQuestions();
-    bank._loadFractionsQuestions();
-    bank._loadDecimalsQuestions();
     return bank;
   }
 
@@ -416,12 +410,12 @@ class QuestionBank {
       {'q': '345678 ÷ 14 = ?', 'a': 24691},
       {'q': '456789 ÷ 15 = ?', 'a': 30452},
       {'q': '567890 ÷ 16 = ?', 'a': 35493},
-      {'q': '678901 ÷ 17 = ?', 'a': 39935},
-      {'q': '789012 ÷ 18 = ?', 'a': 43834},
-      {'q': '890123 ÷ 19 = ?', 'a': 46848},
-      {'q': '901234 ÷ 20 = ?', 'a': 45061},
+      {'q': '39935 ÷ 17 = ?', 'a': 2349},
+      {'q': '43834 ÷ 18 = ?', 'a': 2435},
+      {'q': '46848 ÷ 19 = ?', 'a': 2465},
+      {'q': '45061 ÷ 20 = ?', 'a': 2253},
       {'q': '112233 ÷ 21 = ?', 'a': 5344},
-      {'q': '223344 ÷ 22 = ?', 'a': 10151},
+      {'q': '223344 ÷ 22 = ?', 'a': 10152},
       {'q': '334455 ÷ 23 = ?', 'a': 14541},
       {'q': '445566 ÷ 24 = ?', 'a': 18565},
       {'q': '556677 ÷ 25 = ?', 'a': 22267},
@@ -430,24 +424,24 @@ class QuestionBank {
       {'q': '889900 ÷ 28 = ?', 'a': 31782},
       {'q': '990011 ÷ 29 = ?', 'a': 34138},
       {'q': '101112 ÷ 30 = ?', 'a': 3370},
-      {'q': '234567 ÷ 31 = ?', 'a': 7563},
+      {'q': '234567 ÷ 31 = ?', 'a': 7566},
       // Even more challenging divisions
       {'q': '1000000 ÷ 100 = ?', 'a': 10000},
       {'q': '2000000 ÷ 200 = ?', 'a': 10000},
       {'q': '3000000 ÷ 300 = ?', 'a': 10000},
       {'q': '4000000 ÷ 400 = ?', 'a': 10000},
       {'q': '5000000 ÷ 500 = ?', 'a': 10000},
-      {'q': '12345678 ÷ 123 = ?', 'a': 100372},
-      {'q': '23456789 ÷ 234 = ?', 'a': 100245},
-      {'q': '34567890 ÷ 345 = ?', 'a': 100197},
-      {'q': '45678901 ÷ 456 = ?', 'a': 100172},
-      {'q': '56789012 ÷ 567 = ?', 'a': 100155},
-      {'q': '67890123 ÷ 678 = ?', 'a': 100133},
-      {'q': '78901234 ÷ 789 = ?', 'a': 100013},
-      {'q': '89012345 ÷ 890 = ?', 'a': 100014},
+      {'q': '12345678 ÷ 123 = ?', 'a': 100371},
+      {'q': '23456789 ÷ 234 = ?', 'a': 100242},
+      {'q': '34567890 ÷ 345 = ?', 'a': 100196},
+      {'q': '45678901 ÷ 456 = ?', 'a': 100173},
+      {'q': '56789012 ÷ 567 = ?', 'a': 100156},
+      {'q': '67890123 ÷ 678 = ?', 'a': 100132},
+      {'q': '78901234 ÷ 789 = ?', 'a': 100001},
+      {'q': '89012345 ÷ 890 = ?', 'a': 100013},
       {'q': '90123456 ÷ 901 = ?', 'a': 100026},
-      {'q': '11223344 ÷ 1122 = ?', 'a': 10002},
-      {'q': '22334455 ÷ 2233 = ?', 'a': 10001},
+      {'q': '11223344 ÷ 1122 = ?', 'a': 10003},
+      {'q': '22334455 ÷ 2233 = ?', 'a': 10002},
       {'q': '33445566 ÷ 3344 = ?', 'a': 10001},
       {'q': '44556677 ÷ 4455 = ?', 'a': 10001},
       {'q': '55667788 ÷ 5566 = ?', 'a': 10001},
@@ -455,8 +449,8 @@ class QuestionBank {
       {'q': '77889900 ÷ 7788 = ?', 'a': 10001},
       {'q': '88990011 ÷ 8899 = ?', 'a': 10001},
       {'q': '99001122 ÷ 9900 = ?', 'a': 10001},
-      {'q': '101112233 ÷ 10111 = ?', 'a': 10001},
-      {'q': '112233445 ÷ 11223 = ?', 'a': 10001},
+      {'q': '101112233 ÷ 10111 = ?', 'a': 10000},
+      {'q': '112233445 ÷ 11223 = ?', 'a': 10000},
     ];
 
     for (var item in challengingDivisions) {
@@ -540,367 +534,6 @@ class QuestionBank {
     }
   }
 
-  void _loadWordProblems() {
-    final category = QuestionCategory.wordProblems;
-    final wordProblems = [
-      {
-        'text':
-            'Emma has 15 apples. She buys 10 more. How many apples does she have?',
-        'answer': 25,
-      },
-      {
-        'text':
-            'Tom had 20 candies. He gave 8 to his friends. How many are left?',
-        'answer': 12,
-      },
-      {
-        'text': 'There are 7 boxes with 6 toys each. How many toys in total?',
-        'answer': 42,
-      },
-      {
-        'text':
-            'A farmer has 56 eggs. He puts them in cartons of 8. How many cartons?',
-        'answer': 7,
-      },
-      {
-        'text':
-            'Lisa has 100 stickers. She shares them equally among 10 friends. How many each?',
-        'answer': 10,
-      },
-      {
-        'text': 'John ran 25 laps on Monday and 30 on Tuesday. How many total?',
-        'answer': 55,
-      },
-      {
-        'text': 'A bakery made 200 cookies. They sold 150. How many left?',
-        'answer': 50,
-      },
-      {
-        'text': 'Each packet has 5 pencils. How many pencils in 40 packets?',
-        'answer': 200,
-      },
-      {
-        'text': '360 students go on buses. Each bus holds 40. How many buses?',
-        'answer': 9,
-      },
-      {
-        'text': 'Sarah saved \$500 in 5 weeks. How much per week?',
-        'answer': 100,
-      },
-      {
-        'text': 'A garden has 48 flowers. 16 are red roses. How many are other flowers?',
-        'answer': 32,
-      },
-      {
-        'text': 'Mike reads 8 pages per day. How many days to read 120 pages?',
-        'answer': 15,
-      },
-      {
-        'text': 'There are 144 students in 9 classes. How many students per class?',
-        'answer': 16,
-      },
-      {
-        'text': 'Anna bought 3 books for \$45 each. How much total?',
-        'answer': 135,
-      },
-      {
-        'text': 'A movie theater has 250 seats. 187 are occupied. How many empty?',
-        'answer': 63,
-      },
-      {
-        'text': 'Tom has 75 marbles. He gives away 28. How many left?',
-        'answer': 47,
-      },
-      {
-        'text': 'Each pizza has 8 slices. How many slices in 6 pizzas?',
-        'answer': 48,
-      },
-      {
-        'text': 'Sarah walked 3 km each day for 14 days. How far total?',
-        'answer': 42,
-      },
-      {
-        'text': 'A store sold 156 toys. 89 are dolls. How many are other toys?',
-        'answer': 67,
-      },
-      {
-        'text': 'Each group has 12 students. How many groups for 84 students?',
-        'answer': 7,
-      },
-      {
-        'text': 'Lisa saved \$12 per week. How much in 8 weeks?',
-        'answer': 96,
-      },
-      {
-        'text': 'There are 216 books on shelves. Each shelf holds 24. How many shelves?',
-        'answer': 9,
-      },
-      {
-        'text': 'Tom collected 35 stamps. He gave 19 to his sister. How many left?',
-        'answer': 16,
-      },
-      {
-        'text': 'Each box contains 15 chocolates. How many in 8 boxes?',
-        'answer': 120,
-      },
-      {
-        'text': 'A train travels 180 km in 3 hours. What is the speed?',
-        'answer': 60,
-      },
-      {
-        'text': 'Sarah has 240 stickers. She shares with 8 friends equally. How many each?',
-        'answer': 30,
-      },
-      {
-        'text': 'Mike ran 5 laps of 400m each. How far did he run?',
-        'answer': 2000,
-      },
-      {
-        'text': 'There are 320 students. Each bus holds 40. How many buses needed?',
-        'answer': 8,
-      },
-      {
-        'text': 'Anna baked 96 cookies. She puts 8 in each box. How many boxes?',
-        'answer': 12,
-      },
-      {
-        'text': 'Tom has \$150. Each game costs \$25. How many games can he buy?',
-        'answer': 6,
-      },
-      {
-        'text': 'A library has 500 books. 325 are fiction. How many non-fiction?',
-        'answer': 175,
-      },
-      {
-        'text': 'Each team has 11 players. How many players in 7 teams?',
-        'answer': 77,
-      },
-      {
-        'text': 'Lisa read 9 pages per day for 12 days. How many pages total?',
-        'answer': 108,
-      },
-      {
-        'text': 'A train travels 450 km in 6 hours. What is the average speed?',
-        'answer': 75,
-      },
-      {
-        'text': 'Sarah bought 3 books for \$45 each and 2 notebooks for \$12 each. How much total?',
-        'answer': 171,
-      },
-      {
-        'text': 'There are 360 students in a school. 240 are in grades 1-6. How many in grades 7-12?',
-        'answer': 120,
-      },
-      {
-        'text': 'Mike collected 85 stamps. He gave 28 to his sister and 17 to his brother. How many left?',
-        'answer': 40,
-      },
-      {
-        'text': 'A factory produces 150 cars per day. How many in 28 days?',
-        'answer': 4200,
-      },
-      {
-        'text': 'Anna has 200 stickers. She shares them equally among 8 friends. How many each?',
-        'answer': 25,
-      },
-      {
-        'text': 'The school cafeteria serves 450 meals per day. Each meal costs \$8. What is daily revenue?',
-        'answer': 3600,
-      },
-      {
-        'text': 'Tom ran 3 laps of 400m each and walked 2 laps of 300m each. How far did he travel?',
-        'answer': 2100,
-      },
-      {
-        'text': 'A store sold 156 toys on Monday and 189 on Tuesday. How many total?',
-        'answer': 345,
-      },
-      {
-        'text': 'Each class has 25 students. How many students in 12 classes?',
-        'answer': 300,
-      },
-      {
-        'text': 'Lisa saved \$450 in 6 months. How much per month on average?',
-        'answer': 75,
-      },
-      {
-        'text': 'There are 480 books in the library. 320 are borrowed. What percentage remains?',
-        'answer': 33,
-      },
-      {
-        'text': 'Mike bought 4 pizzas for \$48 each. How much total?',
-        'answer': 192,
-      },
-      {
-        'text': 'A plane flies 1200 km in 3 hours. How far in 7 hours at same speed?',
-        'answer': 2800,
-      },
-      {
-        'text': 'A rectangle has length 15cm and width 8cm. What is the perimeter?',
-        'answer': 46,
-      },
-      {
-        'text': 'Sarah has 360 minutes to complete her homework. Each assignment takes 45 minutes. How many can she finish?',
-        'answer': 8,
-      },
-      {
-        'text': 'The bakery sold 234 muffins on Friday and 189 on Saturday. How many total?',
-        'answer': 423,
-      },
-      {
-        'text': 'A garden is 25m long and 18m wide. What is the area?',
-        'answer': 450,
-      },
-      {
-        'text': 'Tom bought 6 notebooks for \$12 each and 3 pens for \$8 each. How much change from \$100?',
-        'answer': 28,
-      },
-      {
-        'text': 'There are 480 books in the library. 320 are borrowed. What percentage remains?',
-        'answer': 33,
-      },
-      {
-        'text': 'Mike bought 4 pizzas for \$48 each. How much total?',
-        'answer': 192,
-      },
-      {
-        'text': 'A factory produces 150 cars per day. How many in 28 days?',
-        'answer': 4200,
-      },
-      {
-        'text': 'Anna has 200 stickers. She shares them equally among 8 friends. How many each?',
-        'answer': 25,
-      },
-      {
-        'text': 'The school cafeteria serves 450 meals per day. Each meal costs \$8. What is daily revenue?',
-        'answer': 3600,
-      },
-      {
-        'text': 'Tom ran 3 laps of 400m each and walked 2 laps of 300m each. How far did he travel?',
-        'answer': 2100,
-      },
-      {
-        'text': 'A store sold 156 toys on Monday and 189 on Tuesday. How many total?',
-        'answer': 345,
-      },
-      {
-        'text': 'Each class has 25 students. How many students in 12 classes?',
-        'answer': 300,
-      },
-      {
-        'text': 'Lisa saved \$450 in 6 months. How much per month on average?',
-        'answer': 75,
-      },
-      {
-        'text': 'There are 360 students in a school. 240 are in grades 1-6. How many in grades 7-12?',
-        'answer': 120,
-      },
-      {
-        'text': 'Mike collected 85 stamps. He gave 28 to his sister and 17 to his brother. How many left?',
-        'answer': 40,
-      },
-      {
-        'text': 'Sarah bought 3 books for \$45 each and 2 notebooks for \$12 each. How much total?',
-        'answer': 171,
-      },
-      {
-        'text': 'A train travels 450 km in 6 hours. What is the average speed?',
-        'answer': 75,
-      },
-      {
-        'text': 'There are 480 books in the library. 320 are borrowed. What percentage remains?',
-        'answer': 33,
-      },
-      {
-        'text': 'Mike bought 4 pizzas for \$48 each. How much total?',
-        'answer': 192,
-      },
-      {
-        'text': 'A plane flies 1200 km in 3 hours. How far in 7 hours at same speed?',
-        'answer': 2800,
-      },
-      {
-        'text': 'A rectangle has length 15cm and width 8cm. What is the perimeter?',
-        'answer': 46,
-      },
-      {
-        'text': 'Sarah has 360 minutes to complete her homework. Each assignment takes 45 minutes. How many can she finish?',
-        'answer': 8,
-      },
-      {
-        'text': 'The bakery sold 234 muffins on Friday and 189 on Saturday. How many total?',
-        'answer': 423,
-      },
-      {
-        'text': 'A garden is 25m long and 18m wide. What is the area?',
-        'answer': 450,
-      },
-      {
-        'text': 'Tom bought 6 notebooks for \$12 each and 3 pens for \$8 each. How much change from \$100?',
-        'answer': 28,
-      },
-      {
-        'text': 'A factory produces 150 cars per day. How many in 28 days?',
-        'answer': 4200,
-      },
-      {
-        'text': 'Anna has 200 stickers. She shares them equally among 8 friends. How many each?',
-        'answer': 25,
-      },
-      {
-        'text': 'The school cafeteria serves 450 meals per day. Each meal costs \$8. What is daily revenue?',
-        'answer': 3600,
-      },
-      {
-        'text': 'Tom ran 3 laps of 400m each and walked 2 laps of 300m each. How far did he travel?',
-        'answer': 2100,
-      },
-      {
-        'text': 'A store sold 156 toys on Monday and 189 on Tuesday. How many total?',
-        'answer': 345,
-      },
-      {
-        'text': 'Each class has 25 students. How many students in 12 classes?',
-        'answer': 300,
-      },
-      {
-        'text': 'Lisa saved \$450 in 6 months. How much per month on average?',
-        'answer': 75,
-      },
-      {
-        'text': 'There are 360 students in a school. 240 are in grades 1-6. How many in grades 7-12?',
-        'answer': 120,
-      },
-      {
-        'text': 'Mike collected 85 stamps. He gave 28 to his sister and 17 to his brother. How many left?',
-        'answer': 40,
-      },
-      {
-        'text': 'Sarah bought 3 books for \$45 each and 2 notebooks for \$12 each. How much total?',
-        'answer': 171,
-      },
-      {
-        'text': 'A train travels 450 km in 6 hours. What is the average speed?',
-        'answer': 75,
-      },
-    ];
-
-    for (var i = 0; i < wordProblems.length; i++) {
-      for (var diff in QuestionDifficulty.values) {
-        _questions[category]!.add(
-          Question(
-            id: _currentId++,
-            question: wordProblems[i]['text'] as String,
-            correctAnswer: wordProblems[i]['answer'] as int,
-            options: _generateOptions(wordProblems[i]['answer'] as int),
-            category: category,
-            difficulty: diff,
-          ),
-        );
-      }
-    }
-  }
-
   void _loadLogicQuestions() {
     final category = QuestionCategory.logic;
     final logicProblems = [
@@ -965,92 +598,6 @@ class QuestionBank {
             options: _generateOptions(answer),
             category: category,
             difficulty: diff,
-          ),
-        );
-      }
-    }
-  }
-
-  void _loadFractionsQuestions() {
-    final category = QuestionCategory.fractions;
-    final fractionProblems = [
-      {'text': '1/2 + 1/4 = ?', 'answer': 75},
-      {'text': '3/4 - 1/2 = ?', 'answer': 25},
-      {'text': '1/3 × 3/4 = ?', 'answer': 25},
-       {'text': '2/3 ÷ 1/3 = ?', 'answer': 2},
-       {'text': '1/2 of 80 = ?', 'answer': 40},
-       {'text': '2/5 + 1/5 = ?', 'answer': 60},
-       {'text': '3/5 - 1/5 = ?', 'answer': 40},
-       {'text': '1/4 × 2/3 = ?', 'answer': 17}, // 1/4 * 2/3 = 1/6 ≈ 0.1667, but using 17 for 17%
-       {'text': '6/4 ÷ 3/4 = ?', 'answer': 2}, // 6/4 ÷ 3/4 = 2
-       {'text': '1/3 of 90 = ?', 'answer': 30},
-       {'text': '2/3 + 1/6 = ?', 'answer': 75},
-       {'text': '5/6 - 1/3 = ?', 'answer': 50},
-       {'text': '1/2 × 3/4 = ?', 'answer': 38}, // 3/8 = 0.375, using 38 for approximation
-       {'text': '12/5 ÷ 6/5 = ?', 'answer': 2}, // 12/5 ÷ 6/5 = 2
-       {'text': '1/4 of 120 = ?', 'answer': 30},
-       {'text': '3/5 + 1/10 = ?', 'answer': 70},
-       {'text': '7/8 - 1/4 = ?', 'answer': 63},
-       {'text': '2/3 × 3/5 = ?', 'answer': 40},
-       {'text': '10/3 ÷ 5/3 = ?', 'answer': 2}, // 10/3 ÷ 5/3 = 2
-      {'text': '1/5 of 200 = ?', 'answer': 40},
-    ];
-
-    for (var i = 0; i < fractionProblems.length; i++) {
-      for (var diff in QuestionDifficulty.values) {
-        final answer = fractionProblems[i]['answer'] as int;
-        _questions[category]!.add(
-          Question(
-            id: _currentId++,
-            question: fractionProblems[i]['text'] as String,
-            correctAnswer: answer,
-            options: _generateOptions(answer),
-            category: category,
-            difficulty: diff,
-          ),
-        );
-      }
-    }
-  }
-
-  void _loadDecimalsQuestions() {
-    final category = QuestionCategory.decimals;
-    final decimalProblems = [
-      {'text': '12.5 + 7.3 = ?', 'answer': 198},
-      {'text': '15.8 - 9.4 = ?', 'answer': 64},
-      {'text': '3.5 × 4 = ?', 'answer': 14},
-       {'text': '24 ÷ 4 = ?', 'answer': 6}, // No remainder division
-       {'text': '0.5 × 0.8 = ?', 'answer': 4},
-       {'text': '6.7 + 8.9 = ?', 'answer': 156},
-       {'text': '23.4 - 12.8 = ?', 'answer': 106},
-       {'text': '2.5 × 6 = ?', 'answer': 15},
-       {'text': '30 ÷ 3 = ?', 'answer': 10}, // No remainder division
-       {'text': '0.3 × 0.7 = ?', 'answer': 21},
-       {'text': '18.9 + 5.1 = ?', 'answer': 240},
-       {'text': '31.7 - 16.3 = ?', 'answer': 154},
-       {'text': '4.2 × 5 = ?', 'answer': 21},
-       {'text': '64 ÷ 8 = ?', 'answer': 8}, // No remainder division
-       {'text': '0.9 × 0.6 = ?', 'answer': 54},
-       {'text': '7.8 + 14.2 = ?', 'answer': 220},
-       {'text': '25.9 - 13.5 = ?', 'answer': 124},
-       {'text': '1.5 × 12 = ?', 'answer': 18},
-       {'text': '84 ÷ 7 = ?', 'answer': 12}, // No remainder division
-       {'text': '0.4 × 0.25 = ?', 'answer': 1},
-    ];
-
-    for (var i = 0; i < decimalProblems.length; i++) {
-      for (var diff in QuestionDifficulty.values) {
-        final mult = i < 2 ? 100 : (i < 4 ? 10 : 100);
-        final answer = decimalProblems[i]['answer'] as int;
-        _questions[category]!.add(
-          Question(
-            id: _currentId++,
-            question: decimalProblems[i]['text'] as String,
-            correctAnswer: answer,
-            options: _generateOptions(answer),
-            category: category,
-            difficulty: diff,
-            tags: {'scaled': mult},
           ),
         );
       }
@@ -1196,10 +743,10 @@ final questionBankStatsProvider = Provider<QuestionBankStats>((ref) {
 });
 
 class GameLevels {
-  static const int totalLevels = 50;
-  static const int questionsPerLevel = 45;
+  static const int totalLevels = 100;
+  static const int questionsPerLevel = 50;
   static const int levelsPerChapter = 10;
-  static const int totalChapters = 5;
+  static const int totalChapters = 10;
 
   static List<GameLevel> generateLevels() {
     return List.generate(totalLevels, (i) {
@@ -1211,7 +758,7 @@ class GameLevels {
         levelNumber: levelNum,
         chapter: chapter,
         difficulty: difficulty,
-        questionCount: questionsPerLevel,
+        questionCount: levelNum > 50 ? 60 : 50,
         timeLimit: _getTimeLimit(difficulty),
         starsRequired: _getStarsRequired(levelNum),
         isBossLevel: levelNum % 10 == 0,
@@ -1221,11 +768,11 @@ class GameLevels {
   }
 
   static QuestionDifficulty _calculateDifficulty(int level) {
-    if (level <= 10) return QuestionDifficulty.beginner;
-    if (level <= 20) return QuestionDifficulty.easy;
-    if (level <= 30) return QuestionDifficulty.medium;
-    if (level <= 40) return QuestionDifficulty.hard;
-    if (level <= 45) return QuestionDifficulty.expert;
+    if (level <= 15) return QuestionDifficulty.beginner;
+    if (level <= 35) return QuestionDifficulty.easy;
+    if (level <= 55) return QuestionDifficulty.medium;
+    if (level <= 75) return QuestionDifficulty.hard;
+    if (level <= 90) return QuestionDifficulty.expert;
     return QuestionDifficulty.master;
   }
 
@@ -1247,8 +794,13 @@ class GameLevels {
   }
 
   static int _getStarsRequired(int level) {
-    if (level <= 10) return 0;
-    return (level - 10) * 3;
+    if (level <= 1) return 0;
+    // For level > 1, require about 2 stars per level from previous levels
+    // but capped at a reasonable progression.
+    // Level 100 would require (99 * 2) = 198 stars out of 297 available.
+    // For Level 11, it would require 20 stars. 
+    // This is more balanced than the previous (level-10)*3 logic.
+    return (level - 1) * 2;
   }
 }
 

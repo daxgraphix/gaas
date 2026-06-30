@@ -29,27 +29,28 @@ class AppDesignTokens {
   static const Duration animationSlow = Duration(milliseconds: 600);
 
   // Midnight Theme (Deep Obsidian) - Dark Mode
-  static const Color midnightPrimary = Color(0xFF6366F1); // Indigo 500
-  static const Color midnightSecondary = Color(0xFF0EA5E9); // Sky 500
-  static const Color midnightBackground = Color(0xFF030712);
-  static const Color midnightSurface = Color(0xFF111827);
-  static const Color midnightOnSurface = Color(0xFFF8FAFC);
-  static const Color midnightOnSurfaceVariant = Color(0xFF94A3B8);
+  static const Color midnightPrimary = Color(0xFF818CF8); // Indigo 400 (Brighter for dark)
+  static const Color midnightSecondary = Color(0xFF38BDF8); // Sky 400
+  static const Color midnightBackground = Color(0xFF020617); // Slate 950
+  static const Color midnightSurface = Color(0xFF0F172A); // Slate 900
+  static const Color midnightOnSurface = Color(0xFFF1F5F9); // Slate 100
+  static const Color midnightOnSurfaceVariant = Color(0xFFCBD5E1); // Slate 300 (Much more visible)
 
   // Solar Theme (Warm Sunlight) - Light Mode
-  static const Color solarPrimary = Color(0xFFC2410C); // Orange 700 - Slightly bolder for visibility
+  static const Color solarPrimary = Color(0xFFEA580C); // Orange 600
   static const Color solarSecondary = Color(0xFF92400E); // Amber 800
-  static const Color solarBackground = Color(0xFFFEFCE8); // Light yellow tint (Yellow 50)
+  static const Color solarBackground = Color(0xFFFFFBEB); // Amber 50
   static const Color solarSurface = Color(0xFFFFFFFF);
   static const Color solarOnSurface = Color(0xFF0F172A); // Slate 900
-  static const Color solarOnSurfaceVariant = Color(0xFF334155); // Slate 700 (Better contrast)
+  static const Color solarOnSurfaceVariant = Color(0xFF334155); // Slate 700
 
   // Cyber Theme (High Contrast Neon) - Dark Mode
-  static const Color cyberPrimary = Color(0xFF22C55E); // Green 500
-  static const Color cyberSecondary = Color(0xFF06B6D4); // Cyan 500
+  static const Color cyberPrimary = Color(0xFF4ADE80); // Green 400 (Neon)
+  static const Color cyberSecondary = Color(0xFF22D3EE); // Cyan 400
   static const Color cyberBackground = Color(0xFF000000);
-  static const Color cyberSurface = Color(0xFF0F172A);
-  static const Color cyberOnSurface = Color(0xFFF0FDF4);
+  static const Color cyberSurface = Color(0xFF09090B); // Zinc 950
+  static const Color cyberOnSurface = Color(0xFFFAFAFA);
+  static const Color cyberOnSurfaceVariant = Color(0xFFA1A1AA);
 
   static const Color success = Color(0xFF10B981);
   static const Color warning = Color(0xFFF59E0B);
@@ -105,12 +106,24 @@ class AppThemes {
       surfaceContainerHighest: const Color(0xFFF1F5F9),
       onSurfaceVariant: AppDesignTokens.solarOnSurfaceVariant,
       outline: AppDesignTokens.solarOnSurfaceVariant.withValues(alpha: 0.6), // Increased contrast for borders
+      tertiary: const Color(0xFFD97706), // Amber 600
+      onTertiary: Colors.white,
       error: AppDesignTokens.error,
     ),
     scaffoldBackgroundColor: AppDesignTokens.solarBackground,
+    dialogTheme: const DialogThemeData(
+      backgroundColor: AppDesignTokens.solarSurface,
+      surfaceTintColor: Colors.transparent,
+    ),
+    bottomSheetTheme: const BottomSheetThemeData(
+      backgroundColor: AppDesignTokens.solarSurface,
+      modalBackgroundColor: AppDesignTokens.solarSurface,
+      surfaceTintColor: Colors.transparent,
+    ),
     cardTheme: CardThemeData(
       elevation: 2,
       color: AppDesignTokens.solarSurface,
+      surfaceTintColor: Colors.transparent,
       shadowColor: Colors.black.withValues(alpha: 0.1),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(AppDesignTokens.radiusMedium),
@@ -121,6 +134,7 @@ class AppThemes {
       elevation: 0,
       centerTitle: true,
       backgroundColor: Colors.transparent,
+      surfaceTintColor: Colors.transparent,
       foregroundColor: AppDesignTokens.solarOnSurface,
       iconTheme: IconThemeData(color: AppDesignTokens.solarOnSurface),
       titleTextStyle: TextStyle(
@@ -163,6 +177,7 @@ class AppThemes {
     navigationBarTheme: NavigationBarThemeData(
       elevation: 8,
       backgroundColor: AppDesignTokens.solarSurface,
+      surfaceTintColor: Colors.transparent,
       indicatorColor: AppDesignTokens.solarPrimary.withValues(alpha: 0.1),
       labelTextStyle: WidgetStateProperty.resolveWith((states) {
         final isSelected = states.contains(WidgetState.selected);
@@ -198,7 +213,11 @@ class AppThemes {
       onSecondary: Colors.black,
       surface: AppDesignTokens.cyberSurface,
       onSurface: AppDesignTokens.cyberOnSurface,
+      onSurfaceVariant: AppDesignTokens.cyberOnSurfaceVariant,
+      tertiary: const Color(0xFFFFCC00), // Pure yellow for contrast
+      onTertiary: Colors.black,
       error: AppDesignTokens.error,
+      outline: AppDesignTokens.cyberPrimary.withValues(alpha: 0.5),
     ),
     scaffoldBackgroundColor: AppDesignTokens.cyberBackground,
     cardTheme: CardThemeData(
@@ -206,12 +225,38 @@ class AppThemes {
       color: AppDesignTokens.cyberSurface,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(AppDesignTokens.radiusMedium),
-        side: BorderSide(color: AppDesignTokens.cyberPrimary.withValues(alpha: 0.5), width: 1.5),
+        side: BorderSide(color: AppDesignTokens.cyberPrimary.withValues(alpha: 0.7), width: 2),
+      ),
+    ),
+    appBarTheme: const AppBarTheme(
+      elevation: 0,
+      centerTitle: true,
+      backgroundColor: Colors.transparent,
+      foregroundColor: AppDesignTokens.cyberPrimary,
+      titleTextStyle: TextStyle(
+        fontSize: 20,
+        fontWeight: FontWeight.w900,
+        letterSpacing: 2.0,
+        color: AppDesignTokens.cyberPrimary,
+      ),
+    ),
+    elevatedButtonTheme: ElevatedButtonThemeData(
+      style: ElevatedButton.styleFrom(
+        backgroundColor: AppDesignTokens.cyberPrimary,
+        foregroundColor: Colors.black,
+        elevation: 4,
+        shadowColor: AppDesignTokens.cyberPrimary.withValues(alpha: 0.5),
+        padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 16),
+        minimumSize: const Size(0, 56),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppDesignTokens.radiusSmall),
+        ),
+        textStyle: const TextStyle(fontWeight: FontWeight.bold, letterSpacing: 1.0),
       ),
     ),
     textTheme: _buildTextTheme(
       AppDesignTokens.cyberOnSurface,
-      AppDesignTokens.cyberPrimary.withValues(alpha: 0.8),
+      AppDesignTokens.cyberOnSurfaceVariant,
     ),
   );
 
@@ -229,6 +274,8 @@ class AppThemes {
       onSurface: AppDesignTokens.midnightOnSurface,
       surfaceContainerHighest: const Color(0xFF1F2937),
       onSurfaceVariant: AppDesignTokens.midnightOnSurfaceVariant,
+      tertiary: const Color(0xFFF472B6), // Pink 400
+      onTertiary: Colors.white,
       error: AppDesignTokens.error,
       outline: AppDesignTokens.midnightOnSurfaceVariant.withValues(alpha: 0.4),
     ),

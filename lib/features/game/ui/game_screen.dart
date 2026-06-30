@@ -1,4 +1,5 @@
 import 'dart:math';
+import 'package:flutter/rendering.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -7,7 +8,9 @@ import '../../../core/providers.dart';
 import '../logic/game_session_provider.dart';
 import '../../../shared/widgets/custom_keypad.dart';
 import '../../../core/sound_manager.dart';
+import '../../../data/models/user_session.dart';
 import '../../../l10n/generated/app_localizations.dart';
+import 'widgets/level_up_overlay.dart';
 
 
 
@@ -65,6 +68,35 @@ late AnimationController _progressAnimationController;
     _shakeController.forward(from: 0);
   }
 
+  void _showLevelUpOverlay(int level, int reward) {
+    ref.read(soundManagerProvider).playEffect('level_up');
+    
+    showGeneralDialog(
+      context: context,
+      barrierDismissible: false,
+      barrierColor: Colors.black.withValues(alpha: 0.8),
+      transitionDuration: const Duration(milliseconds: 500),
+      pageBuilder: (context, animation, secondaryAnimation) {
+        return LevelUpOverlay(
+          level: level,
+          rewardPoints: reward,
+          onDismiss: () => Navigator.of(context).pop(),
+        );
+      },
+      transitionBuilder: (context, animation, secondaryAnimation, child) {
+        return FadeTransition(
+          opacity: animation,
+          child: ScaleTransition(
+            scale: Tween<double>(begin: 0.8, end: 1.0).animate(
+              CurvedAnimation(parent: animation, curve: Curves.easeOutBack),
+            ),
+            child: child,
+          ),
+        );
+      },
+    );
+  }
+
   @override
   void dispose() {
     _comboAnimationController.dispose();
@@ -105,7 +137,7 @@ if (gameSession.currentQuestionIndex >= gameSession.totalQuestions ||
        return _buildResultsScreen(context, gameSession, theme);
      }
 
-ref.listen<GameSession?>(gameSessionProvider, (previous, next) {
+    ref.listen<GameSession?>(gameSessionProvider, (previous, next) {
         if (previous != null && next != null) {
           if (next.currentQuestionIndex > previous.currentQuestionIndex &&
               next.correctAnswers == previous.correctAnswers) {
@@ -127,44 +159,64 @@ ref.listen<GameSession?>(gameSessionProvider, (previous, next) {
         }
       });
 
+    ref.listen<UserSession?>(userSessionProvider, (previous, next) {
+      if (previous != null && next != null && next.level > previous.level) {
+        _showLevelUpOverlay(next.level, (next.level * 250));
+      }
+    });
+
+    final userSession = ref.watch(userSessionProvider);
+    final isFocusMode = userSession?.isFocusMode ?? false;
+
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
       body: Stack(
         children: [
+          // Dynamic Particle Background
+          if (!isFocusMode)
+            Positioned.fill(
+              child: _DynamicParticleBackground(
+                gameSession: gameSession,
+              ),
+            ),
+
           // HUD Scanlines
-          Positioned.fill(
-            child: Opacity(
-              opacity: 0.015,
-              child: Container(
-                decoration: const BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [
-                      Colors.transparent,
-                      Colors.black54,
-                      Colors.transparent,
-                    ],
-                    stops: [0.0, 0.5, 1.0],
+          if (!isFocusMode)
+            Positioned.fill(
+              child: Opacity(
+                opacity: 0.015,
+                child: Container(
+                  decoration: const BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        Colors.transparent,
+                        Colors.black54,
+                        Colors.transparent,
+                      ],
+                      stops: [0.0, 0.5, 1.0],
+                    ),
                   ),
-                ),
-                child: CustomPaint(
-                  painter: _ScanlinePainter(),
+                  child: CustomPaint(
+                    painter: _ScanlinePainter(),
+                  ),
                 ),
               ),
             ),
-          ),
-AnimatedContainer(
-             duration: const Duration(milliseconds: 300),
-             decoration: BoxDecoration(
-               color: Colors.transparent,
-             ),
+          AnimatedContainer(
+            duration: const Duration(milliseconds: 300),
+            decoration: BoxDecoration(
+              color: Colors.transparent,
+            ),
             child: SafeArea(
               child: Column(
                 children: [
                   RepaintBoundary(child: _buildHeader(gameSession, theme)),
                   const Divider(height: 1),
-                  RepaintBoundary(child: _buildScoreBar(gameSession, theme)),
+                  RepaintBoundary(
+                    child: _buildScoreBar(gameSession, theme, isFocusMode),
+                  ),
                   const Divider(height: 1),
                   Flexible(
                     flex: 4,
@@ -172,7 +224,11 @@ AnimatedContainer(
                       animation: _shakeAnimation,
                       builder: (context, child) {
                         return Transform.translate(
-                          offset: Offset(_shakeAnimation.value * sin(_shakeAnimation.value * pi * 4), 0),
+                          offset: Offset(
+                            _shakeAnimation.value *
+                                sin(_shakeAnimation.value * pi * 4),
+                            0,
+                          ),
                           child: child,
                         );
                       },
@@ -182,7 +238,11 @@ AnimatedContainer(
                             child: RepaintBoundary(
                               child: gameSession.isVisualCounting
                                   ? _buildVisualQuestion(context, theme)
-                                  : _buildMathQuestion(gameSession, theme),
+                                  : _buildMathQuestion(
+                                      gameSession,
+                                      theme,
+                                      isFocusMode,
+                                    ),
                             ),
                           ),
                           if (gameSession.level == 1 &&
@@ -193,7 +253,9 @@ AnimatedContainer(
                       ),
                     ),
                   ),
-                  RepaintBoundary(child: _buildInputArea(context, theme, gameSession)),
+                  RepaintBoundary(
+                    child: _buildInputArea(context, theme, gameSession),
+                  ),
                 ],
               ),
             ),
@@ -232,9 +294,9 @@ AnimatedContainer(
               textAlign: TextAlign.center,
             ),
           ),
-          if (gameSession.isBossLevel ||
+          if (gameSession.mode != GameMode.campaign && (gameSession.isBossLevel ||
               gameSession.mode == GameMode.scoreAttack ||
-              gameSession.mode == GameMode.speedDemon)
+              gameSession.mode == GameMode.speedDemon))
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Row(
@@ -322,15 +384,21 @@ if (gameSession.mode == GameMode.duel)
     }
   }
 
-  Widget _buildScoreBar(GameSession gameSession, ThemeData theme) {
-    final progress = gameSession.currentQuestionIndex / gameSession.totalQuestions;
+  Widget _buildScoreBar(
+    GameSession gameSession,
+    ThemeData theme,
+    bool isFocusMode,
+  ) {
+    final progress =
+        gameSession.currentQuestionIndex / gameSession.totalQuestions;
     if (_progressAnimationController.value != progress) {
       _progressAnimationController.animateTo(progress);
     }
 
     // Calculate real-time statistics
     final currentAccuracy = gameSession.currentQuestionIndex > 0
-        ? (gameSession.correctAnswers / gameSession.currentQuestionIndex * 100).round()
+        ? (gameSession.correctAnswers / gameSession.currentQuestionIndex * 100)
+            .round()
         : 0;
 
     return Container(
@@ -341,7 +409,8 @@ if (gameSession.mode == GameMode.duel)
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               _buildMinimalStat('SCORE', '${gameSession.score}', theme),
-              _buildMinimalStat('ACCURACY', '$currentAccuracy%', theme),
+              if (!isFocusMode)
+                _buildMinimalStat('ACCURACY', '$currentAccuracy%', theme),
               _buildMinimalStat(
                 'PROGRESS',
                 '${gameSession.correctAnswers}/${gameSession.currentQuestionIndex}',
@@ -353,38 +422,77 @@ if (gameSession.mode == GameMode.duel)
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              _buildStreakStat(gameSession.comboMultiplier, theme),
+              if (!isFocusMode)
+                _buildStreakStat(gameSession.comboMultiplier, theme)
+              else
+                const SizedBox(width: 40), // Placeholder to maintain alignment
               _buildMinimalStat('LEVEL', '${gameSession.level}', theme),
-              _buildMinimalStat('TIME', '${gameSession.timeRemaining}s', theme),
+              if (gameSession.mode != GameMode.campaign &&
+                  (gameSession.isBossLevel ||
+                      gameSession.mode == GameMode.scoreAttack ||
+                      gameSession.mode == GameMode.speedDemon))
+                _buildMinimalStat(
+                  'TIME',
+                  '${gameSession.timeRemaining}s',
+                  theme,
+                ),
             ],
           ),
           const SizedBox(height: 8),
-          AnimatedBuilder(
-            animation: _progressAnimation,
-            builder: (context, child) {
-              return Container(
-                height: 4,
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.onSurface.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(2),
-                ),
-                child: FractionallySizedBox(
-                  alignment: Alignment.centerLeft,
-                  widthFactor: _progressAnimation.value,
-                  child: Container(
+          Stack(
+            alignment: Alignment.centerLeft,
+            children: [
+              AnimatedBuilder(
+                animation: _progressAnimation,
+                builder: (context, child) {
+                  return Container(
+                    height: 4,
                     decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [
-                          theme.colorScheme.primary,
-                          theme.colorScheme.secondary,
-                        ],
-                      ),
+                      color: theme.colorScheme.onSurface.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(2),
                     ),
-                  ),
+                    child: FractionallySizedBox(
+                      alignment: Alignment.centerLeft,
+                      widthFactor: _progressAnimation.value,
+                      child: Container(
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [
+                              theme.colorScheme.primary,
+                              theme.colorScheme.secondary,
+                            ],
+                          ),
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              ),
+              if (gameSession.ghostScore != null &&
+                  gameSession.mode == GameMode.scoreAttack &&
+                  !isFocusMode)
+                AnimatedBuilder(
+                  animation: _progressAnimation,
+                  builder: (context, child) {
+                    // Estimate ghost progress based on totalQuestions and ghostScore
+                    // This is a simplification; in a real app we'd track ghost progress per question
+                    final ghostProgress = (gameSession.ghostScore! /
+                            (gameSession.totalQuestions * 20))
+                        .clamp(0.0, 1.0);
+                    return Positioned(
+                      left: (MediaQuery.of(context).size.width - 48) *
+                          ghostProgress,
+                      child: Icon(
+                        Icons.directions_run,
+                        size: 14,
+                        color:
+                            theme.colorScheme.onSurface.withValues(alpha: 0.3),
+                      ),
+                    );
+                  },
                 ),
-              );
-            },
+            ],
           ),
         ],
       ),
@@ -488,11 +596,35 @@ if (gameSession.mode == GameMode.duel)
     );
   }
 
-  Widget _buildMathQuestion(GameSession session, ThemeData theme) {
+  Widget _buildMathQuestion(
+    GameSession session,
+    ThemeData theme,
+    bool isFocusMode,
+  ) {
     final question = session.currentQuestion;
     if (question == null) return const SizedBox();
 
     final isRiddle = question.customQuestion != null;
+    final questionText = isRiddle
+        ? question.customQuestion!
+        : '${question.operand1} ${_getOperationSymbol(session.operation)} ${question.operand2}';
+
+    if (isFocusMode) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24),
+          child: Text(
+            questionText,
+            style: TextStyle(
+              fontSize: _getResponsiveFontSize(context, isRiddle ? 32 : 64),
+              fontWeight: FontWeight.w400,
+              color: theme.colorScheme.onSurface,
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ),
+      );
+    }
 
     return Center(
       child: SingleChildScrollView(
@@ -500,53 +632,57 @@ if (gameSession.mode == GameMode.duel)
           mainAxisSize: MainAxisSize.min,
           children: [
             TweenAnimationBuilder<double>(
-            tween: Tween(begin: 0.0, end: 1.0),
-            duration: const Duration(milliseconds: 600),
-            curve: Curves.easeOutCubic,
-            builder: (context, value, child) {
-              return Opacity(
-                opacity: value,
-                child: Transform.translate(
-                  offset: Offset(0, 20 * (1 - value)),
-                  child: child,
+              tween: Tween(begin: 0.0, end: 1.0),
+              duration: const Duration(milliseconds: 600),
+              curve: Curves.easeOutCubic,
+              builder: (context, value, child) {
+                return Opacity(
+                  opacity: value,
+                  child: Transform.translate(
+                    offset: Offset(0, 20 * (1 - value)),
+                    child: child,
+                  ),
+                );
+              },
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: Text(
+                  questionText,
+                  style: TextStyle(
+                    fontSize:
+                        _getResponsiveFontSize(context, isRiddle ? 32 : 84),
+                    fontWeight: isRiddle ? FontWeight.w600 : FontWeight.w900,
+                    color: theme.colorScheme.onSurface,
+                    letterSpacing: isRiddle ? 0 : -2,
+                    fontFamily: isRiddle ? null : 'monospace',
+                    shadows: [
+                      Shadow(
+                        color: theme.colorScheme.primary.withValues(alpha: 0.3),
+                        blurRadius: 20,
+                      ),
+                    ],
+                  ),
+                  textAlign: TextAlign.center,
+                  softWrap: true,
                 ),
-              );
-            },
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24),
-              child: Text(
-                isRiddle ? question.customQuestion! : '${question.operand1} ${_getOperationSymbol(session.operation)} ${question.operand2}',
-                style: TextStyle(
-                  fontSize: _getResponsiveFontSize(context, isRiddle ? 32 : 84),
-                  fontWeight: isRiddle ? FontWeight.w600 : FontWeight.w900,
-                  color: theme.colorScheme.onSurface,
-                  letterSpacing: isRiddle ? 0 : -2,
-                  fontFamily: isRiddle ? null : 'monospace',
-                  shadows: [
-                    Shadow(color: theme.colorScheme.primary.withValues(alpha: 0.3), blurRadius: 20),
-                  ],
-                ),
-                textAlign: TextAlign.center,
-                softWrap: true,
               ),
             ),
-          ),
-          SizedBox(height: MediaQuery.of(context).size.height < 600 ? 12 : 24),
-          if (session.hintsUsed[session.currentQuestionIndex] == true)
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Text(
-                'HINT: ${question.hint?.toUpperCase() ?? 'NOT AVAILABLE'}',
-                style: TextStyle(
-                  color: theme.colorScheme.secondary.withValues(alpha: 0.7),
-                  fontSize: _getResponsiveFontSize(context, 14),
-                  letterSpacing: 2,
-                  fontWeight: FontWeight.w900,
+            SizedBox(height: MediaQuery.of(context).size.height < 600 ? 12 : 24),
+            if (session.hintsUsed[session.currentQuestionIndex] == true)
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Text(
+                  'HINT: ${question.hint?.toUpperCase() ?? 'NOT AVAILABLE'}',
+                  style: TextStyle(
+                    color: theme.colorScheme.secondary.withValues(alpha: 0.7),
+                    fontSize: _getResponsiveFontSize(context, 14),
+                    letterSpacing: 2,
+                    fontWeight: FontWeight.w900,
+                  ),
+                  textAlign: TextAlign.center,
+                  softWrap: true,
                 ),
-                textAlign: TextAlign.center,
-                softWrap: true,
               ),
-            ),
           ],
         ),
       ),
@@ -767,7 +903,7 @@ if (gameSession.mode == GameMode.duel)
     final percentage = (session.correctAnswers / session.totalQuestions) * 100;
     final isCampaign = session.mode == GameMode.campaign;
     final passed =
-        isCampaign ? session.correctAnswers >= GameSessionNotifier.campaignPassThreshold : true;
+        isCampaign ? session.correctAnswers >= GameSessionNotifier.getCampaignPassThreshold(session.totalQuestions) : true;
     final stars = passed ? _calculateStars(
       session.correctAnswers,
       session.totalQuestions,
@@ -834,17 +970,19 @@ if (gameSession.mode == GameMode.duel)
                       if (session.mode == GameMode.campaign)
                         PremiumPrimaryButton(
                           text: passed ? 'NEXT_PHASE' : 'RECALIBRATE',
-                          onPressed: () {
+                          onPressed: () async {
                             HapticManager.instance.mediumImpact();
-                            ref
+                            final nextLevel = passed ? session.level + 1 : session.level;
+                            await ref
                                 .read(gameSessionProvider.notifier)
                                 .startGame(
                                   mode: GameMode.campaign,
                                   operation: session.operation,
-                                  level: passed ? session.level + 1 : session.level,
-                                  totalQuestions: 45,
+                                  level: nextLevel,
                                 );
-                            setState(() => _currentInput = '');
+                            if (mounted) {
+                              setState(() => _currentInput = '');
+                            }
                           },
                         ),
                       const SizedBox(height: 12),
@@ -901,17 +1039,10 @@ if (gameSession.mode == GameMode.duel)
   }
 
   int _calculateStars(int correct, int total) {
-    if (total != 45) {
-      final percentage = (correct / total) * 100;
-      if (percentage >= 95) return 3;
-      if (percentage >= 85) return 2;
-      if (percentage >= 75) return 1;
-      return 0;
-    }
-    
-    if (correct >= 43) return 3;
-    if (correct >= 39) return 2;
-    if (correct >= 35) return 1;
+    final percentage = (correct / total) * 100;
+    if (percentage >= 95) return 3;
+    if (percentage >= 85) return 2;
+    if (percentage >= 75) return 1;
     return 0;
   }
 
@@ -973,6 +1104,111 @@ class _ScanlinePainter extends CustomPainter {
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
 
+class _DynamicParticleBackground extends StatefulWidget {
+  final GameSession gameSession;
+
+  const _DynamicParticleBackground({required this.gameSession});
+
+  @override
+  State<_DynamicParticleBackground> createState() =>
+      _DynamicParticleBackgroundState();
+}
+
+class _DynamicParticleBackgroundState extends State<_DynamicParticleBackground>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  final List<_Particle> _particles = [];
+  final Random _random = Random();
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 10),
+    )..repeat();
+
+    for (int i = 0; i < 20; i++) {
+      _particles.add(_Particle(_random));
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, child) {
+        for (var p in _particles) {
+          p.update(widget.gameSession.comboMultiplier);
+        }
+        return CustomPaint(
+          painter: _ParticlePainter(
+            _particles,
+            Theme.of(context).colorScheme.primary,
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _Particle {
+  double x = 0;
+  double y = 0;
+  double speed = 0;
+  double size = 0;
+  double opacity = 0;
+  final Random random;
+
+  _Particle(this.random) {
+    reset();
+  }
+
+  void reset() {
+    x = random.nextDouble();
+    y = random.nextDouble();
+    speed = 0.001 + random.nextDouble() * 0.002;
+    size = 2 + random.nextDouble() * 4;
+    opacity = 0.1 + random.nextDouble() * 0.3;
+  }
+
+  void update(int combo) {
+    y -= speed * (1 + combo * 0.2);
+    if (y < -0.1) {
+      y = 1.1;
+      x = random.nextDouble();
+    }
+  }
+}
+
+class _ParticlePainter extends CustomPainter {
+  final List<_Particle> particles;
+  final Color color;
+
+  _ParticlePainter(this.particles, this.color);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    for (var p in particles) {
+      final paint = Paint()..color = color.withValues(alpha: p.opacity);
+      canvas.drawCircle(
+        Offset(p.x * size.width, p.y * size.height),
+        p.size,
+        paint,
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
+}
+
 class VisualShapesPainter extends CustomPainter {
   final List<ShapeData> shapes;
   final ThemeData theme;
@@ -981,6 +1217,12 @@ class VisualShapesPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
+    // Add semantics for accessibility
+    canvas.drawRect(
+      Offset.zero & size,
+      Paint()..color = Colors.transparent,
+    );
+
     final paint = Paint()
       ..color = theme.colorScheme.onSurface.withValues(alpha: 0.8)
       ..style = PaintingStyle.stroke
@@ -1015,6 +1257,21 @@ class VisualShapesPainter extends CustomPainter {
         canvas.drawRect(rect, paint);
       }
     }
+  }
+
+  @override
+  SemanticsBuilderCallback? get semanticsBuilder {
+    return (Size size) {
+      return [
+        CustomPainterSemantics(
+          rect: Offset.zero & size,
+          properties: const SemanticsProperties(
+            label: 'Visual counting area',
+            textDirection: TextDirection.ltr,
+          ),
+        ),
+      ];
+    };
   }
 
   Path _getStarPath(Rect rect) {

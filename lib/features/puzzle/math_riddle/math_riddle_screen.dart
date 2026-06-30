@@ -66,12 +66,6 @@ class _MathRiddleScreenState extends ConsumerState<MathRiddleScreen> with Single
       case MathRiddleType.arithmetic:
         ref.read(mathRiddleProvider.notifier).loadArithmeticProblem(widget.difficulty);
         break;
-      case MathRiddleType.wordProblem:
-        ref.read(mathRiddleProvider.notifier).loadWordProblem(widget.difficulty);
-        break;
-      case MathRiddleType.numberSequence:
-        ref.read(mathRiddleProvider.notifier).loadNumberSequence(widget.difficulty);
-        break;
       case MathRiddleType.logicChallenge:
         ref.read(mathRiddleProvider.notifier).loadLogicChallenge(widget.difficulty);
         break;
@@ -188,7 +182,7 @@ class _MathRiddleScreenState extends ConsumerState<MathRiddleScreen> with Single
   }
 
   Widget _buildPuzzleContent(MathRiddleState state, ThemeData theme) {
-    if (state.currentLogic == null && state.currentRiddle == null && state.currentSequence == null) {
+    if (state.currentLogic == null && state.currentRiddle == null) {
       return Center(
         child: CircularProgressIndicator(
           color: theme.colorScheme.onSurface.withValues(alpha: 0.15),
@@ -203,9 +197,6 @@ class _MathRiddleScreenState extends ConsumerState<MathRiddleScreen> with Single
 
     String question = '';
     if (state.currentRiddle != null) question = state.currentRiddle!.question;
-    if (state.currentSequence != null) {
-      question = state.currentSequence!.displaySequence;
-    }
 
     final screenWidth = MediaQuery.of(context).size.width;
     final fontSize = (screenWidth * 0.08).clamp(24.0, 36.0);
@@ -529,15 +520,13 @@ class _MathRiddleScreenState extends ConsumerState<MathRiddleScreen> with Single
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context)!;
     final state = ref.read(mathRiddleProvider);
-    if (state.currentRiddle == null && state.currentLogic == null && state.currentSequence == null) return;
+    if (state.currentRiddle == null && state.currentLogic == null) return;
 
     String correctAnswer = '';
     if (state.currentRiddle != null) {
       correctAnswer = state.currentRiddle!.correctAnswer;
     } else if (state.currentLogic != null) {
       correctAnswer = state.currentLogic!.correctAnswer;
-    } else if (state.currentSequence != null) {
-      correctAnswer = state.currentSequence!.correctAnswer;
     }
 
     _answerController.text = correctAnswer;

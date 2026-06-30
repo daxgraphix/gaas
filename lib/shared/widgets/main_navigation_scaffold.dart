@@ -10,8 +10,6 @@ import '../../features/arcade/presentation/arcade_screen.dart';
 import '../../features/reports/reports_screen.dart';
 import '../../features/profile/presentation/profile_screen.dart';
 
-final navigationIndexProvider = StateProvider<int>((ref) => 0);
-
 class MainNavigationScaffold extends ConsumerWidget {
   const MainNavigationScaffold({super.key});
 

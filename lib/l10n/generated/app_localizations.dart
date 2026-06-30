@@ -176,10 +176,46 @@ abstract class AppLocalizations {
   /// **'Levels Completed'**
   String get levelsCompleted;
 
+  /// No description provided for @commandCenter.
+  ///
+  /// In en, this message translates to:
+  /// **'COMMAND CENTER'**
+  String get commandCenter;
+
+  /// No description provided for @quickResume.
+  ///
+  /// In en, this message translates to:
+  /// **'QUICK RESUME'**
+  String get quickResume;
+
+  /// No description provided for @todaysSession.
+  ///
+  /// In en, this message translates to:
+  /// **'Today\'s Session'**
+  String get todaysSession;
+
+  /// No description provided for @ptsToLevel.
+  ///
+  /// In en, this message translates to:
+  /// **'{pts} pts to Level {level}'**
+  String ptsToLevel(Object level, Object pts);
+
+  /// No description provided for @timeLeftShort.
+  ///
+  /// In en, this message translates to:
+  /// **'{hours}h {minutes}m left'**
+  String timeLeftShort(Object hours, Object minutes);
+
+  /// No description provided for @levelUppercase.
+  ///
+  /// In en, this message translates to:
+  /// **'LEVEL {level}'**
+  String levelUppercase(Object level);
+
   /// No description provided for @accuracy.
   ///
   /// In en, this message translates to:
-  /// **'ACCURACY'**
+  /// **'Accuracy'**
   String get accuracy;
 
   /// No description provided for @timePlayed.
@@ -527,7 +563,7 @@ abstract class AppLocalizations {
   /// No description provided for @difficultyLevel.
   ///
   /// In en, this message translates to:
-  /// **'DIFFICULTY_LEVEL'**
+  /// **'Difficulty Level'**
   String get difficultyLevel;
 
   /// No description provided for @initiateMixSequence.
@@ -635,7 +671,7 @@ abstract class AppLocalizations {
   /// No description provided for @temporalInvestment.
   ///
   /// In en, this message translates to:
-  /// **'TEMPORAL_INVESTMENT'**
+  /// **'Time Invested'**
   String get temporalInvestment;
 
   /// No description provided for @realTimeAccuracy.
@@ -734,6 +770,18 @@ abstract class AppLocalizations {
   /// **'Logic Riddles'**
   String get logicRiddles;
 
+  /// No description provided for @crossNumbers.
+  ///
+  /// In en, this message translates to:
+  /// **'Cross Numbers'**
+  String get crossNumbers;
+
+  /// No description provided for @crossNumbersDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Solve cross number puzzles'**
+  String get crossNumbersDesc;
+
   /// No description provided for @calculator.
   ///
   /// In en, this message translates to:
@@ -751,6 +799,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Avatar Shop'**
   String get avatarShop;
+
+  /// No description provided for @focusMode.
+  ///
+  /// In en, this message translates to:
+  /// **'Focus Mode'**
+  String get focusMode;
+
+  /// No description provided for @focusModeDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Simplified UI for concentration'**
+  String get focusModeDesc;
+
+  /// No description provided for @performanceMode.
+  ///
+  /// In en, this message translates to:
+  /// **'Performance Mode'**
+  String get performanceMode;
+
+  /// No description provided for @performanceModeDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Reduce transparency for better performance'**
+  String get performanceModeDesc;
 
   /// No description provided for @visualTheme.
   ///
@@ -950,6 +1022,12 @@ abstract class AppLocalizations {
   /// **'Export Report'**
   String get exportReport;
 
+  /// No description provided for @accuracyTrend.
+  ///
+  /// In en, this message translates to:
+  /// **'ACCURACY'**
+  String get accuracyTrend;
+
   /// No description provided for @streak.
   ///
   /// In en, this message translates to:
@@ -1003,6 +1081,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'UNITS_CLEARED'**
   String get unitsCleared;
+
+  /// No description provided for @temporalInvestmentLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'TEMPORAL_INVESTMENT'**
+  String get temporalInvestmentLabel;
 
   /// No description provided for @status.
   ///
@@ -1148,6 +1232,12 @@ abstract class AppLocalizations {
   /// **'CALCULATING...'**
   String get calculating;
 
+  /// No description provided for @difficultyLevelLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'DIFFICULTY_LEVEL'**
+  String get difficultyLevelLabel;
+
   /// No description provided for @advanced.
   ///
   /// In en, this message translates to:
@@ -1256,10 +1346,52 @@ abstract class AppLocalizations {
   /// **'DIV BY ZERO'**
   String get divByZero;
 
+  /// No description provided for @allModes.
+  ///
+  /// In en, this message translates to:
+  /// **'All Modes'**
+  String get allModes;
+
+  /// No description provided for @mathLearningProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'Math Learning Progress'**
+  String get mathLearningProgress;
+
+  /// No description provided for @preparingPdf.
+  ///
+  /// In en, this message translates to:
+  /// **'Preparing PDF...'**
+  String get preparingPdf;
+
+  /// No description provided for @overview.
+  ///
+  /// In en, this message translates to:
+  /// **'Overview'**
+  String get overview;
+
+  /// No description provided for @myGaasProgressReport.
+  ///
+  /// In en, this message translates to:
+  /// **'My GAAS Progress Report'**
+  String get myGaasProgressReport;
+
+  /// No description provided for @pdfSharedSuccessfully.
+  ///
+  /// In en, this message translates to:
+  /// **'PDF shared successfully!'**
+  String get pdfSharedSuccessfully;
+
+  /// No description provided for @shareFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Share failed: {error}'**
+  String shareFailed(Object error);
+
   /// No description provided for @readyToChallenge.
   ///
   /// In en, this message translates to:
-  /// **'🎯 Ready to Challenge Yourself?'**
+  /// **'🎯 Ready to Challenge?'**
   String get readyToChallenge;
 
   /// No description provided for @masterMathematicsDesc.
@@ -1405,6 +1537,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Cancel'**
   String get cancel;
+
+  /// No description provided for @chapter.
+  ///
+  /// In en, this message translates to:
+  /// **'CHAPTER'**
+  String get chapter;
+
+  /// No description provided for @chapterStarsProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'{stars} / {total} STARS'**
+  String chapterStarsProgress(Object stars, Object total);
+
+  /// No description provided for @lockedNeedStars.
+  ///
+  /// In en, this message translates to:
+  /// **'LOCKED - NEED {stars} TOTAL STARS'**
+  String lockedNeedStars(Object stars);
 
   /// No description provided for @solveLogicChallenges.
   ///
@@ -1874,12 +2024,6 @@ abstract class AppLocalizations {
   /// **'No game session'**
   String get noGameSession;
 
-  /// No description provided for @crossword.
-  ///
-  /// In en, this message translates to:
-  /// **'Crossword'**
-  String get crossword;
-
   /// No description provided for @playerLabel.
   ///
   /// In en, this message translates to:
@@ -1946,18 +2090,6 @@ abstract class AppLocalizations {
   /// **'SKIP'**
   String get skip;
 
-  /// No description provided for @across.
-  ///
-  /// In en, this message translates to:
-  /// **'ACROSS'**
-  String get across;
-
-  /// No description provided for @down.
-  ///
-  /// In en, this message translates to:
-  /// **'DOWN'**
-  String get down;
-
   /// No description provided for @allChallengesComplete.
   ///
   /// In en, this message translates to:
@@ -2000,17 +2132,23 @@ abstract class AppLocalizations {
   /// **'Answer revealed!'**
   String get answerRevealed;
 
+  /// No description provided for @excellent.
+  ///
+  /// In en, this message translates to:
+  /// **'Excellent!'**
+  String get excellent;
+
+  /// No description provided for @done.
+  ///
+  /// In en, this message translates to:
+  /// **'Done'**
+  String get done;
+
   /// No description provided for @selectRiddleLevel.
   ///
   /// In en, this message translates to:
   /// **'SELECT RIDDLE LEVEL'**
   String get selectRiddleLevel;
-
-  /// No description provided for @selectCrosswordLevel.
-  ///
-  /// In en, this message translates to:
-  /// **'SELECT CROSSWORD LEVEL'**
-  String get selectCrosswordLevel;
 
   /// No description provided for @loadingGame.
   ///
@@ -2210,11 +2348,11 @@ abstract class AppLocalizations {
   /// **'PUZZLES'**
   String get puzzlesTitle;
 
-  /// No description provided for @crosswordsMathRiddles.
+  /// No description provided for @mathRiddles.
   ///
   /// In en, this message translates to:
-  /// **'Crosswords + Math Riddles'**
-  String get crosswordsMathRiddles;
+  /// **'Math Riddles'**
+  String get mathRiddles;
 
   /// No description provided for @firstVictory.
   ///
@@ -2330,12 +2468,6 @@ abstract class AppLocalizations {
   /// **'Advanced Subtraction'**
   String get advancedSubtraction;
 
-  /// No description provided for @wordProblemsSubtraction.
-  ///
-  /// In en, this message translates to:
-  /// **'Word Problems - Subtraction'**
-  String get wordProblemsSubtraction;
-
   /// No description provided for @multiplicationMastery.
   ///
   /// In en, this message translates to:
@@ -2365,12 +2497,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Three Digit Multiplication'**
   String get threeDigitMultiplication;
-
-  /// No description provided for @multiplicationWordProblems.
-  ///
-  /// In en, this message translates to:
-  /// **'Multiplication Word Problems'**
-  String get multiplicationWordProblems;
 
   /// No description provided for @advancedMultiplication.
   ///
@@ -2413,12 +2539,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Three Digit Division'**
   String get threeDigitDivision;
-
-  /// No description provided for @divisionWordProblems.
-  ///
-  /// In en, this message translates to:
-  /// **'Division Word Problems'**
-  String get divisionWordProblems;
 
   /// No description provided for @longDivision.
   ///

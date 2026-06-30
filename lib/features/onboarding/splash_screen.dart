@@ -2,14 +2,7 @@ import 'dart:async';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import '../../core/providers.dart';
 import '../../core/sound_manager.dart';
-import '../../shared/widgets/main_navigation_scaffold.dart';
-import '../profile_setup/profile_setup_screen.dart';
-import '../../core/notification_service.dart';
-import '../../data/repositories/database_service.dart';
-import 'onboarding_screen.dart';
 
 class SplashScreen extends ConsumerStatefulWidget {
   const SplashScreen({super.key});
@@ -48,131 +41,30 @@ class _SplashScreenState extends ConsumerState<SplashScreen> with TickerProvider
 
   Future<void> _boot() async {
     final bootStart = DateTime.now();
-    
-    await _initializeServices();
-    
-    // Play startup sound once initialized
-    SoundManager.instance.playStartupSound(); 
+
+    // The startupProvider now handles initialization.
+    // We wait for it to be ready.
+    // However, since SplashScreen is shown when isReady is false,
+    // and startupProvider starts _init in constructor,
+    // we just need to make sure the splash shows for a minimum duration.
+
+    SoundManager.instance.playStartupSound();
 
     final elapsed = DateTime.now().difference(bootStart);
-    if (elapsed < const Duration(seconds: 2)) {
-      await Future.delayed(const Duration(seconds: 2) - elapsed);
+    if (elapsed < const Duration(seconds: 3)) {
+      await Future.delayed(const Duration(seconds: 3) - elapsed);
     }
 
-    if (mounted) {
-      await _safeNavigate();
-    }
+    // In a state-driven app, Main.dart switches the screen based on startupState.
+    // If SplashScreen is used as a standalone screen that navigates,
+    // it should be consistent with the logic in Main.dart.
+    // But Main.dart currently returns SplashScreen() if !isReady.
+    // So if _init finishes, Main.dart will automatically swap SplashScreen for something else.
+    // This _boot is only for visual timing if Main.dart is the driver.
   }
 
-  Future<void> _initializeServices() async {
-    try {
-      await DatabaseService.reset();
-    } catch (_) {}
-    
-    try {
-      await Future.wait([
-        _initDatabase(),
-        _initUserSession(),
-        _initTheme(),
-        _initLocale(),
-        _initHaptics(),
-        _initSound(),
-        _initNotifications(),
-      ]);
-    } catch (_) {
-      await _ensureBasicState();
-    }
-  }
+  // Removed navigation logic as Main.dart handles it via startupState
 
-  Future<void> _initDatabase() async {
-    try {
-      await DatabaseService.instance;
-    } catch (_) {}
-  }
-
-  Future<void> _initUserSession() async {
-    try {
-      await ref.read(userSessionProvider.notifier).initializeUser();
-    } catch (_) {}
-  }
-
-  Future<void> _initTheme() async {
-    try {
-      await ref.read(themeProvider.notifier).loadTheme();
-    } catch (_) {}
-  }
-
-  Future<void> _initLocale() async {
-    try {
-      await ref.read(localeProvider.notifier).loadLocale();
-    } catch (_) {}
-  }
-
-  Future<void> _initHaptics() async {
-    try {
-      await HapticManager.instance.initialize();
-    } catch (_) {}
-  }
-
-  Future<void> _initSound() async {
-    try {
-      await SoundManager.instance.initialize();
-    } catch (_) {}
-  }
-
-  Future<void> _initNotifications() async {
-    try {
-      await NotificationService().initialize();
-    } catch (_) {}
-  }
-
-Future<void> _ensureBasicState() async {
-    try {
-      await ref.read(themeProvider.notifier).loadTheme();
-      await ref.read(localeProvider.notifier).loadLocale();
-    } catch (_) {}
-  }
-
-  Future<void> _safeNavigate() async {
-    try {
-      await _navigateToNext();
-    } catch (_) {
-      if (!mounted) return;
-      _performFinalNavigation(const MainNavigationScaffold());
-    }
-  }
-
-  Future<void> _navigateToNext() async {
-    Widget next;
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final seenIntro = prefs.getBool('seen_intro') ?? false;
-      final hasCustomization = prefs.getBool('has_customization') ?? false;
-
-      if (!seenIntro) {
-        next = const OnboardingScreen();
-      } else if (!hasCustomization) {
-        next = const ProfileSetupScreen(isInitialSetup: false);
-      } else {
-        next = const MainNavigationScaffold();
-      }
-    } catch (_) {
-      next = const MainNavigationScaffold();
-    }
-
-    if (!mounted) return;
-    _performFinalNavigation(next);
-  }
-
-  void _performFinalNavigation(Widget next) {
-    Navigator.of(context).pushReplacement(
-      PageRouteBuilder(
-        pageBuilder: (_, _, _) => next,
-        transitionDuration: const Duration(milliseconds: 700),
-        transitionsBuilder: (_, animation, _, child) => FadeTransition(opacity: animation, child: child),
-      ),
-    );
-  }
 
   @override
   void dispose() {

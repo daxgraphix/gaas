@@ -42,8 +42,7 @@ class DatabaseService {
   Future<void> saveLevelProgress(LevelProgress progress) async {
     final key = 'level_progress_${progress.operationId}_${progress.level}';
     final json = progress.toJson();
-    final sanitizedJson = SecurityService.instance.sanitizeInput(jsonEncode(json), maxLength: 2000);
-    await _prefs?.setString(key, sanitizedJson);
+    await _prefs?.setString(key, jsonEncode(json));
   }
 
   Future<LevelProgress?> getLevelProgress(String operationId, int level) async {

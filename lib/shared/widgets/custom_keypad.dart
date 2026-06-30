@@ -120,25 +120,29 @@ class CustomKeypad extends StatelessWidget {
     final theme = Theme.of(context);
     return SizedBox(
       height: 65,
-      child: InkWell(
-        onTap: () {
-          HapticManager.instance.selectionClick();
-          onKeyPressed(key);
-        },
-        child: Container(
-          decoration: BoxDecoration(
-            border: Border.all(
-              color: theme.colorScheme.onSurface.withValues(alpha: 0.05),
-              width: 0.25,
+      child: Semantics(
+        label: 'Key $key',
+        button: true,
+        child: InkWell(
+          onTap: () {
+            HapticManager.instance.selectionClick();
+            onKeyPressed(key);
+          },
+          child: Container(
+            decoration: BoxDecoration(
+              border: Border.all(
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.05),
+                width: 0.25,
+              ),
             ),
-          ),
-          child: Center(
-            child: Text(
-              key,
-              style: TextStyle(
-                fontSize: 28,
-                fontWeight: FontWeight.w200,
-                color: theme.colorScheme.onSurface,
+            child: Center(
+              child: Text(
+                key,
+                style: TextStyle(
+                  fontSize: 28,
+                  fontWeight: FontWeight.w200,
+                  color: theme.colorScheme.onSurface,
+                ),
               ),
             ),
           ),
@@ -153,21 +157,26 @@ class CustomKeypad extends StatelessWidget {
     VoidCallback onPressed,
   ) {
     final theme = Theme.of(context);
+    final isSubmit = icon == Icons.check;
     return SizedBox(
       height: 65,
-      child: InkWell(
-        onTap: onPressed,
-        child: Container(
-          decoration: BoxDecoration(
-            border: Border.all(
-              color: theme.colorScheme.onSurface.withValues(alpha: 0.05),
-              width: 0.25,
+      child: Semantics(
+        label: isSubmit ? 'Submit' : 'Clear',
+        button: true,
+        child: InkWell(
+          onTap: onPressed,
+          child: Container(
+            decoration: BoxDecoration(
+              border: Border.all(
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.05),
+                width: 0.25,
+              ),
             ),
-          ),
-          child: Icon(
-            icon,
-            size: 24,
-            color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+            child: Icon(
+              icon,
+              size: 24,
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+            ),
           ),
         ),
       ),

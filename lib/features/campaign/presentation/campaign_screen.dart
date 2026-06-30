@@ -154,22 +154,27 @@ class _CampaignScreenState extends ConsumerState<CampaignScreen>
     );
   }
 
-  void _startCampaignLevel(String subType, int level, String primaryType) {
+  Future<void> _startCampaignLevel(String subType, int level, String primaryType) async {
     ref.read(soundManagerProvider).playGameStart();
 
-    ref.read(gameSessionProvider.notifier).startGame(
+    // Questions count increases from 50 to 60 after level 50
+    final totalQuestions = level > 50 ? 60 : 50;
+
+    await ref.read(gameSessionProvider.notifier).startGame(
       mode: GameMode.campaign,
       level: level,
       operation: primaryType,
-      totalQuestions: 45,
+      totalQuestions: totalQuestions,
     );
 
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => const GameScreen(),
-      ),
-    );
+    if (mounted) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => const GameScreen(),
+        ),
+      );
+    }
   }
 }
 

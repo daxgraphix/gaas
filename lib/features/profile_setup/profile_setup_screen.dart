@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/providers.dart';
 import '../../l10n/generated/app_localizations.dart';
-import '../../shared/widgets/main_navigation_scaffold.dart';
 
 class ProfileSetupScreen extends ConsumerStatefulWidget {
   final bool isInitialSetup;
@@ -90,14 +88,8 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
             avatarColor: '#${_avatarColors[_selectedColorIndex].toARGB32().toRadixString(16).toUpperCase()}',
           );
 
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setBool('has_customization', true);
-
-      if (!mounted) return;
-
-      Navigator.of(
-        context,
-      ).pushReplacement(MaterialPageRoute(builder: (_) => const MainNavigationScaffold()));
+      await ref.read(startupProvider.notifier).completeProfileSetup();
+      // No need to navigate manually, startupProvider state change will trigger rebuild in GAASApp
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(

@@ -8,6 +8,8 @@ class UserSession {
   String theme;
   String language;
   int totalPoints;
+  int skillRating;
+  bool isFocusMode;
   DateTime createdAt;
   DateTime lastPlayedAt;
   int loginStreak;
@@ -21,12 +23,18 @@ class UserSession {
     this.theme = 'light',
     this.language = 'en',
     this.totalPoints = 0,
+    this.skillRating = 1000,
+    this.isFocusMode = false,
     DateTime? createdAt,
     DateTime? lastPlayedAt,
     this.loginStreak = 0,
     this.unlockedAvatars,
   })  : createdAt = createdAt ?? DateTime.now(),
         lastPlayedAt = lastPlayedAt ?? DateTime.now();
+
+  int get level => (totalPoints / 2500).floor() + 1;
+  double get levelProgress => (totalPoints % 2500) / 2500;
+  int get pointsToNextLevel => 2500 - (totalPoints % 2500);
 
   UserSession copyWith({
     String? id,
@@ -36,6 +44,8 @@ class UserSession {
     String? theme,
     String? language,
     int? totalPoints,
+    int? skillRating,
+    bool? isFocusMode,
     DateTime? createdAt,
     DateTime? lastPlayedAt,
     int? loginStreak,
@@ -49,6 +59,8 @@ class UserSession {
       theme: theme ?? this.theme,
       language: language ?? this.language,
       totalPoints: totalPoints ?? this.totalPoints,
+      skillRating: skillRating ?? this.skillRating,
+      isFocusMode: isFocusMode ?? this.isFocusMode,
       createdAt: createdAt ?? this.createdAt,
       lastPlayedAt: lastPlayedAt ?? this.lastPlayedAt,
       loginStreak: loginStreak ?? this.loginStreak,
@@ -65,6 +77,8 @@ class UserSession {
       'theme': theme,
       'language': language,
       'totalPoints': SecurityService.instance.validateAndSanitizeScore(totalPoints, 999999),
+      'skillRating': skillRating,
+      'isFocusMode': isFocusMode,
       'createdAt': createdAt.toIso8601String(),
       'lastPlayedAt': lastPlayedAt.toIso8601String(),
       'loginStreak': SecurityService.instance.validateAndSanitizeScore(loginStreak, 365),
@@ -81,6 +95,8 @@ class UserSession {
       theme: json['theme'] ?? 'light',
       language: json['language'] ?? 'en',
       totalPoints: SecurityService.instance.validateAndSanitizeScore(json['totalPoints'] ?? 0, 999999),
+      skillRating: json['skillRating'] ?? 1000,
+      isFocusMode: json['isFocusMode'] ?? false,
       createdAt: json['createdAt'] != null
           ? DateTime.parse(json['createdAt'])
           : DateTime.now(),

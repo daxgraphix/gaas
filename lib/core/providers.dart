@@ -5,16 +5,15 @@ import 'package:intl/intl.dart' as intl;
 import '../core/themes/app_themes.dart';
 import '../data/models/user_session.dart';
 import '../data/models/level_progress.dart';
-import '../data/models/crossword_puzzle.dart';
 import '../data/models/math_riddle.dart';
 import '../data/repositories/user_repository.dart';
 import '../data/repositories/level_progress_repository.dart';
 import '../data/repositories/statistics_repository.dart';
 import '../data/repositories/database_service.dart';
-import '../core/math_engine/crossword_engine.dart';
 import '../core/math_engine/math_riddle_engine.dart';
 import '../core/math_engine/math_visual_engine.dart';
-import '../core/math_engine/math_equation_engine.dart';
+import '../data/models/cross_numbers_puzzle.dart';
+import '../core/math_engine/cross_numbers_engine.dart';
 import '../core/sound_manager.dart';
 import '../core/notification_service.dart';
 
@@ -24,6 +23,102 @@ import '../core/utils/game_flow_optimizer.dart';
 
 final dbProvider = FutureProvider<DatabaseService>((ref) async {
   return await DatabaseService.instance;
+});
+
+final navigationIndexProvider = StateProvider<int>((ref) => 0);
+
+class StartupState {
+  final bool isInitialized;
+  final bool needsIntro;
+  final bool needsProfileSetup;
+  final bool isReady;
+
+  StartupState({
+    this.isInitialized = false,
+    this.needsIntro = true,
+    this.needsProfileSetup = true,
+    this.isReady = false,
+  });
+
+  StartupState copyWith({
+    bool? isInitialized,
+    bool? needsIntro,
+    bool? needsProfileSetup,
+    bool? isReady,
+  }) {
+    return StartupState(
+      isInitialized: isInitialized ?? this.isInitialized,
+      needsIntro: needsIntro ?? this.needsIntro,
+      needsProfileSetup: needsProfileSetup ?? this.needsProfileSetup,
+      isReady: isReady ?? this.isReady,
+    );
+  }
+}
+
+class StartupNotifier extends StateNotifier<StartupState> {
+  final Ref ref;
+
+  StartupNotifier(this.ref) : super(StartupState()) {
+    _init();
+  }
+
+  Future<void> _init() async {
+    final stopwatch = Stopwatch()..start();
+    try {
+      // 1. Core Services
+      await Future.wait([
+        ref.read(themeProvider.notifier).loadTheme(),
+        ref.read(localeProvider.notifier).loadLocale(),
+        HapticManager.instance.initialize(),
+        SoundManager.instance.initialize(),
+        NotificationService().initialize(),
+      ]);
+
+      // 2. Database & Data
+      await DatabaseService.instance;
+      await ref.read(userSessionProvider.notifier).initializeUser();
+      await ref.read(levelProgressProvider.notifier).loadProgress();
+
+      // 3. Determine onboarding status
+      final prefs = await SharedPreferences.getInstance();
+      final hasSeenIntro = prefs.getBool('seen_intro') ?? false;
+      final hasCustomization = prefs.getBool('has_customization') ?? false;
+
+      // 4. Enforce minimum splash duration for branding (3 seconds)
+      final elapsed = stopwatch.elapsedMilliseconds;
+      if (elapsed < 3000) {
+        await Future.delayed(Duration(milliseconds: 3000 - elapsed));
+      }
+
+      state = state.copyWith(
+        isInitialized: true,
+        needsIntro: !hasSeenIntro,
+        needsProfileSetup: !hasCustomization,
+        isReady: true,
+      );
+    } catch (e) {
+      // Handle init error - at least set ready so app doesn't stuck
+      state = state.copyWith(isReady: true);
+    } finally {
+      stopwatch.stop();
+    }
+  }
+
+  Future<void> completeIntro() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('seen_intro', true);
+    state = state.copyWith(needsIntro: false);
+  }
+
+  Future<void> completeProfileSetup() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('has_customization', true);
+    state = state.copyWith(needsProfileSetup: false);
+  }
+}
+
+final startupProvider = StateNotifierProvider<StartupNotifier, StartupState>((ref) {
+  return StartupNotifier(ref);
 });
 
 final isarServiceProvider = Provider((ref) => IsarService());
@@ -237,9 +332,10 @@ class AnalyticsNotifier extends StateNotifier<AnalyticsState> {
     );
   }
 
-  void recordSession(String operation, int duration, int questions, int correct, int hints) {
+  void recordSession(String operation, int duration, int questions, int correct, int hints, {String? mode}) {
     final newSession = {
       'operation': operation,
+      'mode': mode ?? 'unknown',
       'duration': duration,
       'questions': questions,
       'correct': correct,
@@ -416,7 +512,10 @@ class UserSessionNotifier extends StateNotifier<UserSession?> {
       // 7-day streak reward
       if (user.loginStreak % 7 == 0) {
         user.totalPoints += 5000;
-        // Optionally trigger a notification/toast here later
+        ref.read(notificationProvider).showAchievementNotification(
+          '7-Day Streak!',
+          'You\'ve played for 7 days in a row! Enjoy 5000 bonus points.',
+        );
       }
     } else if (difference > 1) {
       user.loginStreak = 1;
@@ -448,42 +547,81 @@ class UserSessionNotifier extends StateNotifier<UserSession?> {
     String? avatarColor,
     String? theme,
     String? language,
+    int? skillRating,
+    bool? isFocusMode,
   }) async {
     if (state == null) return;
 
     final repo = ref.read(userRepositoryProvider);
-    final updatedUser = UserSession(
-      name: name ?? state!.name,
-      avatarShape: avatarShape ?? state!.avatarShape,
-      avatarColor: avatarColor ?? state!.avatarColor,
-      theme: theme ?? state!.theme,
-      language: language ?? state!.language,
-      totalPoints: state!.totalPoints,
-      createdAt: state!.createdAt,
-      lastPlayedAt: state!.lastPlayedAt,
-      unlockedAvatars: state!.unlockedAvatars,
-      loginStreak: state!.loginStreak,
-    )..id = state!.id;
+    final updatedUser = state!.copyWith(
+      name: name,
+      avatarShape: avatarShape,
+      avatarColor: avatarColor,
+      theme: theme,
+      language: language,
+      skillRating: skillRating,
+      isFocusMode: isFocusMode,
+    );
 
     await repo.updateUserSession(updatedUser);
     state = updatedUser;
   }
 
+  Future<void> setFocusMode(bool enabled) async {
+    if (state == null) return;
+    await updateUser(isFocusMode: enabled);
+  }
+
   Future<void> addPoints(int points) async {
+    if (state == null) return;
+    
     final repo = ref.read(userRepositoryProvider);
+    final oldLevel = state!.level;
+    
     await repo.updatePoints(points);
-    if (state != null) {
-      state = state!.copyWith(totalPoints: state!.totalPoints + points);
+    state = state!.copyWith(totalPoints: state!.totalPoints + points);
+
+    if (state!.level > oldLevel) {
+      ref.read(notificationProvider).showLevelUpNotification(
+        'LEVEL UP!',
+        'You\'ve reached Level ${state!.level}! Keep up the great work.',
+      );
+      // Optional: Add a bonus for leveling up
+      await addPoints(250 * state!.level); 
     }
   }
 
-  Future<bool> unlockAvatar(String avatarShape, int cost) async {
-    if (state == null) return false;
-    if (state!.totalPoints < cost) return false;
+  Future<void> claimDailyReward() async {
+    if (state == null) return;
+    
+    final now = DateTime.now();
+    final lastPlayed = state!.lastPlayedAt;
+    final today = DateTime(now.year, now.month, now.day);
+    final lastPlayedDay = DateTime(lastPlayed.year, lastPlayed.month, lastPlayed.day);
 
+    if (today.isAfter(lastPlayedDay)) {
+      final reward = 100 * state!.loginStreak;
+      await addPoints(reward);
+      
+      ref.read(notificationProvider).showAchievementNotification(
+        'Daily Reward!',
+        'You earned $reward points for your ${state!.loginStreak}-day streak!',
+      );
+    }
+  }
+
+  Future<bool> unlockAvatar(String avatarShape, int cost, int requiredStars, {int requiredLevel = 1}) async {
+    if (state == null) return false;
+    
     final currentAvatars =
         List<String>.from(state!.unlockedAvatars ?? ['circle', 'square', 'star']);
-    if (currentAvatars.contains(avatarShape)) return true; // Already unlocked
+    
+    if (currentAvatars.contains(avatarShape)) return true;
+    if (state!.totalPoints < cost) return false;
+
+    final totalStars = await ref.read(levelProgressRepositoryProvider).getTotalStars();
+    if (totalStars < requiredStars) return false;
+    if (state!.level < requiredLevel) return false;
 
     final repo = ref.read(userRepositoryProvider);
 
@@ -495,6 +633,17 @@ class UserSessionNotifier extends StateNotifier<UserSession?> {
 
     await repo.updateUserSession(updatedUser);
     state = updatedUser;
+    
+    // Track achievement or analytics for purchase
+    ref.read(analyticsProvider.notifier).recordSession(
+      'shop_purchase',
+      0,
+      0,
+      0,
+      0,
+      mode: 'avatar_$avatarShape',
+    );
+
     return true;
   }
 
@@ -542,31 +691,24 @@ class LevelProgressNotifier
     await loadProgress();
   }
 
+  Future<void> updateProgress(String operationId, int level, int stars, int score) async {
+    final repo = ref.read(levelProgressRepositoryProvider);
+    await repo.updateStars(operationId, level, stars, score);
+    await loadProgress();
+  }
+
   Future<void> unlockNextLevel(String operationId, int level) async {
     final repo = ref.read(levelProgressRepositoryProvider);
     final progress = await repo.getProgress(operationId, level);
     
-    int stars = 0;
-    if (progress == null) {
-      stars = 1; // Default stars for completion
-    } else {
-      stars = progress.stars;
+    int stars = 3; // Default for Cross Numbers for now
+    if (progress != null) {
+      stars = stars > progress.stars ? stars : progress.stars;
     }
     
     // Save current level progress
-    await repo.saveProgress(LevelProgress(
-      operationId: operationId,
-      level: level,
-      stars: stars,
-      isUnlocked: true,
-      highScore: 0,
-    ));
+    await repo.updateStars(operationId, level, stars, 0);
 
-    // Unlock next level if passed
-    if (level < 30) {
-      await repo.unlockLevel(operationId, level + 1);
-    }
-    
     // Refresh the provider state
     await loadProgress();
   }
@@ -1176,240 +1318,9 @@ class DailyChallengeNotifier extends StateNotifier<List<DailyChallenge>> {
   }
 }
 
-final crosswordPuzzleProvider =
-    StateNotifierProvider<CrosswordPuzzleNotifier, CrosswordPuzzleState>((ref) {
-      return CrosswordPuzzleNotifier(ref);
-    });
-
-final mathEquationPuzzleProvider =
-    StateNotifierProvider<MathEquationPuzzleNotifier, MathEquationPuzzleState>((ref) {
-      return MathEquationPuzzleNotifier(ref);
-    });
-
-class CrosswordCellData {
-  final String? userLetter;
-  final bool isSelected;
-  final bool isCorrect;
-  final bool isRevealed;
-
-  CrosswordCellData({
-    this.userLetter,
-    this.isSelected = false,
-    this.isCorrect = false,
-    this.isRevealed = false,
-  });
-
-  CrosswordCellData copyWith({
-    String? userLetter,
-    bool? isSelected,
-    bool? isCorrect,
-    bool? isRevealed,
-  }) {
-    return CrosswordCellData(
-      userLetter: userLetter ?? this.userLetter,
-      isSelected: isSelected ?? this.isSelected,
-      isCorrect: isCorrect ?? this.isCorrect,
-      isRevealed: isRevealed ?? this.isRevealed,
-    );
-  }
-}
-
-class CrosswordPuzzleState {
-  final CrosswordPuzzle? puzzle;
-  final List<List<CrosswordCellData>> grid;
-  final String? selectedClueId;
-  final int hintsUsed;
-  final List<String> revealedHints;
-  final int elapsedSeconds;
-  final bool isComplete;
-  final int stars;
-
-  CrosswordPuzzleState({
-    this.puzzle,
-    List<List<CrosswordCellData>>? grid,
-    this.selectedClueId,
-    this.hintsUsed = 0,
-    this.revealedHints = const [],
-    this.elapsedSeconds = 0,
-    this.isComplete = false,
-    this.stars = 0,
-  }) : grid = grid ?? [];
-
-  CrosswordPuzzleState copyWith({
-    CrosswordPuzzle? puzzle,
-    List<List<CrosswordCellData>>? grid,
-    String? selectedClueId,
-    int? hintsUsed,
-    List<String>? revealedHints,
-    int? elapsedSeconds,
-    bool? isComplete,
-    int? stars,
-  }) {
-    return CrosswordPuzzleState(
-      puzzle: puzzle ?? this.puzzle,
-      grid: grid ?? this.grid,
-      selectedClueId: selectedClueId ?? this.selectedClueId,
-      hintsUsed: hintsUsed ?? this.hintsUsed,
-      revealedHints: revealedHints ?? this.revealedHints,
-      elapsedSeconds: elapsedSeconds ?? this.elapsedSeconds,
-      isComplete: isComplete ?? this.isComplete,
-      stars: stars ?? this.stars,
-    );
-  }
-}
-
-class CrosswordPuzzleNotifier extends StateNotifier<CrosswordPuzzleState> {
-  final Ref ref;
-  CrosswordPuzzleNotifier(this.ref) : super(CrosswordPuzzleState());
-
-  void loadPuzzle({
-    String theme = 'animals',
-    int gridSize = 20,
-    int difficulty = 1,
-  }) {
-    final puzzle = CrosswordEngine.generatePuzzle(
-      theme: theme,
-      difficulty: difficulty,
-      questionCount: 45,
-    );
-
-    final grid = List.generate(
-      gridSize,
-      (r) => List.generate(gridSize, (c) => CrosswordCellData()),
-    );
-
-    state = CrosswordPuzzleState(puzzle: puzzle, grid: grid);
-  }
-
-  void selectCell(int row, int col) {
-    if (state.puzzle == null) return;
-    if (state.puzzle!.isBlocked[row][col]) return;
-
-    final newGrid = state.grid
-        .map((r) => r.map((cell) => cell.copyWith(isSelected: false)).toList())
-        .toList();
-    newGrid[row][col] = newGrid[row][col].copyWith(isSelected: true);
-
-    state = state.copyWith(grid: newGrid, selectedClueId: 'cell_${row}_$col');
-  }
-
-  void enterLetter(String letter, int row, int col) {
-    if (state.puzzle == null) return;
-
-    final newGrid = state.grid.map((r) => r.toList()).toList();
-    final correctLetter = state.puzzle!.grid[row][col];
-
-    if (correctLetter.isNotEmpty) {
-      final isCorrect = letter.toUpperCase() == correctLetter.toUpperCase();
-      newGrid[row][col] = newGrid[row][col].copyWith(
-        userLetter: letter.toUpperCase(),
-        isCorrect: isCorrect,
-      );
-    }
-
-    state = state.copyWith(grid: newGrid);
-    _checkCompletion();
-  }
-
-  void revealLetter() {
-    if (state.puzzle == null) return;
-
-    // Check if user has enough points
-    final user = ref.read(userSessionProvider);
-    if (user == null || user.totalPoints < hintCostPoints) return;
-
-    final newGrid = state.grid.map((r) => r.toList()).toList();
-    int revealed = 0;
-
-    for (int r = 0; r < newGrid.length; r++) {
-      for (int c = 0; c < newGrid[r].length; c++) {
-        if (!state.puzzle!.isBlocked[r][c] &&
-            newGrid[r][c].userLetter != state.puzzle!.grid[r][c]) {
-          newGrid[r][c] = newGrid[r][c].copyWith(
-            userLetter: state.puzzle!.grid[r][c],
-            isCorrect: true,
-            isRevealed: true,
-          );
-          revealed++;
-        }
-      }
-    }
-
-    if (revealed > 0) {
-      // Deduct points
-      ref.read(userSessionProvider.notifier).addPoints(-hintCostPoints);
-      ref.read(soundManagerProvider).playEffect('hint');
-
-      state = state.copyWith(
-        grid: newGrid,
-        hintsUsed: state.hintsUsed + revealed,
-        revealedHints: [...state.revealedHints, 'Word revealed'],
-      );
-    }
-
-    _checkCompletion();
-  }
-
-  void _checkCompletion() {
-    if (state.puzzle == null) return;
-
-    bool complete = true;
-    for (int r = 0; r < state.grid.length; r++) {
-      for (int c = 0; c < state.grid[r].length; c++) {
-        if (!state.puzzle!.isBlocked[r][c]) {
-          if (!state.grid[r][c].isCorrect && !state.grid[r][c].isRevealed) {
-            complete = false;
-          }
-        }
-      }
-    }
-
-    if (complete) {
-      final stars = state.puzzle!.calculateStars(
-        state.elapsedSeconds,
-        state.hintsUsed,
-        _countCorrectCells(),
-      );
-      state = state.copyWith(isComplete: true, stars: stars);
-    }
-  }
-
-  int _countCorrectCells() {
-    if (state.puzzle == null) return 0;
-    int correctWords = 0;
-    for (final clue in state.puzzle!.clues) {
-      bool wordCorrect = true;
-      for (int i = 0; i < clue.length; i++) {
-        final r = clue.direction == 'across' ? clue.startRow - 1 : clue.startCol - 1 + i;
-        final c = clue.direction == 'across' ? clue.startCol - 1 + i : clue.startRow - 1;
-        
-        if (r >= 0 && r < state.grid.length && c >= 0 && c < state.grid[r].length) {
-          if (!state.grid[r][c].isCorrect) {
-            wordCorrect = false;
-            break;
-          }
-        } else {
-          wordCorrect = false;
-          break;
-        }
-      }
-      if (wordCorrect) correctWords++;
-    }
-    return correctWords;
-  }
-
-  void incrementTime() {
-    if (!state.isComplete) {
-      state = state.copyWith(elapsedSeconds: state.elapsedSeconds + 1);
-    }
-  }
-
-  void reset() {
-    if (state.puzzle != null) {
-      loadPuzzle(theme: state.puzzle!.theme, gridSize: state.grid.length, difficulty: state.puzzle!.difficulty);
-    }
-  }
-}
+final crossNumbersProvider = StateNotifierProvider.autoDispose<CrossNumbersNotifier, CrossNumbersState>((ref) {
+  return CrossNumbersNotifier(ref);
+});
 
 final mathRiddleProvider =
     StateNotifierProvider<MathRiddleNotifier, MathRiddleState>((ref) {
@@ -1442,48 +1353,8 @@ class MathRiddleNotifier extends StateNotifier<MathRiddleState> {
     );
   }
 
-  void loadWordProblem(int difficulty) {
-    const questionCount = 20;
-
-    final cached = GameFlowOptimizer.getPreloadedRiddles(
-      operations: ['word'],
-      level: difficulty,
-    );
-
-    final List<dynamic> riddles = (cached != null && cached.isNotEmpty)
-        ? cached
-        : List.generate(questionCount, (i) => MathRiddleEngine.generateWordProblem(difficulty));
-
-    state = state.copyWith(
-      currentRiddle: riddles.isNotEmpty && riddles[0] is MathRiddle ? riddles[0] as MathRiddle : null,
-      allChallenges: riddles,
-      level: difficulty,
-      totalQuestions: riddles.length,
-      questionIndex: 1,
-    );
-  }
-
-  void loadNumberSequence(int difficulty) {
-    const questionCount = 20;
-
-    final cached = GameFlowOptimizer.getPreloadedRiddles(
-      operations: ['sequence'],
-      level: difficulty,
-    );
-
-    final List<dynamic> sequences = (cached != null && cached.isNotEmpty)
-        ? cached
-        : List.generate(questionCount, (i) => MathRiddleEngine.generateNumberSequence(difficulty));
-
-    state = state.copyWith(
-      currentSequence: sequences.isNotEmpty && sequences[0] is NumberSequence ? sequences[0] as NumberSequence : null,
-      allChallenges: sequences,
-      level: difficulty,
-      totalQuestions: sequences.length,
-      questionIndex: 1,
-    );
-  }
-
+    // removed loadWordProblem
+    // removed loadNumberSequence
   Future<void> loadLogicChallenge(int difficulty) async {
     const questionCount = 20;
 
@@ -1509,7 +1380,7 @@ class MathRiddleNotifier extends StateNotifier<MathRiddleState> {
         final logic = await MathVisualEngine.generateVisualLogicChallenge(difficulty);
         challenges.add(logic);
       } else {
-        final logic = MathRiddleEngine.generateLogicChallenge(difficulty);
+        final logic = await MathRiddleEngine.generateLogicChallenge(difficulty);
         challenges.add(logic);
       }
     }
@@ -1536,8 +1407,6 @@ class MathRiddleNotifier extends StateNotifier<MathRiddleState> {
     bool isCorrect;
     if (state.currentRiddle != null) {
       isCorrect = state.selectedAnswer == state.currentRiddle!.correctAnswer;
-    } else if (state.currentSequence != null) {
-      isCorrect = state.selectedAnswer == state.currentSequence!.correctAnswer;
     } else if (state.currentLogic != null) {
       isCorrect = state.selectedAnswer == state.currentLogic!.correctAnswer;
     } else {
@@ -1560,15 +1429,12 @@ class MathRiddleNotifier extends StateNotifier<MathRiddleState> {
     } else {
       // Move to next question - advance to next item in allChallenges
       MathRiddle? nextRiddle;
-      NumberSequence? nextSequence;
       LogicMathChallenge? nextLogic;
       
       if (state.allChallenges.isNotEmpty && newIndex - 1 < state.allChallenges.length) {
         final next = state.allChallenges[newIndex - 1];
         if (next is MathRiddle) {
           nextRiddle = next;
-        } else if (next is NumberSequence) {
-          nextSequence = next;
         } else if (next is LogicMathChallenge) {
           nextLogic = next;
         }
@@ -1582,21 +1448,15 @@ class MathRiddleNotifier extends StateNotifier<MathRiddleState> {
         selectedAnswer: null,
         revealedHints: [],
         currentRiddle: nextRiddle ?? state.currentRiddle,
-        currentSequence: nextSequence ?? state.currentSequence,
         currentLogic: nextLogic ?? state.currentLogic,
       );
     }
   }
 
   Future<void> _saveLevelCompletion(int level, int correct, int total) async {
-    final passed = correct >= 15;
     final repo = ref.read(levelProgressRepositoryProvider);
     
-    final operation = 'logic';
-    
-    if (passed && level < 30) {
-      await repo.updateStars(operation, level + 1, 0, 0);
-    }
+    final operation = 'math_riddle'; // Corrected from 'logic'
     
     final stars = state.stars;
     await repo.updateStars(operation, level, stars, correct * 5);
@@ -1636,18 +1496,6 @@ class MathRiddleNotifier extends StateNotifier<MathRiddleState> {
       state = state.copyWith(
         currentRiddle: challenge,
         currentLogic: null,
-        currentSequence: null,
-        questionIndex: newIndex,
-        selectedAnswer: null,
-        revealedHints: [],
-        isAnswered: false,
-        isCorrect: false,
-      );
-    } else if (challenge is NumberSequence) {
-      state = state.copyWith(
-        currentSequence: challenge,
-        currentLogic: null,
-        currentRiddle: null,
         questionIndex: newIndex,
         selectedAnswer: null,
         revealedHints: [],
@@ -1658,7 +1506,6 @@ class MathRiddleNotifier extends StateNotifier<MathRiddleState> {
       state = state.copyWith(
         currentLogic: challenge,
         currentRiddle: null,
-        currentSequence: null,
         questionIndex: newIndex,
         selectedAnswer: null,
         revealedHints: [],
@@ -1678,8 +1525,6 @@ class MathRiddleNotifier extends StateNotifier<MathRiddleState> {
 
     if (state.currentRiddle != null) {
       availableHints = state.currentRiddle!.progressiveHints;
-    } else if (state.currentSequence != null) {
-      availableHints = state.currentSequence!.progressiveHints;
     } else if (state.currentLogic != null) {
       availableHints = state.currentLogic!.progressiveHints;
     }
@@ -1740,7 +1585,6 @@ final puzzleStatsProvider =
 
 class PuzzleStats {
   final int totalPuzzlesSolved;
-  final int totalCrosswordsSolved;
   final int totalMathRiddlesSolved;
   final int averageTimeSeconds;
   final int bestTimeSeconds;
@@ -1751,7 +1595,6 @@ class PuzzleStats {
 
   PuzzleStats({
     this.totalPuzzlesSolved = 0,
-    this.totalCrosswordsSolved = 0,
     this.totalMathRiddlesSolved = 0,
     this.averageTimeSeconds = 0,
     this.bestTimeSeconds = 0,
@@ -1763,7 +1606,6 @@ class PuzzleStats {
 
   PuzzleStats copyWith({
     int? totalPuzzlesSolved,
-    int? totalCrosswordsSolved,
     int? totalMathRiddlesSolved,
     int? averageTimeSeconds,
     int? bestTimeSeconds,
@@ -1774,8 +1616,6 @@ class PuzzleStats {
   }) {
     return PuzzleStats(
       totalPuzzlesSolved: totalPuzzlesSolved ?? this.totalPuzzlesSolved,
-      totalCrosswordsSolved:
-          totalCrosswordsSolved ?? this.totalCrosswordsSolved,
       totalMathRiddlesSolved:
           totalMathRiddlesSolved ?? this.totalMathRiddlesSolved,
       averageTimeSeconds: averageTimeSeconds ?? this.averageTimeSeconds,
@@ -1801,19 +1641,9 @@ class PuzzleStatsNotifier extends StateNotifier<PuzzleStats> {
         ((state.averageTimeSeconds * state.totalPuzzlesSolved) + timeSeconds) ~/
         (state.totalPuzzlesSolved + 1);
 
-    int crosswords = state.totalCrosswordsSolved;
-    int mathRiddles = state.totalMathRiddlesSolved;
-
-    if (puzzleType == 'crossword') {
-      crosswords++;
-    } else {
-      mathRiddles++;
-    }
-
     state = state.copyWith(
       totalPuzzlesSolved: state.totalPuzzlesSolved + 1,
-      totalCrosswordsSolved: crosswords,
-      totalMathRiddlesSolved: mathRiddles,
+      totalMathRiddlesSolved: state.totalMathRiddlesSolved + 1,
       averageTimeSeconds: newAverage,
       bestTimeSeconds:
           timeSeconds < state.bestTimeSeconds || state.bestTimeSeconds == 0
@@ -1829,43 +1659,138 @@ class PuzzleStatsNotifier extends StateNotifier<PuzzleStats> {
   }
 }
 
-class MathEquationPuzzleState {
-  final MathEquationPuzzle? puzzle;
-  final bool isLoading;
+class CrossNumbersState {
+  final CrossNumbersPuzzle? puzzle;
+  final bool isComplete;
+  final int elapsedSeconds;
+  final int? selectedRow;
+  final int? selectedCol;
+  final int hintsUsed;
 
-  MathEquationPuzzleState({
+  CrossNumbersState({
     this.puzzle,
-    this.isLoading = false,
+    this.isComplete = false,
+    this.elapsedSeconds = 0,
+    this.selectedRow,
+    this.selectedCol,
+    this.hintsUsed = 0,
   });
 
-  MathEquationPuzzleState copyWith({
-    MathEquationPuzzle? puzzle,
-    bool? isLoading,
+  CrossNumbersState copyWith({
+    CrossNumbersPuzzle? puzzle,
+    bool? isComplete,
+    int? elapsedSeconds,
+    int? selectedRow,
+    int? selectedCol,
+    int? hintsUsed,
   }) {
-    return MathEquationPuzzleState(
+    return CrossNumbersState(
       puzzle: puzzle ?? this.puzzle,
-      isLoading: isLoading ?? this.isLoading,
+      isComplete: isComplete ?? this.isComplete,
+      elapsedSeconds: elapsedSeconds ?? this.elapsedSeconds,
+      selectedRow: selectedRow ?? this.selectedRow,
+      selectedCol: selectedCol ?? this.selectedCol,
+      hintsUsed: hintsUsed ?? this.hintsUsed,
     );
   }
 }
 
-class MathEquationPuzzleNotifier extends StateNotifier<MathEquationPuzzleState> {
+class CrossNumbersNotifier extends StateNotifier<CrossNumbersState> {
   final Ref ref;
+  CrossNumbersNotifier(this.ref) : super(CrossNumbersState());
 
-  MathEquationPuzzleNotifier(this.ref) : super(MathEquationPuzzleState());
+  void initPuzzle(int difficulty) {
+    final puzzle = CrossNumbersEngine.generatePuzzle(difficulty: difficulty);
+    state = CrossNumbersState(puzzle: puzzle);
+  }
 
-  Future<void> loadPuzzle({
-    required String theme,
-    required int difficulty,
-  }) async {
-    state = state.copyWith(isLoading: true);
+  void selectCell(int r, int c) {
+    if (state.puzzle == null) return;
+    final cell = state.puzzle!.grid[r][c];
+    if (cell.isUserEditable) {
+      state = state.copyWith(selectedRow: r, selectedCol: c);
+    }
+  }
 
-    final puzzle = MathEquationEngine.generatePuzzle(
-      theme: theme,
-      difficulty: difficulty,
+  void updateCell(int r, int c, String value) {
+    if (state.puzzle == null) return;
+    
+    final newGrid = List<List<CrossNumbersCell>>.from(
+      state.puzzle!.grid.map((row) => List<CrossNumbersCell>.from(row))
+    );
+    
+    final cell = newGrid[r][c];
+    if (cell.isUserEditable) {
+      newGrid[r][c] = cell.copyWith(userValue: value);
+      
+      final newPuzzle = CrossNumbersPuzzle(
+        id: state.puzzle!.id,
+        gridSize: state.puzzle!.gridSize,
+        grid: newGrid,
+        difficulty: state.puzzle!.difficulty,
+      );
+      
+      state = state.copyWith(
+        puzzle: newPuzzle,
+        isComplete: newPuzzle.isComplete && newPuzzle.isAllCorrect,
+      );
+    }
+  }
+
+  void useHint() {
+    if (state.puzzle == null || state.isComplete) return;
+
+    final user = ref.read(userSessionProvider);
+    if (user == null || user.totalPoints < hintCostPoints) return;
+
+    // Find all incorrect or empty editable cells
+    final emptyCells = <Point<int>>[];
+    for (int r = 0; r < state.puzzle!.gridSize; r++) {
+      for (int c = 0; c < state.puzzle!.gridSize; c++) {
+        final cell = state.puzzle!.grid[r][c];
+        if (cell.isUserEditable && (cell.userValue.isEmpty || cell.userValue != cell.value)) {
+          emptyCells.add(Point(r, c));
+        }
+      }
+    }
+
+    if (emptyCells.isEmpty) return;
+
+    // Select a random cell to reveal
+    final random = Random();
+    final target = emptyCells[random.nextInt(emptyCells.length)];
+    
+    final newGrid = List<List<CrossNumbersCell>>.from(
+      state.puzzle!.grid.map((row) => List<CrossNumbersCell>.from(row))
+    );
+    
+    final cell = newGrid[target.x][target.y];
+    newGrid[target.x][target.y] = cell.copyWith(
+      userValue: cell.value,
+      isRevealed: true,
     );
 
-    state = state.copyWith(puzzle: puzzle, isLoading: false);
+    final newPuzzle = CrossNumbersPuzzle(
+      id: state.puzzle!.id,
+      gridSize: state.puzzle!.gridSize,
+      grid: newGrid,
+      difficulty: state.puzzle!.difficulty,
+    );
+
+    ref.read(userSessionProvider.notifier).addPoints(-hintCostPoints);
+    ref.read(soundManagerProvider).playEffect('hint');
+
+    state = state.copyWith(
+      puzzle: newPuzzle,
+      hintsUsed: state.hintsUsed + 1,
+      isComplete: newPuzzle.isComplete && newPuzzle.isAllCorrect,
+    );
+  }
+
+  void incrementTime() {
+    if (!state.isComplete && state.puzzle != null) {
+      state = state.copyWith(elapsedSeconds: state.elapsedSeconds + 1);
+    }
   }
 }
 
@@ -2867,7 +2792,7 @@ class CustomMixArithmeticNotifier extends StateNotifier<CustomMixArithmeticState
   void endMix() {
     // Record analytics before ending the session
     if (state.questionsCompleted > 0 && state.sessionStartTime != null) {
-      final duration = DateTime.now().difference(state.sessionStartTime!).inMinutes;
+      final duration = DateTime.now().difference(state.sessionStartTime!).inSeconds;
       final selectedOps = state.selectedOperations.map((op) => op.name).join(',');
       ref.read(analyticsProvider.notifier).recordSession(
         selectedOps,
@@ -2875,6 +2800,7 @@ class CustomMixArithmeticNotifier extends StateNotifier<CustomMixArithmeticState
         state.questionsCompleted,
         state.correctAnswers,
         0, // Hints not tracked in custom mix yet
+        mode: 'customMix',
       );
     }
 

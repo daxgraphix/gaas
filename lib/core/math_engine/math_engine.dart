@@ -1,7 +1,6 @@
 import 'dart:math';
+import 'package:flutter/foundation.dart';
 import '../constants/app_constants.dart';
-import 'advanced_topics_engine.dart';
-import 'math_riddle_engine.dart';
 import '../../data/models/math_riddle.dart';
 
 class MathQuestion {
@@ -45,8 +44,10 @@ class MathEngine {
 
   static (int min, int max) getNumberRange(int level, String operation) {
     final l = level.toDouble();
-    final minVal = pow(10, l / 10).toInt().clamp(1, 100);
-    final maxVal = pow(10, (l + 5) / 10).toInt().clamp(10, 1000);
+    // Scale ranges more aggressively for 100 levels
+    // Level 1: [2, 12], Level 50: [100, 1000], Level 100: [1000, 10000]
+    final minVal = pow(10, l / 33.3 + 0.3).toInt().clamp(2, 2000);
+    final maxVal = pow(10, l / 33.3 + 1.1).toInt().clamp(12, 10000);
     return (minVal, maxVal);
   }
 
@@ -90,35 +91,49 @@ class MathEngine {
     int level, {
     bool isArcade = false,
     Set<String>? excludeQuestions,
+    int skillRating = 1000,
   }) {
     // Handle advanced topics
-    if (['fractions', 'decimals', 'geometry', 'word_problems', 'sequences', 'logic'].contains(operation)) {
+    if (['logic'].contains(operation)) {
       return _generateAdvancedQuestion(operation, level);
     }
 
+    final isBoss = level % 10 == 0 && !isArcade;
     MathQuestion question;
     int attempts = 0;
 
+    // Adjust effective level based on skill rating
+    // Every 200 points above 1000 increases effective level by 1
+    final effectiveLevel = (level + (skillRating - 1000) ~/ 200).clamp(1, 100);
+
     do {
       if (isArcade) {
-        question = _generateArcadeQuestion(operation, level);
+        question = _generateArcadeQuestion(operation, effectiveLevel);
+      } else if (isBoss) {
+        question = _generateBossQuestion(operation, effectiveLevel);
       } else {
-        final (min, max) = getNumberRange(level, operation);
+        final (min, max) = getNumberRange(effectiveLevel, operation);
+        
+        // Dynamic complexity: if skill is high, potentially add a third operand
+        final useThreeOperands = skillRating > 1400 && _random.nextDouble() < 0.3;
+
         switch (operation) {
           case 'addition':
-            question = _generateAddition(min, max, level);
+            question = useThreeOperands 
+                ? _generateThreeOperandAddition(min, max, effectiveLevel)
+                : _generateAddition(min, max, effectiveLevel);
             break;
           case 'subtraction':
-            question = _generateSubtraction(min, max, level);
+            question = _generateSubtraction(min, max, effectiveLevel);
             break;
           case 'multiplication':
-            question = _generateMultiplication(level);
+            question = _generateMultiplication(effectiveLevel);
             break;
           case 'division':
-            question = _generateDivision(level);
+            question = _generateDivision(effectiveLevel);
             break;
           default:
-            question = _generateAddition(min, max, level);
+            question = _generateAddition(min, max, effectiveLevel);
         }
       }
       attempts++;
@@ -127,14 +142,30 @@ class MathEngine {
     return question;
   }
 
+  static MathQuestion _generateThreeOperandAddition(int min, int max, int level) {
+    final range = (10 + level * 10).clamp(10, 500);
+    final a = _random.nextInt(range) + 1;
+    final b = _random.nextInt(range) + 1;
+    final c = _random.nextInt(range) + 1;
+    return MathQuestion(
+      operand1: a,
+      operand2: b,
+      operand3: c,
+      operation: 'addition',
+      correctAnswer: a + b + c,
+      difficulty: 'hard',
+      hint: 'Sum of three numbers',
+    );
+  }
+
   // Optimized batch question generation for better performance
-  static List<MathQuestion> generateQuestionsBatch(
+  static Future<List<MathQuestion>> generateQuestionsBatch(
     String operation,
     int level,
     int count, {
     bool isArcade = false,
     bool useCache = true,
-  }) {
+  }) async {
     if (useCache && !isArcade) {
       final cached = _getCachedQuestions(operation, level, count);
       if (cached.isNotEmpty) {
@@ -142,10 +173,31 @@ class MathEngine {
       }
     }
 
+    // Move heavy logic to background isolate for 60fps UI performance
+    final result = await compute(_generateBatchIsolate, {
+      'operation': operation,
+      'level': level,
+      'count': count,
+      'isArcade': isArcade,
+    });
+
+    if (useCache && !isArcade && result.length == count) {
+      _cacheQuestions(operation, level, count, result);
+    }
+
+    return result;
+  }
+
+  static List<MathQuestion> _generateBatchIsolate(Map<String, dynamic> params) {
+    final String operation = params['operation'];
+    final int level = params['level'];
+    final int count = params['count'];
+    final bool isArcade = params['isArcade'];
+
     final questions = <MathQuestion>{};
     final excludeSet = <String>{};
     int attempts = 0;
-    const maxAttempts = 1000; // Prevent infinite loops
+    const maxAttempts = 1000;
 
     while (questions.length < count && attempts < maxAttempts) {
       final question = generateQuestion(
@@ -162,13 +214,7 @@ class MathEngine {
 
       attempts++;
     }
-
-    final result = questions.toList();
-    if (useCache && !isArcade && result.length == count) {
-      _cacheQuestions(operation, level, count, result);
-    }
-
-    return result;
+    return questions.toList();
   }
 
   static MathQuestion _generateArcadeQuestion(String operation, int level) {
@@ -185,6 +231,72 @@ class MathEngine {
         return _generateArcadeDivision(difficulty);
       default:
         return _generateArcadeAddition(difficulty);
+    }
+  }
+
+  static MathQuestion _generateBossQuestion(String operation, int level) {
+    // Boss levels use numbers from 5 levels ahead
+    final (min, max) = getNumberRange(level + 5, operation);
+    
+    // Chapter 10 Boss (Level 100) or high levels ALWAYS use complex three-operand logic
+    final bool isHighLevelBoss = level >= 90;
+    final useThreeOperands = isHighLevelBoss || _random.nextDouble() < 0.4;
+
+    if (useThreeOperands) {
+      final op1 = _random.nextInt(max ~/ 2 - min + 1) + min;
+      final op2 = _random.nextInt(max ~/ 2 - min + 1) + min;
+      final op3 = _random.nextInt(max ~/ 2 - min + 1) + min;
+      
+      int result;
+      String opSymbol1 = '+';
+      String opSymbol2 = '+';
+      
+      // Randomly mix operations for boss
+      // At Chapter 10, we want guaranteed mixed operators
+      final mixType = isHighLevelBoss ? _random.nextInt(3) : (_random.nextBool() ? 1 : 0);
+      
+      if (mixType == 1) {
+        result = op1 + op2 - op3;
+        opSymbol2 = '-';
+      } else if (mixType == 2 && isHighLevelBoss) {
+        // Guaranteed mixed: (a - b) + c or (a + b) - c
+        if (_random.nextBool()) {
+           result = op1 - op2 + op3;
+           opSymbol1 = '-';
+           opSymbol2 = '+';
+        } else {
+           result = op1 + op2 - op3;
+           opSymbol1 = '+';
+           opSymbol2 = '-';
+        }
+      } else {
+        result = op1 + op2 + op3;
+      }
+      
+      return MathQuestion(
+        operand1: op1,
+        operand2: op2,
+        operand3: op3,
+        operation: operation,
+        correctAnswer: result,
+        difficulty: isHighLevelBoss ? 'master' : 'expert',
+        hint: isHighLevelBoss ? 'Ultimate Chapter Boss Challenge!' : 'Three-part calculation!',
+        customQuestion: '$op1 $opSymbol1 $op2 $opSymbol2 $op3 = ?',
+      );
+    }
+
+    // Default boss question with increased difficulty
+    switch (operation) {
+      case 'addition':
+        return _generateAddition(min, max, level + 5);
+      case 'subtraction':
+        return _generateSubtraction(min, max, level + 5);
+      case 'multiplication':
+        return _generateMultiplication(level + 5);
+      case 'division':
+        return _generateDivision(level + 5);
+      default:
+        return _generateAddition(min, max, level + 5);
     }
   }
 
@@ -331,7 +443,8 @@ class MathEngine {
 
   static MathQuestion _generateAddition(int min, int max, int level) {
     // Campaign specific scaling for addition - progressive difficulty
-    final range = (10 + level * 15).clamp(20, 2000);
+    // Level 1: ~20, Level 50: ~1000, Level 100: ~5000
+    final range = (10 + pow(level, 1.35) * 10).toInt().clamp(20, 5000);
     final a = _random.nextInt(range) + 1;
     final b = _random.nextInt(range) + 1;
     final result = a + b;
@@ -346,7 +459,7 @@ class MathEngine {
 
   static MathQuestion _generateSubtraction(int min, int max, int level) {
     // Campaign specific scaling for subtraction - progressive difficulty
-    final range = (10 + level * 15).clamp(20, 2000);
+    final range = (10 + pow(level, 1.35) * 10).toInt().clamp(20, 5000);
     var a = _random.nextInt(range) + 5;
     var b = _random.nextInt(range) + 2;
     if (a < b) {
@@ -367,17 +480,18 @@ class MathEngine {
   static MathQuestion _generateMultiplication(int level) {
     int maxFactor;
     if (level <= 10) {
-      maxFactor = 10 + level;  // Single digits
-    } else if (level <= 20) {
-      maxFactor = 20 + (level - 10) * 3;  // Up to double digits
-    } else if (level <= 30) {
-      maxFactor = 50 + (level - 20) * 5;  // Triple digits
+      maxFactor = 10 + level;
+    } else if (level <= 40) {
+      maxFactor = 20 + (level - 10) * 2;
+    } else if (level <= 70) {
+      maxFactor = 80 + (level - 40) * 4;
     } else {
-      maxFactor = 100 + (level - 30) * 10;  // Large numbers
+      maxFactor = 200 + (level - 70) * 8;
     }
 
-    final a = _random.nextInt(maxFactor.clamp(2, 50)) + 1;
-    final b = _random.nextInt(maxFactor.clamp(2, 50)) + 1;
+    // Fixed the bug where factors were capped at 50 regardless of level
+    final a = _random.nextInt(maxFactor.clamp(5, 500)) + 2;
+    final b = _random.nextInt(maxFactor.clamp(2, 100)) + 1;
     final result = a * b;
     return MathQuestion(
       operand1: a,
@@ -390,18 +504,23 @@ class MathEngine {
 
   static MathQuestion _generateDivision(int level) {
     int maxDivisor;
+    int maxQuotient;
     if (level <= 10) {
-      maxDivisor = 10 + level;  // Single digits
-    } else if (level <= 20) {
-      maxDivisor = 20 + (level - 10) * 2;  // Up to double digits
-    } else if (level <= 30) {
-      maxDivisor = 40 + (level - 20) * 3;  // Triple digits
+      maxDivisor = 10;
+      maxQuotient = 10;
+    } else if (level <= 40) {
+      maxDivisor = 12 + (level - 10);
+      maxQuotient = 12 + (level - 10);
+    } else if (level <= 70) {
+      maxDivisor = 42 + (level - 40) * 2;
+      maxQuotient = 42 + (level - 40) * 2;
     } else {
-      maxDivisor = 70 + (level - 30) * 5;  // Large numbers
+      maxDivisor = 100 + (level - 70) * 5;
+      maxQuotient = 100 + (level - 70) * 5;
     }
 
-    final divisor = _random.nextInt(maxDivisor.clamp(2, 30)) + 1;
-    final quotient = _random.nextInt(maxDivisor.clamp(2, 30)) + 1;
+    final divisor = _random.nextInt(maxDivisor.clamp(2, 250)) + 2;
+    final quotient = _random.nextInt(maxQuotient.clamp(2, 250)) + 1;
     final dividend = divisor * quotient;
 
     return MathQuestion(
@@ -409,15 +528,16 @@ class MathEngine {
       operand2: divisor,
       operation: 'division',
       correctAnswer: quotient,
+      difficulty: level <= 30 ? 'easy' : level <= 70 ? 'medium' : 'hard',
       hint: 'Result is $quotient',
     );
   }
 
   static int calculateStars(int correctAnswers, int totalQuestions) {
     final percentage = (correctAnswers / totalQuestions) * 100;
-    if (percentage >= 90) return 3;
-    if (percentage >= 70) return 2;
-    if (percentage >= 50) return 1;
+    if (percentage >= 95) return 3;
+    if (percentage >= 85) return 2;
+    if (percentage >= 75) return 1;
     return 0;
   }
 
@@ -443,28 +563,19 @@ class MathEngine {
 
   static MathQuestion _generateAdvancedQuestion(String operation, int level) {
     final dynamic riddle = switch (operation) {
-      'fractions' => AdvancedTopicsEngine.generateFractionsProblem(level),
-      'decimals' => AdvancedTopicsEngine.generateDecimalsProblem(level),
-      'geometry' => AdvancedTopicsEngine.generateGeometryProblem(level),
-      'word_problems' => AdvancedTopicsEngine.generateWordProblem(level),
-      'sequences' => MathRiddleEngine.generateNumberSequence(level),
       'logic' => _generateMixedLogicChallenge(level),
-      _ => AdvancedTopicsEngine.generateFractionsProblem(level),
+      _ => _generateMixedLogicChallenge(level),
     };
 
     final List<String> hints = (riddle is MathRiddle) 
         ? riddle.progressiveHints 
-        : (riddle is NumberSequence) 
-            ? riddle.progressiveHints 
-            : (riddle is LogicMathChallenge)
+        : (riddle is LogicMathChallenge)
                 ? riddle.progressiveHints
                 : [];
 
     final String questionText = (riddle is MathRiddle) 
         ? riddle.question 
-        : (riddle is NumberSequence) 
-            ? riddle.displaySequence 
-            : (riddle is LogicMathChallenge)
+        : (riddle is LogicMathChallenge)
                 ? riddle.problem
                 : '';
 

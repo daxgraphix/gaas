@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import '../../core/sound_manager.dart';
+import '../../core/themes/app_themes.dart';
 
 class TutorialOverlay extends StatefulWidget {
   final String title;
@@ -254,6 +256,81 @@ class HintButton extends StatelessWidget {
                     ? theme.colorScheme.onSurface
                     : theme.colorScheme.onSurface.withValues(alpha: 0.2),
               ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class SuccessDialog extends StatelessWidget {
+  final String title;
+  final String message;
+  final int stars;
+  final VoidCallback onDone;
+
+  const SuccessDialog({
+    super.key,
+    required this.title,
+    required this.message,
+    required this.stars,
+    required this.onDone,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Dialog(
+      backgroundColor: Colors.transparent,
+      elevation: 0,
+      child: PremiumGlassOverlay(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const SizedBox(height: 16),
+            Icon(
+              Icons.stars_rounded,
+              color: Colors.amber,
+              size: 64,
+            ).animate(onPlay: (c) => c.repeat()).shimmer(duration: 2.seconds),
+            const SizedBox(height: 24),
+            Text(
+              title.toUpperCase(),
+              style: theme.textTheme.headlineSmall?.copyWith(
+                letterSpacing: 4,
+                fontWeight: FontWeight.w900,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 16),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: List.generate(3, (index) {
+                return Icon(
+                  index < stars ? Icons.star_rounded : Icons.star_outline_rounded,
+                  color: Colors.amber,
+                  size: 40,
+                ).animate(delay: (200 * index).ms).scale(
+                      duration: 400.ms,
+                      curve: Curves.easeOutBack,
+                    );
+              }),
+            ),
+            const SizedBox(height: 24),
+            Text(
+              message,
+              style: theme.textTheme.bodyLarge?.copyWith(
+                height: 1.5,
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.8),
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 32),
+            PremiumPrimaryButton(
+              text: 'CONTINUE',
+              onPressed: onDone,
             ),
           ],
         ),

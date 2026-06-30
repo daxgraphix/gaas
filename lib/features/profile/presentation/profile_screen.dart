@@ -60,6 +60,7 @@ class ProfileScreen extends ConsumerWidget {
                   context,
                   ref,
                   theme,
+                  user,
                   currentLocale,
                   currentTheme,
                   settings,
@@ -191,7 +192,32 @@ class ProfileScreen extends ConsumerWidget {
               letterSpacing: 4,
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 4),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                'LEVEL ${user?.level ?? 1}',
+                style: theme.textTheme.labelSmall?.copyWith(
+                  color: theme.colorScheme.primary,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 1,
+                ),
+              ),
+              const SizedBox(width: 12),
+              SizedBox(
+                width: 100,
+                height: 4,
+                child: LinearProgressIndicator(
+                  value: user?.levelProgress ?? 0,
+                  backgroundColor: theme.colorScheme.primary.withValues(alpha: 0.1),
+                  valueColor: AlwaysStoppedAnimation(theme.colorScheme.primary),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
           GlassmorphicContainer(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             borderRadius: 20,
@@ -325,6 +351,7 @@ class ProfileScreen extends ConsumerWidget {
     BuildContext context,
     WidgetRef ref,
     ThemeData theme,
+    dynamic user,
     AppLocale currentLocale,
     AppThemeType currentTheme,
     SettingsState settings,
@@ -340,7 +367,7 @@ class ProfileScreen extends ConsumerWidget {
           const SizedBox(height: 12),
           _buildMenuCard(
             icon: Icons.storefront,
-            title: 'Avatar Shop',
+            title: l10n.avatarShop,
             subtitle: l10n.unlockNewAvatarsWithPoints,
             color: theme.colorScheme.tertiary,
             theme: theme,
@@ -356,7 +383,7 @@ class ProfileScreen extends ConsumerWidget {
           const SizedBox(height: 12),
           _buildMenuCard(
             icon: Icons.calculate,
-            title: 'Calculator',
+            title: l10n.calculator,
             subtitle: l10n.builtInArithmeticTool,
             color: theme.colorScheme.primary,
             theme: theme,
@@ -365,6 +392,16 @@ class ProfileScreen extends ConsumerWidget {
                 context,
                 MaterialPageRoute(builder: (_) => const CalculatorScreen()),
               );
+            },
+          ),
+          _buildMenuCard(
+            icon: Icons.bar_chart,
+            title: l10n.reports,
+            subtitle: l10n.performanceAnalytics,
+            color: theme.colorScheme.secondary,
+            theme: theme,
+            onTap: () {
+              ref.read(navigationIndexProvider.notifier).state = 2;
             },
           ),
           _buildMenuCard(
@@ -444,9 +481,24 @@ class ProfileScreen extends ConsumerWidget {
             ),
           ),
           _buildMenuCard(
+            icon: Icons.visibility_off,
+            title: l10n.focusMode,
+            subtitle: l10n.focusModeDesc,
+            color: theme.colorScheme.primary,
+            theme: theme,
+            trailing: Switch(
+              value: user.isFocusMode,
+              onChanged: (value) {
+                HapticManager.instance.selectionClick();
+                ref.read(userSessionProvider.notifier).setFocusMode(value);
+              },
+              activeThumbColor: theme.colorScheme.primary,
+            ),
+          ),
+          _buildMenuCard(
             icon: Icons.blur_on,
-            title: 'Performance Mode',
-            subtitle: 'Reduce transparency',
+            title: l10n.performanceMode,
+            subtitle: l10n.performanceModeDesc,
             color: theme.colorScheme.primary,
             theme: theme,
             trailing: Consumer(

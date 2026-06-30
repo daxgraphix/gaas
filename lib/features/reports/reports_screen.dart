@@ -82,6 +82,10 @@ class ReportsScreen extends ConsumerWidget {
       centerTitle: true,
       backgroundColor: Colors.transparent,
       elevation: 0,
+      leading: Navigator.canPop(context) ? IconButton(
+        icon: Icon(Icons.arrow_back, color: theme.colorScheme.onSurface),
+        onPressed: () => Navigator.pop(context),
+      ) : null,
       actions: [
         IconButton(
           icon: Container(
@@ -219,17 +223,47 @@ class ReportsScreen extends ConsumerWidget {
         final stats = ref.watch(sessionStatsProvider);
         final trends = ref.watch(performanceTrendsProvider);
         final bestStreak = ref.watch(bestStreakProvider);
+        final analytics = ref.watch(analyticsProvider);
+
+        // Get unique modes from recent sessions
+        final modes = analytics.recentSessions
+            .map((s) => s['mode'] as String?)
+            .where((m) => m != null)
+            .toSet()
+            .toList();
 
         return RepaintBoundary(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                l10n.performanceAnalytics,
-                style: theme.textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: theme.colorScheme.onSurface,
-                ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    l10n.performanceAnalytics,
+                    style: theme.textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: theme.colorScheme.onSurface,
+                    ),
+                  ),
+                  if (modes.isNotEmpty)
+                    PopupMenuButton<String>(
+                      icon: const Icon(Icons.filter_list),
+                      onSelected: (String? mode) {
+                        // In a full implementation, we'd update a filter provider here
+                      },
+                      itemBuilder: (context) => [
+                         PopupMenuItem(
+                          value: null,
+                          child: Text(l10n.allModes),
+                        ),
+                        ...modes.map((mode) => PopupMenuItem(
+                              value: mode,
+                              child: Text(mode!),
+                            )),
+                      ],
+                    ),
+                ],
               ),
               const SizedBox(height: 16),
               PremiumCard(
@@ -728,7 +762,7 @@ class ReportsScreen extends ConsumerWidget {
       await Share.shareXFiles(
         [XFile(file.path)],
         text: l10n.performanceReportTitle,
-        subject: 'Mathematics Learning Progress',
+        subject: l10n.mathLearningProgress,
       );
 
       Future.delayed(const Duration(seconds: 10), () {
@@ -885,7 +919,7 @@ class ReportsScreen extends ConsumerWidget {
               crossAxisAlignment: pw.CrossAxisAlignment.start,
               children: [
                 pw.Text(
-                  'GAAS Performance Report',
+                  l10n.performanceReportTitle,
                   style: pw.TextStyle(fontSize: 20, fontWeight: pw.FontWeight.bold),
                 ),
                 pw.SizedBox(height: 20),
@@ -900,10 +934,10 @@ class ReportsScreen extends ConsumerWidget {
                 ],
                 pw.Divider(),
                 pw.SizedBox(height: 20),
-                _buildPdfStatRow('Total Stars', totalStars.value?.toString() ?? '0'),
-                _buildPdfStatRow('Levels Completed', completedLevels.value?.toString() ?? '0'),
-                _buildPdfStatRow('Accuracy', '${accuracy.value?.toStringAsFixed(1) ?? '0'}%'),
-                _buildPdfStatRow('Time Played', '${(totalTime.value ?? 0) ~/ 60}h ${(totalTime.value ?? 0) % 60}m'),
+                _buildPdfStatRow(l10n.starsEarned, totalStars.value?.toString() ?? '0'),
+                _buildPdfStatRow(l10n.levelsCompleted, completedLevels.value?.toString() ?? '0'),
+                _buildPdfStatRow(l10n.accuracy, '${accuracy.value?.toStringAsFixed(1) ?? '0'}%'),
+                _buildPdfStatRow(l10n.timePlayed, '${(totalTime.value ?? 0) ~/ 60}h ${(totalTime.value ?? 0) % 60}m'),
               ],
             );
           },
@@ -971,16 +1005,16 @@ class ReportsScreen extends ConsumerWidget {
               crossAxisAlignment: pw.CrossAxisAlignment.start,
               children: [
                 pw.Text(
-                  'GAAS Performance Report',
+                  l10n.performanceReportTitle,
                   style: pw.TextStyle(fontSize: 20, fontWeight: pw.FontWeight.bold),
                 ),
                 pw.SizedBox(height: 20),
                 if (user != null) pw.Text('${l10n.playerLabel}: ${user.name}', style: pw.TextStyle(fontSize: 14)),
                 pw.SizedBox(height: 20),
-                _buildPdfStatRow('Total Stars', totalStars.value?.toString() ?? '0'),
-                _buildPdfStatRow('Levels Completed', completedLevels.value?.toString() ?? '0'),
-                _buildPdfStatRow('Accuracy', '${accuracy.value?.toStringAsFixed(1) ?? '0'}%'),
-                _buildPdfStatRow('Time Played', '${(totalTime.value ?? 0) ~/ 60}h ${(totalTime.value ?? 0) % 60}m'),
+                _buildPdfStatRow(l10n.starsEarned, totalStars.value?.toString() ?? '0'),
+                _buildPdfStatRow(l10n.levelsCompleted, completedLevels.value?.toString() ?? '0'),
+                _buildPdfStatRow(l10n.accuracy, '${accuracy.value?.toStringAsFixed(1) ?? '0'}%'),
+                _buildPdfStatRow(l10n.timePlayed, '${(totalTime.value ?? 0) ~/ 60}h ${(totalTime.value ?? 0) % 60}m'),
               ],
             );
           },
@@ -1032,7 +1066,7 @@ class ReportsScreen extends ConsumerWidget {
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Preparing PDF...'),
+          content: Text(l10n.preparingPdf),
           duration: const Duration(seconds: 2),
         ),
       );
@@ -1051,22 +1085,22 @@ class ReportsScreen extends ConsumerWidget {
               crossAxisAlignment: pw.CrossAxisAlignment.start,
               children: [
                 pw.Text(
-                  'GAAS Performance Report',
+                  l10n.performanceReportTitle,
                   style: pw.TextStyle(fontSize: 20, fontWeight: pw.FontWeight.bold),
                 ),
                 pw.SizedBox(height: 20),
                 pw.Text('Generated on ${DateTime.now().toString().split('.')[0]}'),
                 if (user != null) pw.Text('${l10n.playerLabel}: ${user.name}'),
                 pw.SizedBox(height: 24),
-                pw.Text('Overview', style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold)),
+                pw.Text(l10n.overview, style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold)),
                 pw.SizedBox(height: 12),
                 pw.Row(
                   mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                   children: [
-                    _pdfStatColumn('Stars', '${totalStars.value ?? 0}'),
-                    _pdfStatColumn('Levels', '${completedLevels.value ?? 0}'),
-                    _pdfStatColumn('Streak', '${bestStreak.value ?? 0}'),
-                    _pdfStatColumn('Accuracy', '${accuracy.value?.toStringAsFixed(0) ?? '0'}%'),
+                    _pdfStatColumn(l10n.stars, '${totalStars.value ?? 0}'),
+                    _pdfStatColumn(l10n.level, '${completedLevels.value ?? 0}'),
+                    _pdfStatColumn(l10n.streak, '${bestStreak.value ?? 0}'),
+                    _pdfStatColumn(l10n.accuracy, '${accuracy.value?.toStringAsFixed(0) ?? '0'}%'),
                   ],
                 ),
               ],
@@ -1082,8 +1116,8 @@ class ReportsScreen extends ConsumerWidget {
 
       await Share.shareXFiles(
         [XFile(file.path)],
-        text: 'My GAAS Math Progress Report',
-        subject: 'GAAS Performance Report',
+        text: l10n.myGaasProgressReport,
+        subject: l10n.performanceReportTitle,
       );
 
       Future.delayed(const Duration(seconds: 10), () {
@@ -1093,7 +1127,7 @@ class ReportsScreen extends ConsumerWidget {
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('PDF shared successfully!'),
+          content: Text(l10n.pdfSharedSuccessfully),
           backgroundColor: Colors.green,
         ),
       );
@@ -1101,7 +1135,7 @@ class ReportsScreen extends ConsumerWidget {
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Share failed: $e'),
+          content: Text(l10n.shareFailed(e.toString())),
           backgroundColor: Theme.of(context).colorScheme.error,
         ),
       );

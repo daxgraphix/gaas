@@ -60,54 +60,27 @@ class HapticManager {
 
   Future<void> successPattern() async {
     if (!isEnabled) return;
+    // Medium for correct answers
     await HapticFeedback.mediumImpact();
-    await Future.delayed(const Duration(milliseconds: 40));
-    await HapticFeedback.lightImpact();
   }
 
   Future<void> errorPattern() async {
     if (!isEnabled) return;
     await HapticFeedback.heavyImpact();
     await Future.delayed(const Duration(milliseconds: 60));
-    await HapticFeedback.heavyImpact();
-    await Future.delayed(const Duration(milliseconds: 60));
-    await HapticFeedback.vibrate();
+    await HapticFeedback.lightImpact();
   }
 
   Future<void> correctAnswerPattern() async {
     if (!isEnabled) return;
-    await HapticFeedback.selectionClick();
-  }
-
-  Future<void> correctAnswerPatternWithIntensity() async {
-    if (!isEnabled) return;
     await HapticFeedback.mediumImpact();
-    await Future.delayed(const Duration(milliseconds: 30));
-    await HapticFeedback.lightImpact();
-  }
-
-  Future<void> wrongAnswerPattern() async {
-    if (!isEnabled) return;
-    await HapticFeedback.heavyImpact();
-    await Future.delayed(const Duration(milliseconds: 100));
-    await HapticFeedback.mediumImpact();
-  }
-
-  Future<void> achievementPattern() async {
-    if (!isEnabled) return;
-    await HapticFeedback.mediumImpact();
-    await Future.delayed(const Duration(milliseconds: 100));
-    await HapticFeedback.lightImpact();
-    await Future.delayed(const Duration(milliseconds: 100));
-    await HapticFeedback.heavyImpact();
   }
 
   Future<void> levelUpPattern() async {
     if (!isEnabled) return;
-    await HapticFeedback.selectionClick();
-    await Future.delayed(const Duration(milliseconds: 150));
-    await HapticFeedback.lightImpact();
-    await Future.delayed(const Duration(milliseconds: 150));
+    // Heavy for level completions/boss defeats
+    await HapticFeedback.heavyImpact();
+    await Future.delayed(const Duration(milliseconds: 100));
     await HapticFeedback.mediumImpact();
   }
 
@@ -152,6 +125,22 @@ class HapticManager {
   Future<void> timerWarningPattern() async {
     if (!isEnabled) return;
     await HapticFeedback.lightImpact();
+  }
+
+  Future<void> wrongAnswerPattern() async {
+    if (!isEnabled) return;
+    await HapticFeedback.heavyImpact();
+    await Future.delayed(const Duration(milliseconds: 50));
+    await HapticFeedback.heavyImpact();
+  }
+
+  Future<void> achievementPattern() async {
+    if (!isEnabled) return;
+    await HapticFeedback.mediumImpact();
+    await Future.delayed(const Duration(milliseconds: 100));
+    await HapticFeedback.mediumImpact();
+    await Future.delayed(const Duration(milliseconds: 100));
+    await HapticFeedback.heavyImpact();
   }
 }
 

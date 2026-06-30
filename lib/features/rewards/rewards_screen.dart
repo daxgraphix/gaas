@@ -73,107 +73,159 @@ class RewardsScreen extends ConsumerWidget {
     final unlockedAvatars = user?.unlockedAvatars ?? ['circle', 'square', 'star'];
     
     final shopItems = [
-      {'id': 'hexagon', 'name': 'Hexagon', 'cost': 500, 'icon': Icons.hexagon},
-      {'id': 'pentagon', 'name': 'Pentagon', 'cost': 750, 'icon': Icons.pentagon},
-      {'id': 'diamond', 'name': 'Diamond', 'cost': 1000, 'icon': Icons.diamond},
-      {'id': 'favorite', 'name': 'Heart', 'cost': 1500, 'icon': Icons.favorite},
-      {'id': 'star', 'name': 'Premium Star', 'cost': 2000, 'icon': Icons.stars},
+      {'id': 'hexagon', 'name': 'Hexagon', 'cost': 500, 'icon': Icons.hexagon, 'stars': 5},
+      {'id': 'pentagon', 'name': 'Pentagon', 'cost': 750, 'icon': Icons.pentagon, 'stars': 10},
+      {'id': 'diamond', 'name': 'Diamond', 'cost': 1000, 'icon': Icons.diamond, 'stars': 15},
+      {'id': 'favorite', 'name': 'Heart', 'cost': 1500, 'icon': Icons.favorite, 'stars': 20},
+      {'id': 'star', 'name': 'Premium Star', 'cost': 2000, 'icon': Icons.stars, 'stars': 30},
     ];
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'AVATAR SHOP',
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-            color: theme.colorScheme.onSurface,
-            letterSpacing: 1,
-          ),
-        ),
-        const SizedBox(height: 20),
-        GridView.builder(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 2,
-            crossAxisSpacing: 16,
-            mainAxisSpacing: 16,
-            childAspectRatio: 0.85,
-          ),
-          itemCount: shopItems.length,
-          itemBuilder: (context, index) {
-            final item = shopItems[index];
-            final id = item['id'] as String;
-            final isUnlocked = unlockedAvatars.contains(id);
-            final cost = item['cost'] as int;
-            final canAfford = (user?.totalPoints ?? 0) >= cost;
+    return FutureBuilder<int>(
+      future: ref.read(levelProgressRepositoryProvider).getTotalStars(),
+      builder: (context, snapshot) {
+        final totalStars = snapshot.data ?? 0;
 
-            return Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: theme.colorScheme.surface,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(
-                  color: isUnlocked 
-                      ? theme.colorScheme.primary.withValues(alpha: 0.5)
-                      : theme.colorScheme.outline.withValues(alpha: 0.1),
-                  width: 2,
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'AVATAR SHOP',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: theme.colorScheme.onSurface,
+                    letterSpacing: 1,
+                  ),
                 ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.05),
-                    blurRadius: 10,
-                    offset: const Offset(0, 4),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.primary.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(12),
                   ),
-                ],
+                  child: Row(
+                    children: [
+                      Icon(Icons.star, size: 16, color: theme.colorScheme.primary),
+                      const SizedBox(width: 4),
+                      Text(
+                        '$totalStars Stars',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                          color: theme.colorScheme.primary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
+            GridView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2,
+                crossAxisSpacing: 16,
+                mainAxisSpacing: 16,
+                childAspectRatio: 0.85,
               ),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    item['icon'] as IconData,
-                    size: 48,
-                    color: isUnlocked ? theme.colorScheme.primary : Colors.grey,
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    item['name'] as String,
-                    style: const TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 8),
-                  if (isUnlocked)
-                    Text(
-                      'UNLOCKED',
-                      style: TextStyle(
-                        color: theme.colorScheme.primary,
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    )
-                  else
-                    ElevatedButton(
-                      onPressed: canAfford ? () async {
-                        final success = await ref.read(userSessionProvider.notifier).unlockAvatar(id, cost);
-                        if (success && context.mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text('Unlocked ${item['name']}!'))
-                          );
-                        }
-                      } : null,
-                      style: ElevatedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(horizontal: 12),
-                        minimumSize: const Size(0, 36),
-                      ),
-                      child: Text('$cost pts'),
+              itemCount: shopItems.length,
+              itemBuilder: (context, index) {
+                final item = shopItems[index];
+                final id = item['id'] as String;
+                final isUnlocked = unlockedAvatars.contains(id);
+                final cost = item['cost'] as int;
+                final requiredStars = item['stars'] as int;
+                final canAfford = (user?.totalPoints ?? 0) >= cost && totalStars >= requiredStars;
+
+                return Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.surface,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(
+                      color: isUnlocked 
+                          ? theme.colorScheme.primary.withValues(alpha: 0.5)
+                          : theme.colorScheme.outline.withValues(alpha: 0.1),
+                      width: 2,
                     ),
-                ],
-              ),
-            );
-          },
-        ),
-      ],
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.05),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        item['icon'] as IconData,
+                        size: 48,
+                        color: isUnlocked ? theme.colorScheme.primary : Colors.grey,
+                      ),
+                      const SizedBox(height: 12),
+                      Text(
+                        item['name'] as String,
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(height: 8),
+                      if (isUnlocked)
+                        Text(
+                          'UNLOCKED',
+                          style: TextStyle(
+                            color: theme.colorScheme.primary,
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        )
+                      else ...[
+                        if (totalStars < requiredStars)
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.star, size: 12, color: theme.colorScheme.error),
+                              const SizedBox(width: 4),
+                              Text(
+                                '$requiredStars stars',
+                                style: TextStyle(
+                                  color: theme.colorScheme.error,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
+                        const SizedBox(height: 4),
+                        ElevatedButton(
+                          onPressed: canAfford ? () async {
+                            final success = await ref.read(userSessionProvider.notifier).unlockAvatar(id, cost, requiredStars);
+                            if (success && context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text('Unlocked ${item['name']}!'))
+                              );
+                            }
+                          } : null,
+                          style: ElevatedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(horizontal: 12),
+                            minimumSize: const Size(0, 36),
+                          ),
+                          child: Text('$cost pts'),
+                        ),
+                      ],
+                    ],
+                  ),
+                );
+              },
+            ),
+          ],
+        );
+      }
     );
   }
 

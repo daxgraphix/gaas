@@ -48,6 +48,30 @@ class AppLocalizationsSw extends AppLocalizations {
   String get levelsCompleted => 'Ngazi Zilizokamilika';
 
   @override
+  String get commandCenter => 'KITUO CHA AMRI';
+
+  @override
+  String get quickResume => 'ENDELEA HARAKA';
+
+  @override
+  String get todaysSession => 'Kipindi cha Leo';
+
+  @override
+  String ptsToLevel(Object level, Object pts) {
+    return 'pointi $pts mpaka Ngazi ya $level';
+  }
+
+  @override
+  String timeLeftShort(Object hours, Object minutes) {
+    return 'saa $hours daki $minutes zimebaki';
+  }
+
+  @override
+  String levelUppercase(Object level) {
+    return 'NGAZI $level';
+  }
+
+  @override
   String get accuracy => 'Usahihi';
 
   @override
@@ -327,13 +351,31 @@ class AppLocalizationsSw extends AppLocalizations {
   String get logicRiddles => 'Fumbo za Akili';
 
   @override
+  String get crossNumbers => 'Nambari Mtambuka';
+
+  @override
+  String get crossNumbersDesc => 'Suluhisha mafumbo ya nambari mtambuka';
+
+  @override
   String get calculator => 'Kikokotoo';
 
   @override
   String get reports => 'Ripoti';
 
   @override
-  String get avatarShop => 'Duka la Mtumiaji';
+  String get avatarShop => 'Duka la Avatar';
+
+  @override
+  String get focusMode => 'Hali ya Kuzingatia';
+
+  @override
+  String get focusModeDesc => 'UI iliyorahisishwa kwa umakini';
+
+  @override
+  String get performanceMode => 'Hali ya Utendaji';
+
+  @override
+  String get performanceModeDesc => 'Punguza uwazi kwa utendaji bora';
 
   @override
   String get visualTheme => 'Mandhari ya Kuona';
@@ -435,6 +477,9 @@ class AppLocalizationsSw extends AppLocalizations {
   String get exportReport => 'Hamisha Ripoti';
 
   @override
+  String get accuracyTrend => 'ACCURACY';
+
+  @override
   String get streak => 'MFULULIZO';
 
   @override
@@ -460,6 +505,9 @@ class AppLocalizationsSw extends AppLocalizations {
 
   @override
   String get unitsCleared => 'SEHEMU_ZILIZOKAMILIKA';
+
+  @override
+  String get temporalInvestmentLabel => 'TEMPORAL_INVESTMENT';
 
   @override
   String get status => 'HALI';
@@ -534,6 +582,9 @@ class AppLocalizationsSw extends AppLocalizations {
   String get calculating => 'INAHESABU...';
 
   @override
+  String get difficultyLevelLabel => 'DIFFICULTY_LEVEL';
+
+  @override
   String get advanced => 'ILIYOBORESHWA';
 
   @override
@@ -586,6 +637,30 @@ class AppLocalizationsSw extends AppLocalizations {
 
   @override
   String get divByZero => 'GAWANYA NA SIFURI';
+
+  @override
+  String get allModes => 'Njia Zote';
+
+  @override
+  String get mathLearningProgress => 'Maendeleo ya Kujifunza Hisabati';
+
+  @override
+  String get preparingPdf => 'Inatayarisha PDF...';
+
+  @override
+  String get overview => 'Muhtasari';
+
+  @override
+  String get myGaasProgressReport =>
+      'Ripoti Yangu ya Maendeleo ya Hisabati ya GAAS';
+
+  @override
+  String get pdfSharedSuccessfully => 'PDF imeshirikiwa kwa mafanikio!';
+
+  @override
+  String shareFailed(Object error) {
+    return 'Ushiriki umeshindwa: $error';
+  }
 
   @override
   String get readyToChallenge => '🎯 Tayari Kupambana na Changamoto?';
@@ -663,6 +738,19 @@ class AppLocalizationsSw extends AppLocalizations {
 
   @override
   String get cancel => 'Ghairi';
+
+  @override
+  String get chapter => 'SURA';
+
+  @override
+  String chapterStarsProgress(Object stars, Object total) {
+    return '$stars / $total NYOTA';
+  }
+
+  @override
+  String lockedNeedStars(Object stars) {
+    return 'IMEFUNGWA - UNAHITAJI JUMLA YA NYOTA $stars';
+  }
 
   @override
   String get solveLogicChallenges => 'Suluhisha fumbo za akili ngumu';
@@ -903,9 +991,6 @@ class AppLocalizationsSw extends AppLocalizations {
   String get noGameSession => 'Hakuna kipindi cha mchezo';
 
   @override
-  String get crossword => 'Neno la kuvuta';
-
-  @override
   String get playerLabel => 'Mchezaji';
 
   @override
@@ -943,12 +1028,6 @@ class AppLocalizationsSw extends AppLocalizations {
   String get skip => 'RUKIA';
 
   @override
-  String get across => 'KWA UPANDE';
-
-  @override
-  String get down => 'KWA CHINI';
-
-  @override
   String get allChallengesComplete => 'Changamoto zote zimekamilika!';
 
   @override
@@ -970,10 +1049,13 @@ class AppLocalizationsSw extends AppLocalizations {
   String get answerRevealed => 'Jibu limefunuliwa!';
 
   @override
-  String get selectRiddleLevel => 'CHAGUA NGazi YA FUMBO';
+  String get excellent => 'Excellent!';
 
   @override
-  String get selectCrosswordLevel => 'CHAGUA NGazi YA NENO LA KUVUTA';
+  String get done => 'Done';
+
+  @override
+  String get selectRiddleLevel => 'CHAGUA NGazi YA FUMBO';
 
   @override
   String get loadingGame => 'Inapakia mchezo...';
@@ -1081,7 +1163,7 @@ class AppLocalizationsSw extends AppLocalizations {
   String get puzzlesTitle => 'MAFUMBO';
 
   @override
-  String get crosswordsMathRiddles => 'Maneno ya Kuvuta + Fumbo za Hesabu';
+  String get mathRiddles => 'Math Riddles';
 
   @override
   String get firstVictory => 'Ushindi wa Kwanza';
@@ -1141,9 +1223,6 @@ class AppLocalizationsSw extends AppLocalizations {
   String get advancedSubtraction => 'Kutoa ya Juu';
 
   @override
-  String get wordProblemsSubtraction => 'Matatizo ya Maneno - Kutoa';
-
-  @override
   String get multiplicationMastery => 'Ujuzi wa Kuzidisha';
 
   @override
@@ -1157,9 +1236,6 @@ class AppLocalizationsSw extends AppLocalizations {
 
   @override
   String get threeDigitMultiplication => 'Kuzidisha Nambari Tatu';
-
-  @override
-  String get multiplicationWordProblems => 'Matatizo ya Maneno - Kuzidisha';
 
   @override
   String get advancedMultiplication => 'Kuzidisha ya Juu';
@@ -1181,9 +1257,6 @@ class AppLocalizationsSw extends AppLocalizations {
 
   @override
   String get threeDigitDivision => 'Kugawanya Nambari Tatu';
-
-  @override
-  String get divisionWordProblems => 'Matatizo ya Maneno - Kugawanya';
 
   @override
   String get longDivision => 'Kugawanya kwa Muda Mrefu';

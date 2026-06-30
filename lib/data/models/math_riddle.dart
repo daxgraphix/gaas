@@ -1,4 +1,4 @@
-enum MathRiddleType { arithmetic, wordProblem, numberSequence, logicChallenge }
+enum MathRiddleType { arithmetic, logicChallenge }
 
 enum ArithmeticOperation { addition, subtraction, multiplication, division }
 
@@ -39,7 +39,6 @@ class MathRiddle {
 
 class MathRiddleState {
   final MathRiddle? currentRiddle;
-  final NumberSequence? currentSequence;
   final LogicMathChallenge? currentLogic;
   final String? selectedAnswer;
   final List<String> revealedHints;
@@ -56,7 +55,6 @@ class MathRiddleState {
 
   const MathRiddleState({
     this.currentRiddle,
-    this.currentSequence,
     this.currentLogic,
     this.selectedAnswer,
     this.revealedHints = const [],
@@ -74,7 +72,6 @@ class MathRiddleState {
 
   MathRiddleState copyWith({
     MathRiddle? currentRiddle,
-    NumberSequence? currentSequence,
     LogicMathChallenge? currentLogic,
     String? selectedAnswer,
     List<String>? revealedHints,
@@ -91,7 +88,6 @@ class MathRiddleState {
   }) {
     return MathRiddleState(
       currentRiddle: currentRiddle ?? this.currentRiddle,
-      currentSequence: currentSequence ?? this.currentSequence,
       currentLogic: currentLogic ?? this.currentLogic,
       selectedAnswer: selectedAnswer ?? this.selectedAnswer,
       revealedHints: revealedHints ?? this.revealedHints,
@@ -119,35 +115,6 @@ class MathRiddleState {
   }
 }
 
-class NumberSequence {
-  final String id;
-  final List<int> sequence;
-  final int missingIndex;
-  final String rule;
-  final List<String> options;
-  final String correctAnswer;
-  final String explanation;
-  final List<String> progressiveHints;
-  final int difficulty;
-
-  const NumberSequence({
-    required this.id,
-    required this.sequence,
-    required this.missingIndex,
-    required this.rule,
-    required this.options,
-    required this.correctAnswer,
-    required this.explanation,
-    required this.progressiveHints,
-    required this.difficulty,
-  });
-
-  String get displaySequence {
-    final display = List<String>.from(sequence.map((n) => n.toString()));
-    display.insert(missingIndex, '?');
-    return display.join(', ');
-  }
-}
 
 class LogicMathChallenge {
   final String id;

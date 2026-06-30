@@ -28,7 +28,7 @@ class GameFlowOptimizer {
 
     try {
       // Use batch generation for better performance
-      final questions = MathEngine.generateQuestionsBatch(
+      final questions = await MathEngine.generateQuestionsBatch(
         operation,
         level,
         count,
@@ -70,12 +70,8 @@ class GameFlowOptimizer {
         // In a real scenario, we might want to map these to MathRiddleEngine methods
         if (operation == 'arithmetic') {
           riddles.add(MathRiddleEngine.generateArithmeticProblem(level));
-        } else if (operation == 'word') {
-          riddles.add(MathRiddleEngine.generateWordProblem(level));
-        } else if (operation == 'sequence') {
-          riddles.add(MathRiddleEngine.generateNumberSequence(level));
         } else if (operation == 'logic') {
-          riddles.add(MathRiddleEngine.generateLogicChallenge(level));
+          riddles.add(await MathRiddleEngine.generateLogicChallenge(level));
         }
       }
 

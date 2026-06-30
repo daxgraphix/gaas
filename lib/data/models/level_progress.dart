@@ -24,7 +24,7 @@ class LevelProgress {
       'level': SecurityService.instance.validateAndSanitizeScore(level, 30),
       'stars': SecurityService.instance.validateAndSanitizeScore(stars, 3),
       'isUnlocked': isUnlocked,
-      'highScore': SecurityService.instance.validateAndSanitizeScore(highScore, 20),
+      'highScore': SecurityService.instance.validateAndSanitizeScore(highScore, 2000),
     };
   }
 
@@ -35,7 +35,7 @@ class LevelProgress {
       level: SecurityService.instance.validateAndSanitizeScore(json['level'] ?? 0, 30),
       stars: SecurityService.instance.validateAndSanitizeScore(json['stars'] ?? 0, 3),
       isUnlocked: json['isUnlocked'] ?? false,
-      highScore: SecurityService.instance.validateAndSanitizeScore(json['highScore'] ?? 0, 20),
+      highScore: SecurityService.instance.validateAndSanitizeScore(json['highScore'] ?? 0, 2000),
     );
   }
 }

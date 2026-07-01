@@ -13,6 +13,8 @@ class Statistics {
   bool isSynced;
   final List<Map<String, dynamic>> timePerQuestion;
   final Map<String, double> accuracyByOperation;
+  final Map<String, int> modeUsage; // Tracks sessions per mode
+  final Map<String, int> levelCompletion; // Tracks completion count per level key
 
   Statistics({
     this.id,
@@ -29,9 +31,13 @@ class Statistics {
     this.isSynced = false,
     List<Map<String, dynamic>>? timePerQuestion,
     Map<String, double>? accuracyByOperation,
+    Map<String, int>? modeUsage,
+    Map<String, int>? levelCompletion,
   })  : lastUpdated = lastUpdated ?? DateTime.now(),
         timePerQuestion = timePerQuestion ?? [],
-        accuracyByOperation = accuracyByOperation ?? {};
+        accuracyByOperation = accuracyByOperation ?? {},
+        modeUsage = modeUsage ?? {},
+        levelCompletion = levelCompletion ?? {};
 
   Map<String, dynamic> toJson() {
     return {
@@ -49,6 +55,8 @@ class Statistics {
       'isSynced': isSynced,
       'timePerQuestion': timePerQuestion,
       'accuracyByOperation': accuracyByOperation,
+      'modeUsage': modeUsage,
+      'levelCompletion': levelCompletion,
     };
   }
 
@@ -69,7 +77,9 @@ class Statistics {
           : DateTime.now(),
       isSynced: json['isSynced'] ?? false,
       timePerQuestion: (json['timePerQuestion'] as List?)?.cast<Map<String, dynamic>>() ?? [],
-      accuracyByOperation: (json['accuracyByOperation'] as Map?)?.cast<String, double>() ?? {},
+      accuracyByOperation: (json['accuracyByOperation'] as Map?)?.map((k, v) => MapEntry(k.toString(), (v as num).toDouble())) ?? {},
+      modeUsage: (json['modeUsage'] as Map?)?.cast<String, int>() ?? {},
+      levelCompletion: (json['levelCompletion'] as Map?)?.cast<String, int>() ?? {},
     );
   }
 }

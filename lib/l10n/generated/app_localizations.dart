@@ -1643,14 +1643,14 @@ abstract class AppLocalizations {
   /// No description provided for @hoursAgo.
   ///
   /// In en, this message translates to:
-  /// **'h ago'**
-  String get hoursAgo;
+  /// **'{count}h ago'**
+  String hoursAgo(Object count);
 
   /// No description provided for @daysAgo.
   ///
   /// In en, this message translates to:
-  /// **'d ago'**
-  String get daysAgo;
+  /// **'{count}d ago'**
+  String daysAgo(Object count);
 
   /// No description provided for @pleaseEnterYourName.
   ///
@@ -2641,6 +2641,66 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Completion Rate'**
   String get completionRate;
+
+  /// No description provided for @engineIntensity.
+  ///
+  /// In en, this message translates to:
+  /// **'ENGINE INTENSITY'**
+  String get engineIntensity;
+
+  /// No description provided for @averageHeat.
+  ///
+  /// In en, this message translates to:
+  /// **'AVG HEAT'**
+  String get averageHeat;
+
+  /// No description provided for @currentHeat.
+  ///
+  /// In en, this message translates to:
+  /// **'CURRENT HEAT'**
+  String get currentHeat;
+
+  /// No description provided for @maxHeat.
+  ///
+  /// In en, this message translates to:
+  /// **'MAX HEAT'**
+  String get maxHeat;
+
+  /// No description provided for @heatIndex.
+  ///
+  /// In en, this message translates to:
+  /// **'Heat Index'**
+  String get heatIndex;
+
+  /// No description provided for @intensityNormal.
+  ///
+  /// In en, this message translates to:
+  /// **'NORMAL'**
+  String get intensityNormal;
+
+  /// No description provided for @intensityMedium.
+  ///
+  /// In en, this message translates to:
+  /// **'MEDIUM'**
+  String get intensityMedium;
+
+  /// No description provided for @intensityHigh.
+  ///
+  /// In en, this message translates to:
+  /// **'HIGH'**
+  String get intensityHigh;
+
+  /// No description provided for @intensityCritical.
+  ///
+  /// In en, this message translates to:
+  /// **'CRITICAL'**
+  String get intensityCritical;
+
+  /// No description provided for @generatedOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Generated on {date}'**
+  String generatedOn(Object date);
 }
 
 class _AppLocalizationsDelegate

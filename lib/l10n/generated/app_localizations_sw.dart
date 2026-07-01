@@ -798,10 +798,14 @@ class AppLocalizationsSw extends AppLocalizations {
   String get viewProgress => 'Angalia Maendeleo';
 
   @override
-  String get hoursAgo => 'saa_AGO';
+  String hoursAgo(Object count) {
+    return 'saa $count zilizopita';
+  }
 
   @override
-  String get daysAgo => 'siku_AGO';
+  String daysAgo(Object count) {
+    return 'siku $count zilizopita';
+  }
 
   @override
   String get pleaseEnterYourName => 'Tafadhali weka jina lako';
@@ -1308,4 +1312,36 @@ class AppLocalizationsSw extends AppLocalizations {
 
   @override
   String get completionRate => 'Kiwango cha Ukamilishaji';
+
+  @override
+  String get engineIntensity => 'NGUVU YA INJINI';
+
+  @override
+  String get averageHeat => 'WASTANI WA JOTO';
+
+  @override
+  String get currentHeat => 'JOTO LA SASA';
+
+  @override
+  String get maxHeat => 'JOTO LA JUU';
+
+  @override
+  String get heatIndex => 'Kielezo cha Joto';
+
+  @override
+  String get intensityNormal => 'KAWAIDA';
+
+  @override
+  String get intensityMedium => 'WASTANI';
+
+  @override
+  String get intensityHigh => 'JUU';
+
+  @override
+  String get intensityCritical => 'HATARI';
+
+  @override
+  String generatedOn(Object date) {
+    return 'Imetolewa mnamo $date';
+  }
 }

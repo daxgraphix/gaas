@@ -31,11 +31,10 @@ class StatisticsRepository {
     required int score,
     required bool isCorrect,
     required int timeSpent,
+    String? mode,
+    String? levelKey,
   }) async {
-    var stats = await getStatistics(operationId) ??
-        Statistics(
-          operationId: operationId,
-        );
+    var stats = await getStatistics(null) ?? Statistics();
 
     stats.totalQuestionsAnswered += 1;
     stats.timeSpentSeconds += timeSpent;
@@ -43,12 +42,19 @@ class StatisticsRepository {
 
     if (isCorrect) {
       stats.correctAnswers += 1;
+      stats.currentStreak += 1;
+      if (stats.currentStreak > stats.bestStreak) {
+        stats.bestStreak = stats.currentStreak;
+      }
       if (score > stats.highScore) {
         stats.highScore = score;
       }
-      if (stats.totalQuestionsAnswered > 0) {
-        stats.dailyAccuracy = (stats.correctAnswers / stats.totalQuestionsAnswered) * 100;
-      }
+    } else {
+      stats.currentStreak = 0;
+    }
+    
+    if (stats.totalQuestionsAnswered > 0) {
+      stats.dailyAccuracy = (stats.correctAnswers / stats.totalQuestionsAnswered) * 100;
     }
 
     // Track time per question
@@ -56,16 +62,31 @@ class StatisticsRepository {
       'operationId': operationId,
       'timeSpent': timeSpent,
       'isCorrect': isCorrect,
+      'mode': mode,
+      'levelKey': levelKey,
       'timestamp': DateTime.now().toIso8601String(),
     });
 
     // Update accuracy by operation
-    final opKey = operationId ?? 'unknown';
-    final totalOpQuestions = stats.timePerQuestion.where((q) => q['operationId'] == opKey).length;
-    final correctOpQuestions = stats.timePerQuestion.where((q) => q['operationId'] == opKey && q['isCorrect'] == true).length;
-    stats.accuracyByOperation[opKey] = totalOpQuestions > 0 ? correctOpQuestions / totalOpQuestions * 100 : 0.0;
+    if (operationId != null) {
+      final totalOp = stats.timePerQuestion.where((q) => q['operationId'] == operationId).length;
+      final correctOp = stats.timePerQuestion.where((q) => q['operationId'] == operationId && q['isCorrect'] == true).length;
+      stats.accuracyByOperation[operationId] = totalOp > 0 ? (correctOp / totalOp * 100) : 0.0;
+    }
 
-    // Keep only last 100 entries
+    // Update mode usage
+    if (mode != null) {
+      stats.modeUsage[mode] = (stats.modeUsage[mode] ?? 0) + 1;
+    }
+
+    // Update level completion if it's a "win"
+    if (levelKey != null && isCorrect) {
+      // In a real game, level completion might be tracked separately from per-question stats
+      // but here we can at least increment attempts/wins if levelKey is provided
+      stats.levelCompletion[levelKey] = (stats.levelCompletion[levelKey] ?? 0) + 1;
+    }
+
+    // Keep only last 100 entries for history
     if (stats.timePerQuestion.length > 100) {
       stats.timePerQuestion.removeAt(0);
     }

@@ -92,6 +92,7 @@ class MathEngine {
     bool isArcade = false,
     Set<String>? excludeQuestions,
     int skillRating = 1000,
+    double heatIndex = 1.0,
   }) {
     // Handle advanced topics
     if (['logic'].contains(operation)) {
@@ -102,9 +103,10 @@ class MathEngine {
     MathQuestion question;
     int attempts = 0;
 
-    // Adjust effective level based on skill rating
-    // Every 200 points above 1000 increases effective level by 1
-    final effectiveLevel = (level + (skillRating - 1000) ~/ 200).clamp(1, 100);
+    // Adjust effective level based on skill rating and real-time heat
+    // Heat index > 1.0 boosts the effective difficulty for the session
+    final heatBonus = (heatIndex > 1.0) ? (heatIndex - 1.0) * 5 : 0;
+    final effectiveLevel = (level + (skillRating - 1000) ~/ 200 + heatBonus.toInt()).clamp(1, 100);
 
     do {
       if (isArcade) {
@@ -114,8 +116,11 @@ class MathEngine {
       } else {
         final (min, max) = getNumberRange(effectiveLevel, operation);
         
-        // Dynamic complexity: if skill is high, potentially add a third operand
-        final useThreeOperands = skillRating > 1400 && _random.nextDouble() < 0.3;
+        // Dynamic complexity: if skill is high OR heat is high, potentially add a third operand
+        // High heat makes the chance for 3 operands increase up to 70%
+        final threeOperandChance = (0.3 * heatIndex).clamp(0.1, 0.7);
+        final useThreeOperands = (skillRating > 1400 || heatIndex > 1.5) && 
+                                 _random.nextDouble() < threeOperandChance;
 
         switch (operation) {
           case 'addition':
@@ -165,6 +170,8 @@ class MathEngine {
     int count, {
     bool isArcade = false,
     bool useCache = true,
+    int skillRating = 1000,
+    double heatIndex = 1.0,
   }) async {
     if (useCache && !isArcade) {
       final cached = _getCachedQuestions(operation, level, count);
@@ -179,6 +186,8 @@ class MathEngine {
       'level': level,
       'count': count,
       'isArcade': isArcade,
+      'skillRating': skillRating,
+      'heatIndex': heatIndex,
     });
 
     if (useCache && !isArcade && result.length == count) {
@@ -193,6 +202,8 @@ class MathEngine {
     final int level = params['level'];
     final int count = params['count'];
     final bool isArcade = params['isArcade'];
+    final int skillRating = params['skillRating'] ?? 1000;
+    final double heatIndex = params['heatIndex'] ?? 1.0;
 
     final questions = <MathQuestion>{};
     final excludeSet = <String>{};
@@ -205,6 +216,8 @@ class MathEngine {
         level,
         isArcade: isArcade,
         excludeQuestions: excludeSet,
+        skillRating: skillRating,
+        heatIndex: heatIndex,
       );
 
       if (!excludeSet.contains(question.displayString)) {

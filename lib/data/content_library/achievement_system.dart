@@ -39,12 +39,14 @@ class Achievement {
 class AchievementTrigger {
   final String type;
   final int targetValue;
+  final int? targetTime;
   final String? operation;
   final String? mode;
 
   const AchievementTrigger({
     required this.type,
     required this.targetValue,
+    this.targetTime,
     this.operation,
     this.mode,
   });
@@ -98,6 +100,26 @@ final List<Achievement> _defaultAchievements = [
     trigger: AchievementTrigger(type: 'streak', targetValue: 10),
   ),
   const Achievement(
+    id: 'heat_master',
+    title: 'Heat Master',
+    description: 'Maintain a Heat Index above 2.5 for an entire session',
+    category: AchievementCategory.special,
+    rarity: AchievementRarity.epic,
+    points: 200,
+    iconName: 'fireplace',
+    trigger: AchievementTrigger(type: 'heat', targetValue: 250), // 2.5 * 100 for integer comparison
+  ),
+  const Achievement(
+    id: 'speed_demon_gold',
+    title: 'Flash Calculator',
+    description: 'Answer 50 questions with an average time under 2 seconds',
+    category: AchievementCategory.time,
+    rarity: AchievementRarity.legendary,
+    points: 500,
+    iconName: 'bolt',
+    trigger: AchievementTrigger(type: 'avg_time', targetValue: 50, targetTime: 2),
+  ),
+  const Achievement(
     id: 'streak_25',
     title: 'Legend',
     description: 'Get 25 correct answers in a row',
@@ -106,6 +128,37 @@ final List<Achievement> _defaultAchievements = [
     points: 150,
     iconName: 'military_tech',
     trigger: AchievementTrigger(type: 'streak', targetValue: 25),
+  ),
+  // Multi-tiered Accuracy Achievements
+  const Achievement(
+    id: 'accuracy_80_bronze',
+    title: 'Sharp Mind (Bronze)',
+    description: 'Achieve 80% accuracy in any game mode',
+    category: AchievementCategory.gameplay,
+    rarity: AchievementRarity.common,
+    points: 20,
+    iconName: 'psychology',
+    trigger: AchievementTrigger(type: 'accuracy', targetValue: 80),
+  ),
+  const Achievement(
+    id: 'accuracy_80_silver',
+    title: 'Sharp Mind (Silver)',
+    description: 'Achieve 85% accuracy in any game mode',
+    category: AchievementCategory.gameplay,
+    rarity: AchievementRarity.uncommon,
+    points: 35,
+    iconName: 'psychology',
+    trigger: AchievementTrigger(type: 'accuracy', targetValue: 85),
+  ),
+  const Achievement(
+    id: 'accuracy_80_gold',
+    title: 'Sharp Mind (Gold)',
+    description: 'Achieve 90% accuracy in any game mode',
+    category: AchievementCategory.gameplay,
+    rarity: AchievementRarity.rare,
+    points: 50,
+    iconName: 'psychology',
+    trigger: AchievementTrigger(type: 'accuracy', targetValue: 90),
   ),
   const Achievement(
     id: 'questions_100',
@@ -147,15 +200,36 @@ final List<Achievement> _defaultAchievements = [
     iconName: 'verified',
     trigger: AchievementTrigger(type: 'perfect', targetValue: 1),
   ),
+  // Tiered Speed Achievements
   const Achievement(
-    id: 'speed_demon',
-    title: 'Speed Demon',
+    id: 'speed_demon_bronze',
+    title: 'Speed Demon (Bronze)',
+    description: 'Answer 10 questions in under 45 seconds',
+    category: AchievementCategory.time,
+    rarity: AchievementRarity.uncommon,
+    points: 30,
+    iconName: 'bolt',
+    trigger: AchievementTrigger(type: 'speed_run', targetValue: 10, targetTime: 45),
+  ),
+  const Achievement(
+    id: 'speed_demon_silver',
+    title: 'Speed Demon (Silver)',
     description: 'Answer 10 questions in under 30 seconds',
     category: AchievementCategory.time,
     rarity: AchievementRarity.rare,
     points: 60,
     iconName: 'bolt',
-    trigger: AchievementTrigger(type: 'speed_run', targetValue: 10),
+    trigger: AchievementTrigger(type: 'speed_run', targetValue: 10, targetTime: 30),
+  ),
+  const Achievement(
+    id: 'speed_demon_gold',
+    title: 'Speed Demon (Gold)',
+    description: 'Answer 10 questions in under 15 seconds',
+    category: AchievementCategory.time,
+    rarity: AchievementRarity.epic,
+    points: 100,
+    iconName: 'bolt',
+    trigger: AchievementTrigger(type: 'speed_run', targetValue: 10, targetTime: 15),
   ),
   const Achievement(
     id: 'daily_streak_7',
@@ -494,6 +568,36 @@ final List<Achievement> _defaultAchievements = [
     iconName: 'lightbulb',
     trigger: AchievementTrigger(type: 'hints_obtained', targetValue: 50),
   ),
+  const Achievement(
+    id: 'cross_numbers_novice',
+    title: 'Grid Explorer',
+    description: 'Complete 5 Cross Numbers puzzles',
+    category: AchievementCategory.progress,
+    rarity: AchievementRarity.common,
+    points: 20,
+    iconName: 'grid_view',
+    trigger: AchievementTrigger(type: 'cross_numbers_completed', targetValue: 5),
+  ),
+  const Achievement(
+    id: 'cross_numbers_speed',
+    title: 'Lightning Grid',
+    description: 'Complete a 7x7 Cross Numbers puzzle in under 90 seconds',
+    category: AchievementCategory.time,
+    rarity: AchievementRarity.rare,
+    points: 100,
+    iconName: 'speed',
+    trigger: AchievementTrigger(type: 'cross_numbers_speed_7x7', targetValue: 1),
+  ),
+  const Achievement(
+    id: 'cross_numbers_master',
+    title: 'Logic Architect',
+    description: 'Complete 50 Cross Numbers puzzles',
+    category: AchievementCategory.progress,
+    rarity: AchievementRarity.epic,
+    points: 250,
+    iconName: 'architecture',
+    trigger: AchievementTrigger(type: 'cross_numbers_completed', targetValue: 50),
+  ),
 ];
 
 class AchievementState {
@@ -524,6 +628,10 @@ final achievementStateProvider =
 class AchievementNotifier extends StateNotifier<AchievementState> {
   AchievementNotifier() : super(AchievementState());
 
+  void initialize() {
+    // Initialization logic if needed, or just to satisfy the call
+  }
+
   bool isUnlocked(String id) {
     return state.unlockedAchievements.any((a) => a.achievementId == id);
   }
@@ -552,14 +660,21 @@ class AchievementNotifier extends StateNotifier<AchievementState> {
     return state.progressTrackers[type] ?? 0;
   }
 
-  void checkAndUnlock(String type, int value, List<Achievement> achievements) {
+  void checkAndUnlock(String type, int value, List<Achievement> achievements, {int? timeValue}) {
     updateProgress(type, value);
 
     for (final achievement in achievements) {
-      if (achievement.trigger?.type == type &&
-          value >= achievement.trigger!.targetValue &&
-          !isUnlocked(achievement.id)) {
-        unlock(achievement);
+      if (achievement.trigger?.type == type && !isUnlocked(achievement.id)) {
+        bool conditionMet = value >= achievement.trigger!.targetValue;
+        
+        // Handle time-based secondary conditions
+        if (conditionMet && achievement.trigger!.targetTime != null && timeValue != null) {
+          conditionMet = timeValue <= achievement.trigger!.targetTime!;
+        }
+
+        if (conditionMet) {
+          unlock(achievement);
+        }
       }
     }
   }

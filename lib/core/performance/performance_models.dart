@@ -12,11 +12,15 @@ class PerformanceDataPoint {
   final double accuracy;
   final int averageTime;
   final int streak;
+  final double? avgHeatIndex;
+  final String? mode;
 
   PerformanceDataPoint({
     required this.timestamp,
     required this.accuracy,
     required this.averageTime,
     required this.streak,
+    this.avgHeatIndex,
+    this.mode,
   });
 }

@@ -14,6 +14,10 @@ class UserSession {
   DateTime lastPlayedAt;
   int loginStreak;
   List<String>? unlockedAvatars;
+  String? lastPlayedMode;
+  String? lastPlayedOperation;
+  int? lastPlayedLevel;
+  double? lastHeatIndex;
 
   UserSession({
     this.id,
@@ -29,6 +33,10 @@ class UserSession {
     DateTime? lastPlayedAt,
     this.loginStreak = 0,
     this.unlockedAvatars,
+    this.lastPlayedMode,
+    this.lastPlayedOperation,
+    this.lastPlayedLevel,
+    this.lastHeatIndex,
   })  : createdAt = createdAt ?? DateTime.now(),
         lastPlayedAt = lastPlayedAt ?? DateTime.now();
 
@@ -50,6 +58,10 @@ class UserSession {
     DateTime? lastPlayedAt,
     int? loginStreak,
     List<String>? unlockedAvatars,
+    String? lastPlayedMode,
+    String? lastPlayedOperation,
+    int? lastPlayedLevel,
+    double? lastHeatIndex,
   }) {
     return UserSession(
       id: id ?? this.id,
@@ -65,6 +77,10 @@ class UserSession {
       lastPlayedAt: lastPlayedAt ?? this.lastPlayedAt,
       loginStreak: loginStreak ?? this.loginStreak,
       unlockedAvatars: unlockedAvatars ?? this.unlockedAvatars,
+      lastPlayedMode: lastPlayedMode ?? this.lastPlayedMode,
+      lastPlayedOperation: lastPlayedOperation ?? this.lastPlayedOperation,
+      lastPlayedLevel: lastPlayedLevel ?? this.lastPlayedLevel,
+      lastHeatIndex: lastHeatIndex ?? this.lastHeatIndex,
     );
   }
 
@@ -83,6 +99,10 @@ class UserSession {
       'lastPlayedAt': lastPlayedAt.toIso8601String(),
       'loginStreak': SecurityService.instance.validateAndSanitizeScore(loginStreak, 365),
       'unlockedAvatars': unlockedAvatars,
+      'lastPlayedMode': lastPlayedMode,
+      'lastPlayedOperation': lastPlayedOperation,
+      'lastPlayedLevel': lastPlayedLevel,
+      'lastHeatIndex': lastHeatIndex,
     };
   }
 
@@ -105,6 +125,10 @@ class UserSession {
           : DateTime.now(),
       loginStreak: SecurityService.instance.validateAndSanitizeScore(json['loginStreak'] ?? 0, 365),
       unlockedAvatars: (json['unlockedAvatars'] as List<dynamic>?)?.cast<String>(),
+      lastPlayedMode: json['lastPlayedMode'],
+      lastPlayedOperation: json['lastPlayedOperation'],
+      lastPlayedLevel: json['lastPlayedLevel'],
+      lastHeatIndex: (json['lastHeatIndex'] as num?)?.toDouble(),
     );
   }
 }

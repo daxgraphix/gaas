@@ -153,6 +153,7 @@ class SoundManager {
   bool _soundEnabled = true;
   double _volume = 1.0;
   bool _isInitialized = false;
+  double _currentHeatIndex = 1.0;
   
   // Use a pool of players to prevent overhead of creating new ones
   final Map<String, AudioPlayer> _playerPool = {};
@@ -404,6 +405,23 @@ class SoundManager {
 
   void reset() {
     _isInitialized = false;
+  }
+
+  /// Update the current heat index to modulate pitch and playback rate
+  void updateHeat(double heatIndex) {
+    _currentHeatIndex = heatIndex.clamp(1.0, 4.0);
+    _applyHeatModulation();
+  }
+
+  void _applyHeatModulation() {
+    // Pitch and rate increase with heat
+    // Base is 1.0 at heatIndex 1.0
+    // Max is ~1.5 at heatIndex 4.0
+    final rate = 1.0 + (_currentHeatIndex - 1.0) * 0.15;
+    
+    for (final player in _playerPool.values) {
+      player.setPlaybackRate(rate);
+    }
   }
 
   String _getSoundFile(String key) {

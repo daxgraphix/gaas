@@ -30,6 +30,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
 late AnimationController _progressAnimationController;
     late Animation<double> _progressAnimation;
     late AnimationController _questionAnimationController;
+    final Random _random = Random();
 
     @override
     void initState() {
@@ -217,15 +218,18 @@ if (gameSession.currentQuestionIndex >= gameSession.totalQuestions ||
                   RepaintBoundary(
                     child: _buildScoreBar(gameSession, theme, isFocusMode),
                   ),
+                  if (gameSession.heatIndex > 1.2 && !isFocusMode)
+                    _buildHeatIndicator(gameSession.heatIndex, theme),
                   const Divider(height: 1),
                   Flexible(
                     flex: 4,
                     child: AnimatedBuilder(
                       animation: _shakeAnimation,
                       builder: (context, child) {
+                        final heatShake = (gameSession.heatIndex - 1.0) * 0.5;
                         return Transform.translate(
                           offset: Offset(
-                            _shakeAnimation.value *
+                            (_shakeAnimation.value + heatShake * _random.nextDouble()) *
                                 sin(_shakeAnimation.value * pi * 4),
                             0,
                           ),
@@ -568,6 +572,35 @@ if (gameSession.mode == GameMode.duel)
                 .fadeOut(delay: 1.seconds, duration: 1.seconds),
       ),
     );
+  }
+
+  Widget _buildHeatIndicator(double heatIndex, ThemeData theme) {
+    final intensity = ((heatIndex - 1.0) / 2.0).clamp(0.0, 1.0);
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      width: double.infinity,
+      color: Colors.red.withValues(alpha: 0.1 * intensity),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.whatshot,
+            size: 14,
+            color: Color.lerp(Colors.orange, Colors.red, intensity),
+          ),
+          const SizedBox(width: 8),
+          Text(
+            'ENGINE HEAT: ${(heatIndex * 100).toInt()}%',
+            style: TextStyle(
+              color: Color.lerp(Colors.orange, Colors.red, intensity),
+              fontSize: 10,
+              letterSpacing: 2,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+        ],
+      ),
+    ).animate().fadeIn().shimmer(duration: 2.seconds, color: Colors.white24);
   }
 
   Widget _buildMinimalStat(String label, String value, ThemeData theme) {

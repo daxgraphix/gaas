@@ -9,8 +9,10 @@ import 'package:share_plus/share_plus.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:printing/printing.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:fl_chart/fl_chart.dart';
 import '../../core/providers.dart';
 import '../../core/themes/app_themes.dart';
+import '../../features/game/logic/game_session_provider.dart';
 import '../../l10n/generated/app_localizations.dart';
 
 class ReportsScreen extends ConsumerWidget {
@@ -18,6 +20,11 @@ class ReportsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // Check for session inactivity when opening reports
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(sessionStatsProvider.notifier).checkInactivity();
+    });
+
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context)!;
     final accuracy = ref.watch(overallAccuracyProvider);
@@ -45,7 +52,7 @@ class ReportsScreen extends ConsumerWidget {
                       child = const SizedBox(height: 32);
                       break;
                     case 2:
-                      child = _buildPerformanceAnalytics(context, theme, accuracy, totalTime, l10n);
+                      child = _buildPerformanceAnalytics(context, theme, l10n);
                       break;
                     case 3:
                       child = const SizedBox(height: 32);
@@ -105,7 +112,7 @@ class ReportsScreen extends ConsumerWidget {
             ),
           ),
           onPressed: () => _showExportOptions(context, ref, l10n),
-          tooltip: 'Export Options',
+          tooltip: l10n.exportOptions,
         ),
       ],
     );
@@ -214,14 +221,11 @@ class ReportsScreen extends ConsumerWidget {
   Widget _buildPerformanceAnalytics(
     BuildContext context,
     ThemeData theme,
-    AsyncValue<double> accuracy,
-    AsyncValue<int> totalTime,
     AppLocalizations l10n,
   ) {
     return Consumer(
       builder: (context, ref, child) {
         final stats = ref.watch(sessionStatsProvider);
-        final trends = ref.watch(performanceTrendsProvider);
         final bestStreak = ref.watch(bestStreakProvider);
         final analytics = ref.watch(analyticsProvider);
 
@@ -231,6 +235,9 @@ class ReportsScreen extends ConsumerWidget {
             .where((m) => m != null)
             .toSet()
             .toList();
+
+        final filter = ref.watch(reportsFilterProvider);
+        final displayTrends = ref.watch(filteredPerformanceTrendsProvider);
 
         return RepaintBoundary(
           child: Column(
@@ -247,20 +254,43 @@ class ReportsScreen extends ConsumerWidget {
                     ),
                   ),
                   if (modes.isNotEmpty)
-                    PopupMenuButton<String>(
-                      icon: const Icon(Icons.filter_list),
+                    PopupMenuButton<String?>(
+                      initialValue: filter,
+                      icon: Icon(
+                        Icons.filter_list,
+                        color: filter != null ? theme.colorScheme.primary : theme.colorScheme.onSurface,
+                      ),
                       onSelected: (String? mode) {
-                        // In a full implementation, we'd update a filter provider here
+                        ref.read(reportsFilterProvider.notifier).state = mode;
                       },
                       itemBuilder: (context) => [
                          PopupMenuItem(
                           value: null,
                           child: Text(l10n.allModes),
                         ),
-                        ...modes.map((mode) => PopupMenuItem(
-                              value: mode,
-                              child: Text(mode!),
-                            )),
+                        ...modes.map((mode) {
+                          String localizedMode = mode!;
+                          if (mode.toLowerCase() == 'addition') {
+                            localizedMode = l10n.addition;
+                          } else if (mode.toLowerCase() == 'subtraction') {
+                            localizedMode = l10n.subtraction;
+                          } else if (mode.toLowerCase() == 'multiplication') {
+                            localizedMode = l10n.multiplication;
+                          } else if (mode.toLowerCase() == 'division') {
+                            localizedMode = l10n.division;
+                          } else if (mode.toLowerCase() == 'arcade') {
+                            localizedMode = l10n.arcade;
+                          } else if (mode.toLowerCase() == 'practice') {
+                            localizedMode = l10n.practice;
+                          } else if (mode.toLowerCase() == 'campaign') {
+                            localizedMode = l10n.campaign;
+                          }
+                          
+                          return PopupMenuItem(
+                            value: mode,
+                            child: Text(localizedMode),
+                          );
+                        }),
                       ],
                     ),
                 ],
@@ -282,10 +312,33 @@ class ReportsScreen extends ConsumerWidget {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceAround,
                       children: [
-                        _buildMetricItem(l10n.accuracy, '${accuracy.value?.toStringAsFixed(1) ?? '0'}%', theme),
-                        _buildMetricItem(l10n.time, '${(totalTime.value ?? 0) ~/ 60}m', theme),
+                        _buildMetricItem(l10n.accuracy, '${stats.accuracy.toStringAsFixed(1)}%', theme),
+                        _buildMetricItem(l10n.time, '${stats.timeSpent ~/ 60}m', theme),
                       ],
                     ),
+                    const SizedBox(height: 16),
+                    _buildAccuracyChart(displayTrends, theme, l10n),
+                    const SizedBox(height: 20),
+                    const Divider(height: 1, color: Colors.white10),
+                    const SizedBox(height: 20),
+                    Text(
+                      l10n.engineIntensity,
+                      style: theme.textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w600,
+                        color: theme.colorScheme.error,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        _buildMiniStat(l10n.averageHeat, displayTrends.averageHeat.toStringAsFixed(2), theme),
+                        _buildMiniStat(l10n.currentHeat, ref.watch(gameSessionProvider)?.heatIndex.toStringAsFixed(2) ?? '1.00', theme),
+                        _buildMiniStat(l10n.maxHeat, displayTrends.heatHistory.isEmpty ? '1.00' : displayTrends.heatHistory.reduce((a, b) => a > b ? a : b).toStringAsFixed(2), theme),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    _buildHeatTrendChart(displayTrends, theme, l10n),
                     const SizedBox(height: 20),
                     const Divider(height: 1, color: Colors.white10),
                     const SizedBox(height: 20),
@@ -303,7 +356,7 @@ class ReportsScreen extends ConsumerWidget {
                         _buildMiniStat(l10n.questions, '${stats.questionsAnswered}', theme),
                         _buildMiniStat(l10n.correct, '${stats.correctAnswers}', theme),
                         _buildMiniStat(l10n.bestStreak, '${bestStreak.value ?? 0}', theme),
-                        _buildMiniStat(l10n.sessions, '${trends.accuracyHistory.length}', theme),
+                        _buildMiniStat(l10n.sessions, '${displayTrends.accuracyHistory.length}', theme),
                       ],
                     ),
                   ],
@@ -335,6 +388,169 @@ class ReportsScreen extends ConsumerWidget {
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildAccuracyChart(PerformanceTrends trends, ThemeData theme, AppLocalizations l10n) {
+    if (trends.accuracyHistory.isEmpty) return const SizedBox.shrink();
+
+    final spots = trends.accuracyHistory.asMap().entries.map((e) {
+      return FlSpot(e.key.toDouble(), e.value);
+    }).toList();
+
+    return SizedBox(
+      height: 60,
+      child: LineChart(
+        LineChartData(
+          gridData: const FlGridData(show: false),
+          titlesData: const FlTitlesData(show: false),
+          borderData: FlBorderData(show: false),
+          lineTouchData: LineTouchData(
+            touchTooltipData: LineTouchTooltipData(
+              getTooltipColor: (touchedSpot) => theme.colorScheme.surface.withValues(alpha: 0.9),
+              getTooltipItems: (List<LineBarSpot> touchedBarSpots) {
+                return touchedBarSpots.map((barSpot) {
+                  final index = barSpot.x.toInt();
+                  final accuracy = barSpot.y;
+                  final timestamp = trends.timestamps.length > index ? trends.timestamps[index] : null;
+                  
+                  final dateStr = timestamp != null 
+                    ? '${timestamp.hour}:${timestamp.minute.toString().padLeft(2, '0')}' 
+                    : '${l10n.gameSession} ${index + 1}';
+
+                  return LineTooltipItem(
+                    '$dateStr\n${accuracy.toStringAsFixed(1)}%',
+                    theme.textTheme.bodySmall!.copyWith(
+                      color: theme.colorScheme.primary,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 10,
+                    ),
+                  );
+                }).toList();
+              },
+            ),
+          ),
+          minX: 0,
+          maxX: spots.length.toDouble() - 1,
+          minY: 0,
+          maxY: 105,
+          lineBarsData: [
+            LineChartBarData(
+              spots: spots,
+              isCurved: true,
+              color: theme.colorScheme.primary,
+              barWidth: 2,
+              isStrokeCapRound: true,
+              dotData: const FlDotData(show: false),
+              belowBarData: BarAreaData(
+                show: true,
+                gradient: LinearGradient(
+                  colors: [
+                    theme.colorScheme.primary.withValues(alpha: 0.2),
+                    theme.colorScheme.primary.withValues(alpha: 0.0),
+                  ],
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHeatTrendChart(PerformanceTrends trends, ThemeData theme, AppLocalizations l10n) {
+    if (trends.heatHistory.isEmpty) return const SizedBox.shrink();
+
+    final spots = trends.heatHistory.asMap().entries.map((e) {
+      return FlSpot(e.key.toDouble(), e.value);
+    }).toList();
+
+    final minHeat = trends.heatHistory.reduce((a, b) => a < b ? a : b);
+    final maxHeat = trends.heatHistory.reduce((a, b) => a > b ? a : b);
+    
+    // Calculate adaptive Y-axis bounds
+    final minY = (minHeat - 0.2).clamp(0.0, 5.0);
+    final maxY = (maxHeat + 0.2).clamp(minY + 0.5, 5.0);
+
+    return SizedBox(
+      height: 80,
+      child: LineChart(
+        LineChartData(
+          gridData: const FlGridData(show: false),
+          titlesData: const FlTitlesData(show: false),
+          borderData: FlBorderData(show: false),
+          lineTouchData: LineTouchData(
+            touchTooltipData: LineTouchTooltipData(
+              getTooltipColor: (touchedSpot) => theme.colorScheme.surface.withValues(alpha: 0.9),
+              getTooltipItems: (List<LineBarSpot> touchedBarSpots) {
+                return touchedBarSpots.map((barSpot) {
+                  final index = barSpot.x.toInt();
+                  final heat = barSpot.y;
+                  final timestamp = trends.timestamps.length > index ? trends.timestamps[index] : null;
+                  
+                  String level;
+                  if (heat >= 2.5) {
+                    level = l10n.intensityCritical;
+                  } else if (heat >= 2.0) {
+                    level = l10n.intensityHigh;
+                  } else if (heat >= 1.5) {
+                    level = l10n.intensityMedium;
+                  } else {
+                    level = l10n.intensityNormal;
+                  }
+                  
+                  final dateStr = timestamp != null 
+                    ? '${timestamp.hour}:${timestamp.minute.toString().padLeft(2, '0')}' 
+                    : '${l10n.gameSession} ${index + 1}';
+
+                  return LineTooltipItem(
+                    '$dateStr\n${heat.toStringAsFixed(2)}x\n$level',
+                    theme.textTheme.bodySmall!.copyWith(
+                      color: heat >= 2.0 ? theme.colorScheme.error : theme.colorScheme.primary,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 10,
+                    ),
+                  );
+                }).toList();
+              },
+            ),
+          ),
+          minX: 0,
+          maxX: spots.length.toDouble() - 1,
+          minY: minY,
+          maxY: maxY,
+          lineBarsData: [
+            LineChartBarData(
+              spots: spots,
+              isCurved: true,
+              color: theme.colorScheme.error,
+              barWidth: 3,
+              isStrokeCapRound: true,
+              dotData: FlDotData(
+                show: true,
+                getDotPainter: (spot, percent, barData, index) => FlDotCirclePainter(
+                  radius: 3,
+                  color: theme.colorScheme.error,
+                  strokeWidth: 0,
+                ),
+              ),
+              belowBarData: BarAreaData(
+                show: true,
+                gradient: LinearGradient(
+                  colors: [
+                    theme.colorScheme.error.withValues(alpha: 0.3),
+                    theme.colorScheme.error.withValues(alpha: 0.0),
+                  ],
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -393,13 +609,25 @@ class ReportsScreen extends ConsumerWidget {
                         final completed = levels.where((level) => level.stars > 0).length;
                         final unlocked = levels.where((level) => level.isUnlocked).length;
                         final totalStarsEarned = levels.fold<int>(0, (sum, level) => sum + level.stars);
+                        
+                        String localizedOp = operation;
+                        if (operation.toLowerCase() == 'addition') {
+                          localizedOp = l10n.addition;
+                        } else if (operation.toLowerCase() == 'subtraction') {
+                          localizedOp = l10n.subtraction;
+                        } else if (operation.toLowerCase() == 'multiplication') {
+                          localizedOp = l10n.multiplication;
+                        } else if (operation.toLowerCase() == 'division') {
+                          localizedOp = l10n.division;
+                        }
+                        
                         return Padding(
                           padding: const EdgeInsets.symmetric(vertical: 8),
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               Text(
-                                operation.toUpperCase(),
+                                localizedOp.toUpperCase(),
                                 style: theme.textTheme.titleSmall?.copyWith(
                                   fontWeight: FontWeight.bold,
                                   letterSpacing: 1.1,
@@ -458,12 +686,30 @@ class ReportsScreen extends ConsumerWidget {
                     ...analytics.operationUsage.entries.map((entry) {
                       final mode = entry.key;
                       final count = entry.value;
+                      
+                      String localizedMode = mode;
+                      if (mode.toLowerCase() == 'addition') {
+                        localizedMode = l10n.addition;
+                      } else if (mode.toLowerCase() == 'subtraction') {
+                        localizedMode = l10n.subtraction;
+                      } else if (mode.toLowerCase() == 'multiplication') {
+                        localizedMode = l10n.multiplication;
+                      } else if (mode.toLowerCase() == 'division') {
+                        localizedMode = l10n.division;
+                      } else if (mode.toLowerCase() == 'arcade') {
+                        localizedMode = l10n.arcade;
+                      } else if (mode.toLowerCase() == 'practice') {
+                        localizedMode = l10n.practice;
+                      } else if (mode.toLowerCase() == 'campaign') {
+                        localizedMode = l10n.campaign;
+                      }
+                      
                       return Padding(
                         padding: const EdgeInsets.symmetric(vertical: 4),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Text(mode.toUpperCase(), style: theme.textTheme.bodyMedium),
+                            Text(localizedMode.toUpperCase(), style: theme.textTheme.bodyMedium),
                             Text(
                               '$count ${l10n.sessions}',
                               style: theme.textTheme.bodyMedium?.copyWith(
@@ -792,61 +1038,58 @@ class ReportsScreen extends ConsumerWidget {
     final user = ref.read(userSessionProvider);
     final accuracy = ref.read(overallAccuracyProvider);
     final totalStars = ref.read(totalStarsProvider);
-    final completedLevels = ref.read(completedLevelsProvider);
-    final totalTime = ref.read(totalTimePlayedProvider);
-
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Text(
-          l10n.performanceReportTitle,
-          style: theme.textTheme.headlineSmall?.copyWith(
-            fontWeight: FontWeight.bold,
-            color: theme.colorScheme.primary,
-          ),
-          textAlign: TextAlign.center,
-        ),
-        const SizedBox(height: 8),
-        Text(
-          'Generated on ${DateTime.now().toString().split('.')[0]}',
-          style: theme.textTheme.bodySmall,
-          textAlign: TextAlign.center,
-        ),
-        if (user != null) ...[
-          const SizedBox(height: 20),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            decoration: BoxDecoration(
-              color: theme.colorScheme.primary.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(20),
+    final trends = ref.read(performanceTrendsProvider);
+      
+      return Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            l10n.performanceReportTitle,
+            style: theme.textTheme.headlineSmall?.copyWith(
+              fontWeight: FontWeight.bold,
+              color: theme.colorScheme.primary,
             ),
-            child: Text(
-              '${l10n.playerLabel}: ${user.name}',
-              style: theme.textTheme.titleMedium?.copyWith(
-                color: theme.colorScheme.primary,
-                fontWeight: FontWeight.bold,
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 8),
+          Text(
+            l10n.generatedOn(DateTime.now().toString().split('.')[0]),
+            style: theme.textTheme.bodySmall,
+            textAlign: TextAlign.center,
+          ),
+          if (user != null) ...[
+            const SizedBox(height: 20),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              decoration: BoxDecoration(
+                color: theme.colorScheme.primary.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(20),
               ),
+              child: Text(
+                '${l10n.playerLabel}: ${user.name}',
+                style: theme.textTheme.titleMedium?.copyWith(
+                  color: theme.colorScheme.primary,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ],
+          const SizedBox(height: 24),
+          _buildStatCardForImage(l10n.starsEarned, '${totalStars.value ?? 0}', Icons.star, theme.colorScheme.primary, theme),
+          const SizedBox(height: 12),
+          _buildStatCardForImage(l10n.accuracy, '${accuracy.value?.toStringAsFixed(1) ?? '0'}%', Icons.trending_up, theme.colorScheme.tertiary, theme),
+          const SizedBox(height: 12),
+          _buildStatCardForImage(l10n.averageHeat, trends.averageHeat.toStringAsFixed(2), Icons.speed, theme.colorScheme.error, theme),
+          const SizedBox(height: 24),
+          Text(
+            'gaas-math.app',
+            style: theme.textTheme.labelSmall?.copyWith(
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.3),
+              letterSpacing: 2,
             ),
           ),
         ],
-        const SizedBox(height: 32),
-        _buildStatCardForImage(l10n.starsEarned, '${totalStars.value ?? 0}', Icons.star, theme.colorScheme.primary, theme),
-        const SizedBox(height: 12),
-        _buildStatCardForImage(l10n.levelsCompleted, '${completedLevels.value ?? 0}', Icons.flag, theme.colorScheme.secondary, theme),
-        const SizedBox(height: 12),
-        _buildStatCardForImage(l10n.accuracy, '${accuracy.value?.toStringAsFixed(1) ?? '0'}%', Icons.trending_up, theme.colorScheme.tertiary, theme),
-        const SizedBox(height: 12),
-        _buildStatCardForImage(l10n.timePlayed, '${(totalTime.value ?? 0) ~/ 60}h ${(totalTime.value ?? 0) % 60}m', Icons.timer, theme.colorScheme.error, theme),
-        const SizedBox(height: 24),
-        Text(
-          'gaas-math.app',
-          style: theme.textTheme.labelSmall?.copyWith(
-            color: theme.colorScheme.onSurface.withValues(alpha: 0.3),
-            letterSpacing: 2,
-          ),
-        ),
-      ],
-    );
+      );
   }
 
   Widget _buildStatCardForImage(String label, String value, IconData icon, Color color, ThemeData theme) {
@@ -909,12 +1152,16 @@ class ReportsScreen extends ConsumerWidget {
       final totalStars = ref.read(totalStarsProvider);
       final completedLevels = ref.read(completedLevelsProvider);
       final totalTime = ref.read(totalTimePlayedProvider);
+      final trends = ref.read(performanceTrendsProvider);
 
       final pdf = pw.Document();
 
       pdf.addPage(
         pw.Page(
           build: (pw.Context context) {
+            final avgHeat = trends.averageHeat;
+            final maxHeat = trends.heatHistory.isEmpty ? 1.0 : trends.heatHistory.reduce((a, b) => a > b ? a : b);
+
             return pw.Column(
               crossAxisAlignment: pw.CrossAxisAlignment.start,
               children: [
@@ -924,7 +1171,7 @@ class ReportsScreen extends ConsumerWidget {
                 ),
                 pw.SizedBox(height: 20),
                 pw.Text(
-                  'Generated on ${DateTime.now().toString().split('.')[0]}',
+                  l10n.generatedOn(DateTime.now().toString().split('.')[0]),
                   style: pw.TextStyle(fontSize: 12, color: PdfColors.grey),
                 ),
                 pw.SizedBox(height: 20),
@@ -938,6 +1185,13 @@ class ReportsScreen extends ConsumerWidget {
                 _buildPdfStatRow(l10n.levelsCompleted, completedLevels.value?.toString() ?? '0'),
                 _buildPdfStatRow(l10n.accuracy, '${accuracy.value?.toStringAsFixed(1) ?? '0'}%'),
                 _buildPdfStatRow(l10n.timePlayed, '${(totalTime.value ?? 0) ~/ 60}h ${(totalTime.value ?? 0) % 60}m'),
+                pw.SizedBox(height: 10),
+                pw.Divider(),
+                pw.SizedBox(height: 10),
+                pw.Text(l10n.engineIntensity, style: pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold)),
+                pw.SizedBox(height: 10),
+                _buildPdfStatRow(l10n.averageHeat, avgHeat.toStringAsFixed(2)),
+                _buildPdfStatRow(l10n.maxHeat, maxHeat.toStringAsFixed(2)),
               ],
             );
           },
@@ -995,12 +1249,16 @@ class ReportsScreen extends ConsumerWidget {
       final totalStars = ref.read(totalStarsProvider);
       final completedLevels = ref.read(completedLevelsProvider);
       final totalTime = ref.read(totalTimePlayedProvider);
+      final trends = ref.read(performanceTrendsProvider);
 
       final pdf = pw.Document();
 
       pdf.addPage(
         pw.Page(
           build: (pw.Context context) {
+            final avgHeat = trends.averageHeat;
+            final maxHeat = trends.heatHistory.isEmpty ? 1.0 : trends.heatHistory.reduce((a, b) => a > b ? a : b);
+
             return pw.Column(
               crossAxisAlignment: pw.CrossAxisAlignment.start,
               children: [
@@ -1015,6 +1273,11 @@ class ReportsScreen extends ConsumerWidget {
                 _buildPdfStatRow(l10n.levelsCompleted, completedLevels.value?.toString() ?? '0'),
                 _buildPdfStatRow(l10n.accuracy, '${accuracy.value?.toStringAsFixed(1) ?? '0'}%'),
                 _buildPdfStatRow(l10n.timePlayed, '${(totalTime.value ?? 0) ~/ 60}h ${(totalTime.value ?? 0) % 60}m'),
+                pw.SizedBox(height: 10),
+                pw.Divider(),
+                pw.SizedBox(height: 10),
+                _buildPdfStatRow(l10n.averageHeat, avgHeat.toStringAsFixed(2)),
+                _buildPdfStatRow(l10n.maxHeat, maxHeat.toStringAsFixed(2)),
               ],
             );
           },
@@ -1076,11 +1339,15 @@ class ReportsScreen extends ConsumerWidget {
       final totalStars = ref.read(totalStarsProvider);
       final completedLevels = ref.read(completedLevelsProvider);
       final bestStreak = ref.watch(bestStreakProvider);
+      final trends = ref.read(performanceTrendsProvider);
 
       final pdf = pw.Document();
       pdf.addPage(
         pw.Page(
           build: (pw.Context context) {
+            final avgHeat = trends.averageHeat;
+            final maxHeat = trends.heatHistory.isEmpty ? 1.0 : trends.heatHistory.reduce((a, b) => a > b ? a : b);
+
             return pw.Column(
               crossAxisAlignment: pw.CrossAxisAlignment.start,
               children: [
@@ -1089,7 +1356,7 @@ class ReportsScreen extends ConsumerWidget {
                   style: pw.TextStyle(fontSize: 20, fontWeight: pw.FontWeight.bold),
                 ),
                 pw.SizedBox(height: 20),
-                pw.Text('Generated on ${DateTime.now().toString().split('.')[0]}'),
+                pw.Text(l10n.generatedOn(DateTime.now().toString().split('.')[0])),
                 if (user != null) pw.Text('${l10n.playerLabel}: ${user.name}'),
                 pw.SizedBox(height: 24),
                 pw.Text(l10n.overview, style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold)),
@@ -1101,6 +1368,16 @@ class ReportsScreen extends ConsumerWidget {
                     _pdfStatColumn(l10n.level, '${completedLevels.value ?? 0}'),
                     _pdfStatColumn(l10n.streak, '${bestStreak.value ?? 0}'),
                     _pdfStatColumn(l10n.accuracy, '${accuracy.value?.toStringAsFixed(0) ?? '0'}%'),
+                  ],
+                ),
+                pw.SizedBox(height: 24),
+                pw.Text(l10n.engineIntensity, style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold)),
+                pw.SizedBox(height: 12),
+                pw.Row(
+                  mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                  children: [
+                    _pdfStatColumn(l10n.averageHeat, avgHeat.toStringAsFixed(2)),
+                    _pdfStatColumn(l10n.maxHeat, maxHeat.toStringAsFixed(2)),
                   ],
                 ),
               ],

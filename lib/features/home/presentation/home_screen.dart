@@ -8,6 +8,7 @@ import '../../../core/utils/responsive_utils.dart';
 import '../../../l10n/generated/app_localizations.dart';
 import '../../profile/presentation/avatar_shop_screen.dart';
 import '../../campaign/presentation/campaign_screen.dart';
+import '../../game/logic/game_session_provider.dart';
 import '../../arcade/presentation/arcade_screen.dart';
 import '../../arcade/enhanced_challenge_screen.dart';
 import '../../practice/presentation/practice_screen.dart';
@@ -273,38 +274,92 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   Widget _buildQuickPlayModule(ThemeData theme, AppLocalizations l10n) {
     return Consumer(
       builder: (context, ref, child) {
-        final progressMap = ref.watch(levelProgressProvider);
-        if (progressMap.isEmpty) return const SizedBox.shrink();
+        final user = ref.watch(userSessionProvider);
+        if (user == null) return const SizedBox.shrink();
 
-        // Find the last unlocked level that isn't completed with 3 stars, or just the next unlocked level
-        // For simplicity, we'll pick the first operation and its first incomplete unlocked level
-        String? nextOp;
-        int? nextLevel;
+        final String? lastMode = user.lastPlayedMode;
+        final String? lastOp = user.lastPlayedOperation;
+        final int? lastLevel = user.lastPlayedLevel;
+        final double? lastHeat = user.lastHeatIndex;
+
+        String title = l10n.quickResume;
+        String subtitle = '';
         
-        for (final entry in progressMap.entries) {
-          final levels = entry.value;
-          for (final level in levels) {
-            if (level.isUnlocked && level.stars < 3) {
-              nextOp = entry.key;
-              nextLevel = level.level;
-              break;
-            }
-          }
-          if (nextOp != null) break;
+        // Heat Intensity Tag
+        Widget? heatTag;
+        if (lastHeat != null && lastHeat > 1.2) {
+           heatTag = Container(
+             margin: const EdgeInsets.only(top: 4),
+             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+             decoration: BoxDecoration(
+               color: Colors.orange.withValues(alpha: 0.2),
+               borderRadius: BorderRadius.circular(4),
+               border: Border.all(color: Colors.orange.withValues(alpha: 0.4)),
+             ),
+             child: Row(
+               mainAxisSize: MainAxisSize.min,
+               children: [
+                 const Icon(Icons.local_fire_department, color: Colors.orange, size: 10),
+                 const SizedBox(width: 2),
+                 Text(
+                   '${l10n.engineIntensity.toUpperCase()}: ${(lastHeat * 100).toInt()}%',
+                   style: const TextStyle(color: Colors.orange, fontSize: 8, fontWeight: FontWeight.bold),
+                 ),
+               ],
+             ),
+           );
         }
 
-        // Fallback to first level if everything is 3-starred
-        nextOp ??= progressMap.keys.first;
-        nextLevel ??= 1;
+        void handleOnTap() {
+          if (lastMode == 'campaign' && lastOp != null && lastLevel != null) {
+            ref.read(gameSessionProvider.notifier).startGame(
+              mode: GameMode.campaign,
+              operation: lastOp,
+              level: lastLevel,
+            );
+            _navigateToScreen(const CampaignScreen()); // Or directly to GameScreen if possible
+          } else {
+            _navigateToScreen(const CampaignScreen());
+          }
+        }
+        
+        VoidCallback onTap = handleOnTap;
+
+        if (lastMode != null && lastOp != null) {
+          if (lastMode == 'campaign') {
+            subtitle = '${lastOp.toUpperCase()} ${l10n.levelUppercase(lastLevel ?? 1)}';
+          } else {
+            subtitle = '${lastMode.toUpperCase()} - ${lastOp.toUpperCase()}';
+          }
+        } else {
+          // Fallback logic if no last played data
+          final progressMap = ref.watch(levelProgressProvider);
+          if (progressMap.isNotEmpty) {
+            String? nextOp;
+            int? nextLevel;
+            for (final entry in progressMap.entries) {
+              final levels = entry.value;
+              for (final level in levels) {
+                if (level.isUnlocked && level.stars < 3) {
+                  nextOp = entry.key;
+                  nextLevel = level.level;
+                  break;
+                }
+              }
+              if (nextOp != null) break;
+            }
+            nextOp ??= progressMap.keys.first;
+            nextLevel ??= 1;
+            subtitle = '${nextOp.toUpperCase()} ${l10n.levelUppercase(nextLevel)}';
+          } else {
+            return const SizedBox.shrink();
+          }
+        }
 
         return PremiumCard(
           padding: const EdgeInsets.all(20),
           borderColor: theme.colorScheme.primary.withValues(alpha: 0.4),
-          onTap: () {
-            // Logic to launch campaign level
-            // For now, navigating to campaign screen as a safe default
-            _navigateToScreen(const CampaignScreen());
-          },
+          onTap: onTap,
           child: Row(
             children: [
               Container(
@@ -325,7 +380,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      l10n.quickResume,
+                      title,
                       style: theme.textTheme.labelSmall?.copyWith(
                         fontWeight: FontWeight.w900,
                         letterSpacing: 2,
@@ -334,11 +389,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      '${nextOp.toUpperCase()} ${l10n.levelUppercase(nextLevel)}',
+                      subtitle,
                       style: theme.textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.bold,
                       ),
                     ),
+                    ?heatTag,
                   ],
                 ),
               ),
@@ -361,6 +417,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     return Consumer(
       builder: (context, ref, child) {
         final user = ref.watch(userSessionProvider);
+        final hour = DateTime.now().hour;
+        final String greeting = hour < 12
+            ? l10n.goodMorning
+            : hour < 17
+                ? l10n.goodAfternoon
+                : hour < 21
+                    ? l10n.goodEvening
+                    : l10n.goodNight;
+
         return PremiumGlassOverlay(
           padding: const EdgeInsets.all(24),
           child: Column(
@@ -373,7 +438,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          l10n.welcomeBack,
+                          '$greeting, ${user?.name ?? l10n.player}!',
                           style: theme.textTheme.headlineSmall?.copyWith(
                             fontWeight: FontWeight.bold,
                             color: theme.colorScheme.onSurface,
@@ -381,23 +446,44 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                         ),
                         const SizedBox(height: 8),
                         if (user != null)
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                            decoration: BoxDecoration(
-                              color: theme.colorScheme.primary.withValues(alpha: 0.1),
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            child: Text(
-                              l10n.levelUppercase(user.level),
-                              style: TextStyle(
-                                color: theme.colorScheme.primary,
-                                fontWeight: FontWeight.w900,
-                                fontSize: 12,
-                                letterSpacing: 1,
+                          Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                decoration: BoxDecoration(
+                                  color: theme.colorScheme.primary.withValues(alpha: 0.1),
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                child: Text(
+                                  l10n.levelUppercase(user.level),
+                                  style: TextStyle(
+                                    color: theme.colorScheme.primary,
+                                    fontWeight: FontWeight.w900,
+                                    fontSize: 12,
+                                    letterSpacing: 1,
+                                  ),
+                                ),
                               ),
-                            ),
+                              const SizedBox(width: 8),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                decoration: BoxDecoration(
+                                  color: theme.colorScheme.secondary.withValues(alpha: 0.1),
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                child: Text(
+                                  '${user.totalPoints} PTS',
+                                  style: TextStyle(
+                                    color: theme.colorScheme.secondary,
+                                    fontWeight: FontWeight.w900,
+                                    fontSize: 12,
+                                    letterSpacing: 1,
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
-                        const SizedBox(height: 8),
+                        const SizedBox(height: 12),
                         Text(
                           l10n.masterMathematicsDesc,
                           style: theme.textTheme.bodyMedium?.copyWith(
@@ -411,10 +497,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                   Hero(
                     tag: 'app_logo_icon',
                     child: Container(
-                      padding: const EdgeInsets.all(16),
+                      width: 64,
+                      height: 64,
                       decoration: BoxDecoration(
                         color: theme.colorScheme.primary.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(20),
+                        shape: BoxShape.circle,
                         border: Border.all(
                           color: theme.colorScheme.primary.withValues(alpha: 0.2),
                         ),
@@ -426,10 +513,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                           ),
                         ],
                       ),
-                      child: Icon(
-                        Icons.rocket_launch,
-                        color: theme.colorScheme.primary,
-                        size: 32,
+                      child: ClipOval(
+                        child: _buildAvatarPlaceholder(user, theme),
                       ),
                     ),
                   ).animate(onPlay: (controller) => controller.repeat(reverse: true))
@@ -438,26 +523,54 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                 ],
               ),
               if (user != null) ...[
-                const SizedBox(height: 16),
-                Row(
+                const SizedBox(height: 24),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Expanded(
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(4),
-                        child: LinearProgressIndicator(
-                          value: user.levelProgress,
-                          backgroundColor: theme.colorScheme.primary.withValues(alpha: 0.1),
-                          valueColor: AlwaysStoppedAnimation(theme.colorScheme.primary),
-                          minHeight: 8,
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          '${(user.levelProgress * 100).toInt()}% ${l10n.ptsToLevel(user.pointsToNextLevel, user.level + 1)}',
+                          style: theme.textTheme.labelSmall?.copyWith(
+                            fontWeight: FontWeight.bold,
+                            color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                          ),
                         ),
-                      ),
+                        Text(
+                          '${user.pointsToNextLevel} XP LEFT',
+                          style: theme.textTheme.labelSmall?.copyWith(
+                            fontWeight: FontWeight.w900,
+                            color: theme.colorScheme.primary,
+                          ),
+                        ),
+                      ],
                     ),
-                    const SizedBox(width: 12),
-                    Text(
-                      l10n.ptsToLevel(user.pointsToNextLevel, user.level + 1),
-                      style: theme.textTheme.labelSmall?.copyWith(
-                        color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
-                        fontWeight: FontWeight.bold,
+                    const SizedBox(height: 8),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(10),
+                      child: Stack(
+                        children: [
+                          Container(
+                            height: 12,
+                            width: double.infinity,
+                            color: theme.colorScheme.primary.withValues(alpha: 0.1),
+                          ),
+                          FractionallySizedBox(
+                            widthFactor: user.levelProgress,
+                            child: Container(
+                              height: 12,
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  colors: [
+                                    theme.colorScheme.primary,
+                                    theme.colorScheme.secondary,
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ).animate().shimmer(duration: 1500.ms),
+                        ],
                       ),
                     ),
                   ],
@@ -470,6 +583,23 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
         );
       },
     ).animate().fadeIn(duration: 800.ms).slideY(begin: 0.2, end: 0, curve: Curves.easeOutCubic);
+  }
+
+  Widget _buildAvatarPlaceholder(dynamic user, ThemeData theme) {
+    if (user == null) {
+      return Icon(Icons.person, color: theme.colorScheme.primary, size: 32);
+    }
+    // In a real app, you'd use the avatarShape and avatarColor
+    return Center(
+      child: Text(
+        user.name.isNotEmpty ? user.name[0].toUpperCase() : 'P',
+        style: TextStyle(
+          color: theme.colorScheme.primary,
+          fontWeight: FontWeight.bold,
+          fontSize: 24,
+        ),
+      ),
+    );
   }
 
   Widget _buildDailyProgressIndicator(ThemeData theme) {

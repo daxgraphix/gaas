@@ -798,10 +798,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get viewProgress => 'View Progress';
 
   @override
-  String get hoursAgo => 'h ago';
+  String hoursAgo(Object count) {
+    return '${count}h ago';
+  }
 
   @override
-  String get daysAgo => 'd ago';
+  String daysAgo(Object count) {
+    return '${count}d ago';
+  }
 
   @override
   String get pleaseEnterYourName => 'Please enter your name';
@@ -1305,4 +1309,36 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get completionRate => 'Completion Rate';
+
+  @override
+  String get engineIntensity => 'ENGINE INTENSITY';
+
+  @override
+  String get averageHeat => 'AVG HEAT';
+
+  @override
+  String get currentHeat => 'CURRENT HEAT';
+
+  @override
+  String get maxHeat => 'MAX HEAT';
+
+  @override
+  String get heatIndex => 'Heat Index';
+
+  @override
+  String get intensityNormal => 'NORMAL';
+
+  @override
+  String get intensityMedium => 'MEDIUM';
+
+  @override
+  String get intensityHigh => 'HIGH';
+
+  @override
+  String get intensityCritical => 'CRITICAL';
+
+  @override
+  String generatedOn(Object date) {
+    return 'Generated on $date';
+  }
 }

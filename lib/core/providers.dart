@@ -16,10 +16,14 @@ import '../data/models/cross_numbers_puzzle.dart';
 import '../core/math_engine/cross_numbers_engine.dart';
 import '../core/sound_manager.dart';
 import '../core/notification_service.dart';
+import '../core/game_adaptability/dynamic_difficulty_system.dart';
 
 import '../core/performance/isar_service.dart';
 import '../core/performance/performance_models.dart';
 import '../core/utils/game_flow_optimizer.dart';
+import '../data/content_library/achievement_system.dart';
+
+import '../features/game/logic/game_session_provider.dart';
 
 final dbProvider = FutureProvider<DatabaseService>((ref) async {
   return await DatabaseService.instance;
@@ -73,6 +77,9 @@ class StartupNotifier extends StateNotifier<StartupState> {
         SoundManager.instance.initialize(),
         NotificationService().initialize(),
       ]);
+
+      // Initialize achievement state
+      ref.read(achievementStateProvider.notifier).initialize();
 
       // 2. Database & Data
       await DatabaseService.instance;
@@ -297,9 +304,21 @@ class AnalyticsNotifier extends StateNotifier<AnalyticsState> {
   }
 
   Future<void> _initializeAnalytics() async {
-    // Simulate loading analytics data
-    await Future.delayed(const Duration(seconds: 1));
-    _updateAnalytics();
+    final statsRepo = ref.read(statisticsRepositoryProvider);
+    final stats = await statsRepo.getOverallStats();
+    
+    final recentSessions = stats.timePerQuestion.reversed.toList();
+    
+    state = state.copyWith(
+      sessionCount: stats.totalQuestionsAnswered, // or stats.timePerQuestion.length as a proxy for questions
+      averageSessionTime: stats.totalQuestionsAnswered > 0 
+          ? stats.timeSpentSeconds / stats.totalQuestionsAnswered 
+          : 0.0,
+      operationUsage: stats.modeUsage,
+      recentSessions: recentSessions,
+      totalQuestionsAnswered: stats.totalQuestionsAnswered,
+      totalHintsUsed: stats.totalHintsUsed,
+    );
   }
 
   void _updateAnalytics() {
@@ -359,8 +378,10 @@ class AnalyticsNotifier extends StateNotifier<AnalyticsState> {
       totalHintsUsed: state.totalHintsUsed + hints,
       lastUpdated: DateTime.now(),
     );
-
-    _updateAnalytics();
+    
+    // Also refresh other real-time providers if needed
+    ref.invalidate(overallAccuracyProvider);
+    ref.invalidate(totalTimePlayedProvider);
   }
 
   void refreshAnalytics() {
@@ -549,6 +570,11 @@ class UserSessionNotifier extends StateNotifier<UserSession?> {
     String? language,
     int? skillRating,
     bool? isFocusMode,
+    int? totalPoints,
+    String? lastPlayedMode,
+    String? lastPlayedOperation,
+    int? lastPlayedLevel,
+    double? lastHeatIndex,
   }) async {
     if (state == null) return;
 
@@ -561,6 +587,11 @@ class UserSessionNotifier extends StateNotifier<UserSession?> {
       language: language,
       skillRating: skillRating,
       isFocusMode: isFocusMode,
+      totalPoints: totalPoints,
+      lastPlayedMode: lastPlayedMode,
+      lastPlayedOperation: lastPlayedOperation,
+      lastPlayedLevel: lastPlayedLevel,
+      lastHeatIndex: lastHeatIndex,
     );
 
     await repo.updateUserSession(updatedUser);
@@ -699,15 +730,20 @@ class LevelProgressNotifier
 
   Future<void> unlockNextLevel(String operationId, int level) async {
     final repo = ref.read(levelProgressRepositoryProvider);
-    final progress = await repo.getProgress(operationId, level);
     
-    int stars = 3; // Default for Cross Numbers for now
-    if (progress != null) {
-      stars = stars > progress.stars ? stars : progress.stars;
+    final nextLevel = level; // This is actually the level number to unlock if passed from updateProgress as difficulty + 1
+    final progress = await repo.getProgress(operationId, nextLevel);
+    
+    if (progress == null || !progress.isUnlocked) {
+      final newProgress = LevelProgress(
+        operationId: operationId,
+        level: nextLevel,
+        stars: 0,
+        isUnlocked: true,
+        highScore: 0,
+      );
+      await repo.saveProgress(newProgress);
     }
-    
-    // Save current level progress
-    await repo.updateStars(operationId, level, stars, 0);
 
     // Refresh the provider state
     await loadProgress();
@@ -801,6 +837,9 @@ final currentStreakProvider = FutureProvider<int>((ref) async {
   return stats.currentStreak;
 });
 
+// Filter provider for reports
+final reportsFilterProvider = StateProvider<String?>((ref) => null);
+
 // Real-time session statistics
 final sessionStatsProvider = StateNotifierProvider<SessionStatsNotifier, SessionStats>((ref) {
   return SessionStatsNotifier();
@@ -846,11 +885,15 @@ class SessionStats {
 }
 
 class SessionStatsNotifier extends StateNotifier<SessionStats> {
+  static const Duration sessionTimeout = Duration(minutes: 30);
+
   SessionStatsNotifier() : super(SessionStats()) {
     _startPeriodicReset();
   }
 
   void recordAnswer(String operation, bool isCorrect, int timeSpent, bool usedHint) {
+    checkInactivity();
+    
     final newOperationStats = Map<String, int>.from(state.operationStats);
     newOperationStats[operation] = (newOperationStats[operation] ?? 0) + 1;
 
@@ -860,7 +903,15 @@ class SessionStatsNotifier extends StateNotifier<SessionStats> {
       hintsUsed: state.hintsUsed + (usedHint ? 1 : 0),
       timeSpent: state.timeSpent + timeSpent,
       operationStats: newOperationStats,
+      lastUpdate: DateTime.now(),
     );
+  }
+
+  void checkInactivity() {
+    final now = DateTime.now();
+    if (now.difference(state.lastUpdate) > sessionTimeout) {
+      resetSession();
+    }
   }
 
   void resetSession() {
@@ -883,40 +934,70 @@ class SessionStatsNotifier extends StateNotifier<SessionStats> {
 // Real-time performance trends
 final performanceTrendsProvider = StateNotifierProvider<PerformanceTrendsNotifier, PerformanceTrends>((ref) {
   final isarService = ref.watch(isarServiceProvider);
-  return PerformanceTrendsNotifier(isarService);
+  return PerformanceTrendsNotifier(isarService, ref);
+});
+
+final filteredPerformanceTrendsProvider = Provider<PerformanceTrends>((ref) {
+  final filter = ref.watch(reportsFilterProvider);
+  final trends = ref.watch(performanceTrendsProvider);
+  
+  if (filter == null) return trends;
+
+  final isar = ref.watch(isarServiceProvider);
+  final allData = isar.getRecentPerformanceDataSync(100);
+  final filteredData = allData.where((p) => p.mode == filter).take(50).toList().reversed.toList();
+  
+  return PerformanceTrends(
+    accuracyHistory: filteredData.map((e) => e.accuracy).toList(),
+    timeHistory: filteredData.map((e) => e.averageTime).toList(),
+    streakHistory: filteredData.map((e) => e.streak).toList(),
+    heatHistory: filteredData.map((e) => e.avgHeatIndex ?? 1.0).toList(),
+    timestamps: filteredData.map((e) => e.timestamp).toList(),
+  );
 });
 
 class PerformanceTrends {
   final List<double> accuracyHistory;
   final List<int> timeHistory;
   final List<int> streakHistory;
+  final List<double> heatHistory;
+  final List<DateTime> timestamps;
   final DateTime lastUpdated;
 
   PerformanceTrends({
     List<double>? accuracyHistory,
     List<int>? timeHistory,
     List<int>? streakHistory,
+    List<double>? heatHistory,
+    List<DateTime>? timestamps,
     DateTime? lastUpdated,
   }) : accuracyHistory = accuracyHistory ?? [],
        timeHistory = timeHistory ?? [],
        streakHistory = streakHistory ?? [],
+       heatHistory = heatHistory ?? [],
+       timestamps = timestamps ?? [],
        lastUpdated = lastUpdated ?? DateTime.now();
 
   double get averageAccuracy => accuracyHistory.isEmpty ? 0.0 : accuracyHistory.reduce((a, b) => a + b) / accuracyHistory.length;
   double get peakAccuracy => accuracyHistory.isEmpty ? 0.0 : accuracyHistory.reduce((a, b) => a > b ? a : b);
   double get averageTime => timeHistory.isEmpty ? 0.0 : timeHistory.reduce((a, b) => a + b) / timeHistory.length;
   int get bestStreak => streakHistory.isEmpty ? 0 : streakHistory.reduce((a, b) => a > b ? a : b);
+  double get averageHeat => heatHistory.isEmpty ? 1.0 : heatHistory.reduce((a, b) => a + b) / heatHistory.length;
 
   PerformanceTrends copyWith({
     List<double>? accuracyHistory,
     List<int>? timeHistory,
     List<int>? streakHistory,
+    List<double>? heatHistory,
+    List<DateTime>? timestamps,
     DateTime? lastUpdated,
   }) {
     return PerformanceTrends(
       accuracyHistory: accuracyHistory ?? this.accuracyHistory,
       timeHistory: timeHistory ?? this.timeHistory,
       streakHistory: streakHistory ?? this.streakHistory,
+      heatHistory: heatHistory ?? this.heatHistory,
+      timestamps: timestamps ?? this.timestamps,
       lastUpdated: lastUpdated ?? DateTime.now(),
     );
   }
@@ -924,32 +1005,40 @@ class PerformanceTrends {
 
 class PerformanceTrendsNotifier extends StateNotifier<PerformanceTrends> {
   final IsarService _isarService;
+  final Ref ref;
 
-  PerformanceTrendsNotifier(this._isarService) : super(PerformanceTrends()) {
+  PerformanceTrendsNotifier(this._isarService, this.ref) : super(PerformanceTrends()) {
     _loadHistoricalData();
   }
 
-  void addDataPoint(double accuracy, int avgTime, int streak) {
+  void addDataPoint(double accuracy, int avgTime, int streak, {double? heat}) {
     const maxHistorySize = 50; // Keep last 50 data points
+    final now = DateTime.now();
 
     final newAccuracyHistory = List<double>.from(state.accuracyHistory)..add(accuracy);
     final newTimeHistory = List<int>.from(state.timeHistory)..add(avgTime);
     final newStreakHistory = List<int>.from(state.streakHistory)..add(streak);
+    final newHeatHistory = List<double>.from(state.heatHistory)..add(heat ?? 1.0);
+    final newTimestamps = List<DateTime>.from(state.timestamps)..add(now);
 
     // Keep only the most recent data points
     if (newAccuracyHistory.length > maxHistorySize) {
       newAccuracyHistory.removeAt(0);
       newTimeHistory.removeAt(0);
       newStreakHistory.removeAt(0);
+      newHeatHistory.removeAt(0);
+      newTimestamps.removeAt(0);
     }
 
     state = state.copyWith(
       accuracyHistory: newAccuracyHistory,
       timeHistory: newTimeHistory,
       streakHistory: newStreakHistory,
+      heatHistory: newHeatHistory,
+      timestamps: newTimestamps,
     );
 
-    _saveHistoricalData(accuracy, avgTime, streak);
+    _saveHistoricalData(accuracy, avgTime, streak, heat ?? 1.0);
   }
 
   Future<void> _loadHistoricalData() async {
@@ -970,6 +1059,7 @@ class PerformanceTrendsNotifier extends StateNotifier<PerformanceTrends> {
             accuracy: double.tryParse(accuracyData[i]) ?? 0.0,
             averageTime: i < timeData.length ? int.tryParse(timeData[i]) ?? 0 : 0,
             streak: i < streakData.length ? int.tryParse(streakData[i]) ?? 0 : 0,
+            avgHeatIndex: 1.0,
           ));
         }
         
@@ -988,6 +1078,8 @@ class PerformanceTrendsNotifier extends StateNotifier<PerformanceTrends> {
           accuracyHistory: historicalData.map((e) => e.accuracy).toList(),
           timeHistory: historicalData.map((e) => e.averageTime).toList(),
           streakHistory: historicalData.map((e) => e.streak).toList(),
+          heatHistory: historicalData.map((e) => e.avgHeatIndex ?? 1.0).toList(),
+          timestamps: historicalData.map((e) => e.timestamp).toList(),
         );
         return;
       }
@@ -1000,15 +1092,25 @@ class PerformanceTrendsNotifier extends StateNotifier<PerformanceTrends> {
       accuracyHistory: historicalData.map((e) => e.accuracy).toList(),
       timeHistory: historicalData.map((e) => e.averageTime).toList(),
       streakHistory: historicalData.map((e) => e.streak).toList(),
+      heatHistory: historicalData.map((e) => e.avgHeatIndex ?? 1.0).toList(),
+      timestamps: historicalData.map((e) => e.timestamp).toList(),
     );
   }
 
-  Future<void> _saveHistoricalData(double accuracy, int avgTime, int streak) async {
+  Future<void> _saveHistoricalData(double accuracy, int avgTime, int streak, double heat) async {
+    final activeGame = ref.read(gameSessionProvider);
+    
+    // Use operation name as the primary tag to allow granular filtering in reports
+    // Fallback to mode name if operation is not available
+    String? modeTag = activeGame?.operation ?? activeGame?.mode.name;
+
     final dataPoint = PerformanceDataPoint(
       timestamp: DateTime.now(),
       accuracy: accuracy,
       averageTime: avgTime,
       streak: streak,
+      avgHeatIndex: heat,
+      mode: modeTag,
     );
     await _isarService.savePerformanceData(dataPoint);
   }
@@ -1112,6 +1214,14 @@ class AchievementsNotifier extends StateNotifier<Map<String, Achievement>> {
         icon: '🧠',
         rewardPoints: 750,
         maxProgress: 10,
+      ),
+      'overdrive': Achievement(
+        id: 'overdrive',
+        title: 'Overdrive',
+        description: 'Maintain heat above 2.5 for 30 seconds',
+        icon: '🔥',
+        rewardPoints: 2000,
+        maxProgress: 30,
       ),
     };
   }
@@ -1416,6 +1526,24 @@ class MathRiddleNotifier extends StateNotifier<MathRiddleState> {
     final newCorrect = state.correctAnswers + (isCorrect ? 1 : 0);
     final newIndex = state.questionIndex + 1;
 
+    // Record per-answer session stats
+    final operation = state.currentRiddle != null ? 'riddle' : 'logic';
+    ref.read(sessionStatsProvider.notifier).recordAnswer(
+      operation,
+      isCorrect,
+      0, // Time tracking not fully integrated in MathRiddleNotifier yet
+      false, // Hints used tracking to be added
+    );
+
+    // Record for dynamic difficulty
+    ref.read(playerPerformanceProvider.notifier).recordAnswer(
+      operation: operation,
+      isCorrect: isCorrect,
+      responseTimeMs: 0,
+      hintsUsed: 0,
+    );
+    ref.read(dynamicDifficultyProvider.notifier).recordAssessment(isCorrect: isCorrect);
+
     // Check if level complete
     if (newIndex >= state.totalQuestions) {
       // Level finished - save progress and unlock next level
@@ -1660,37 +1788,65 @@ class PuzzleStatsNotifier extends StateNotifier<PuzzleStats> {
 }
 
 class CrossNumbersState {
+  final List<CrossNumbersPuzzle> allPuzzles;
   final CrossNumbersPuzzle? puzzle;
   final bool isComplete;
   final int elapsedSeconds;
   final int? selectedRow;
   final int? selectedCol;
+  final bool isNewSelection;
   final int hintsUsed;
+  final int currentQuestionIndex;
+  final int correctQuestions;
+  final int totalQuestions;
+  final bool isLevelFinished;
+  final String gridStyle;
 
   CrossNumbersState({
+    this.allPuzzles = const [],
     this.puzzle,
     this.isComplete = false,
     this.elapsedSeconds = 0,
     this.selectedRow,
     this.selectedCol,
+    this.isNewSelection = false,
     this.hintsUsed = 0,
+    this.currentQuestionIndex = 1,
+    this.correctQuestions = 0,
+    this.totalQuestions = 7,
+    this.isLevelFinished = false,
+    this.gridStyle = 'Classic',
   });
 
   CrossNumbersState copyWith({
+    List<CrossNumbersPuzzle>? allPuzzles,
     CrossNumbersPuzzle? puzzle,
     bool? isComplete,
     int? elapsedSeconds,
     int? selectedRow,
     int? selectedCol,
+    bool? isNewSelection,
     int? hintsUsed,
+    int? currentQuestionIndex,
+    int? correctQuestions,
+    int? totalQuestions,
+    bool? isLevelFinished,
+    String? gridStyle,
   }) {
     return CrossNumbersState(
+      allPuzzles: allPuzzles ?? this.allPuzzles,
       puzzle: puzzle ?? this.puzzle,
       isComplete: isComplete ?? this.isComplete,
       elapsedSeconds: elapsedSeconds ?? this.elapsedSeconds,
       selectedRow: selectedRow ?? this.selectedRow,
       selectedCol: selectedCol ?? this.selectedCol,
+      isNewSelection: isNewSelection ?? this.isNewSelection,
       hintsUsed: hintsUsed ?? this.hintsUsed,
+      currentQuestionIndex: currentQuestionIndex ?? this.currentQuestionIndex,
+      correctQuestions: correctQuestions ?? this.correctQuestions,
+      totalQuestions: totalQuestions ?? this.totalQuestions,
+      isLevelFinished: isLevelFinished ?? this.isLevelFinished,
+      gridStyle: gridStyle ?? this.gridStyle,
     );
   }
 }
@@ -1699,21 +1855,67 @@ class CrossNumbersNotifier extends StateNotifier<CrossNumbersState> {
   final Ref ref;
   CrossNumbersNotifier(this.ref) : super(CrossNumbersState());
 
-  void initPuzzle(int difficulty) {
-    final puzzle = CrossNumbersEngine.generatePuzzle(difficulty: difficulty);
-    state = CrossNumbersState(puzzle: puzzle);
+  void initLevel(int level) {
+    int totalQuestions = 7 + (level ~/ 10);
+    
+    // Pre-generate all puzzles for the level
+    final List<CrossNumbersPuzzle> puzzles = [];
+    for (int i = 0; i < totalQuestions; i++) {
+      String style = _getGridStyle(level, i + 1);
+      puzzles.add(CrossNumbersEngine.generatePuzzle(
+        difficulty: level,
+        style: style,
+      ));
+    }
+
+    state = CrossNumbersState(
+      allPuzzles: puzzles,
+      puzzle: puzzles.isNotEmpty ? puzzles[0] : null,
+      totalQuestions: totalQuestions,
+      currentQuestionIndex: 1,
+      correctQuestions: 0,
+      isLevelFinished: false,
+      gridStyle: puzzles.isNotEmpty ? _getGridStyle(level, 1) : 'Classic',
+    );
+  }
+
+  void _loadPuzzleAt(int index) {
+    if (index < 0 || index >= state.allPuzzles.length) return;
+    
+    final puzzle = state.allPuzzles[index];
+    state = state.copyWith(
+      puzzle: puzzle,
+      isComplete: false,
+      gridStyle: _getGridStyle(puzzle.difficulty, index + 1),
+      selectedRow: null,
+      selectedCol: null,
+    );
+  }
+
+
+
+  String _getGridStyle(int level, int questionIndex) {
+    if (level < 5) return 'Classic';
+    final styles = ['Classic', 'Dense', 'Symmetry', 'Chaos'];
+    // More complex styles as level increases
+    int styleCount = min(styles.length, (level ~/ 5) + 1);
+    return styles[(questionIndex + level) % styleCount];
   }
 
   void selectCell(int r, int c) {
-    if (state.puzzle == null) return;
+    if (state.puzzle == null || state.isLevelFinished) return;
     final cell = state.puzzle!.grid[r][c];
     if (cell.isUserEditable) {
-      state = state.copyWith(selectedRow: r, selectedCol: c);
+      state = state.copyWith(
+        selectedRow: r, 
+        selectedCol: c,
+        isNewSelection: true,
+      );
     }
   }
 
   void updateCell(int r, int c, String value) {
-    if (state.puzzle == null) return;
+    if (state.puzzle == null || state.isLevelFinished) return;
     
     final newGrid = List<List<CrossNumbersCell>>.from(
       state.puzzle!.grid.map((row) => List<CrossNumbersCell>.from(row))
@@ -1721,7 +1923,33 @@ class CrossNumbersNotifier extends StateNotifier<CrossNumbersState> {
     
     final cell = newGrid[r][c];
     if (cell.isUserEditable) {
-      newGrid[r][c] = cell.copyWith(userValue: value);
+      String newValue;
+      bool nextIsNewSelection = false;
+      
+      if (value == 'CLEAR') {
+        newValue = '';
+      } else if (value == 'BACK') {
+        if (cell.userValue.isNotEmpty) {
+          newValue = cell.userValue.substring(0, cell.userValue.length - 1);
+        } else {
+          newValue = '';
+        }
+      } else {
+        // Handle digit input
+        if (state.isNewSelection) {
+          newValue = value;
+        } else {
+          // Append digit, max 4 digits (to support up to 1000+)
+          String current = cell.userValue;
+          if (current.length < 4) {
+            newValue = current + value;
+          } else {
+            newValue = current;
+          }
+        }
+      }
+      
+      newGrid[r][c] = cell.copyWith(userValue: newValue);
       
       final newPuzzle = CrossNumbersPuzzle(
         id: state.puzzle!.id,
@@ -1733,9 +1961,49 @@ class CrossNumbersNotifier extends StateNotifier<CrossNumbersState> {
       state = state.copyWith(
         puzzle: newPuzzle,
         isComplete: newPuzzle.isComplete && newPuzzle.isAllCorrect,
+        isNewSelection: nextIsNewSelection,
       );
     }
   }
+
+  void submitQuestion() {
+    if (state.puzzle == null || !state.isComplete) return;
+
+    final isCorrect = state.puzzle!.isAllCorrect;
+    final nextIndex = state.currentQuestionIndex + 1;
+    final newCorrectCount = isCorrect ? state.correctQuestions + 1 : state.correctQuestions;
+
+    // Record per-answer session stats
+    ref.read(sessionStatsProvider.notifier).recordAnswer(
+      'cross_numbers',
+      isCorrect,
+      state.elapsedSeconds,
+      state.hintsUsed > 0,
+    );
+
+    // Record for dynamic difficulty
+    ref.read(playerPerformanceProvider.notifier).recordAnswer(
+      operation: 'cross_numbers',
+      isCorrect: isCorrect,
+      responseTimeMs: state.elapsedSeconds * 1000,
+      hintsUsed: state.hintsUsed,
+    );
+    ref.read(dynamicDifficultyProvider.notifier).recordAssessment(isCorrect: isCorrect);
+
+    if (nextIndex > state.totalQuestions) {
+      state = state.copyWith(
+        correctQuestions: newCorrectCount,
+        isLevelFinished: true,
+      );
+    } else {
+      state = state.copyWith(
+        correctQuestions: newCorrectCount,
+        currentQuestionIndex: nextIndex,
+      );
+      _loadPuzzleAt(nextIndex - 1);
+    }
+  }
+
 
   void useHint() {
     if (state.puzzle == null || state.isComplete) return;
@@ -1788,8 +2056,14 @@ class CrossNumbersNotifier extends StateNotifier<CrossNumbersState> {
   }
 
   void incrementTime() {
-    if (!state.isComplete && state.puzzle != null) {
+    if (!state.isLevelFinished && state.puzzle != null) {
       state = state.copyWith(elapsedSeconds: state.elapsedSeconds + 1);
+    }
+  }
+
+  void resetLevel() {
+    if (state.puzzle != null) {
+      initLevel(state.puzzle!.difficulty);
     }
   }
 }
@@ -2776,10 +3050,26 @@ class CustomMixArithmeticNotifier extends StateNotifier<CustomMixArithmeticState
       questionAnswered: true,
     );
 
+    // Record per-answer session stats
+    final operation = 'mixed';
+    ref.read(sessionStatsProvider.notifier).recordAnswer(
+      operation,
+      isCorrect,
+      0, // Time per question not tracked in custom mix UI yet
+      false, // Hints not used in custom mix
+    );
+
+    // Record for dynamic difficulty
+    ref.read(playerPerformanceProvider.notifier).recordAnswer(
+      operation: operation,
+      isCorrect: isCorrect,
+      responseTimeMs: 0,
+      hintsUsed: 0,
+    );
+    ref.read(dynamicDifficultyProvider.notifier).recordAssessment(isCorrect: isCorrect);
+
     // Batch analytics updates - don't record every single question immediately 
     // to reduce UI thread load during rapid input.
-    // Instead, we only update total questions answered for now, 
-    // and record the full session data when it ends.
     if (state.questionsCompleted % 5 == 0) {
        _syncBatchAnalytics();
     }

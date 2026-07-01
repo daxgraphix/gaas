@@ -254,8 +254,8 @@
   "viewAchievement": "Angalia Mafanikio",
   "startMission": "Anza Utume",
   "viewProgress": "Angalia Maendeleo",
-  "hoursAgo": "saa_AGO",
-  "daysAgo": "siku_AGO",
+  "hoursAgo": "saa {count} zilizopita",
+  "daysAgo": "siku {count} zilizopita",
   "pleaseEnterYourName": "Tafadhali weka jina lako",
   "errorSavingProfile": "Kosa katika kuhifadhi wasifu",
   "welcomeExclamation": "Karibu!",
@@ -425,5 +425,15 @@
   "performanceInsights": "Maarifa ya Utendaji",
   "bestAccuracy": "Usahihi Bora",
   "averageResponseTime": "Muda wa Wastani wa Kujibu",
-  "completionRate": "Kiwango cha Ukamilishaji"
+  "completionRate": "Kiwango cha Ukamilishaji",
+  "engineIntensity": "NGUVU YA INJINI",
+  "averageHeat": "WASTANI WA JOTO",
+  "currentHeat": "JOTO LA SASA",
+  "maxHeat": "JOTO LA JUU",
+  "heatIndex": "Kielezo cha Joto",
+  "intensityNormal": "KAWAIDA",
+  "intensityMedium": "WASTANI",
+  "intensityHigh": "JUU",
+  "intensityCritical": "HATARI",
+  "generatedOn": "Imetolewa mnamo {date}"
 }

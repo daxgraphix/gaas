@@ -4,10 +4,12 @@ import '../../data/models/cross_numbers_puzzle.dart';
 class CrossNumbersEngine {
   static final Random _random = Random();
 
-  static CrossNumbersPuzzle generatePuzzle({required int difficulty}) {
+  static CrossNumbersPuzzle generatePuzzle({required int difficulty, String style = 'Classic'}) {
     int size = difficulty > 20 ? 7 : 5;
-    // For very high levels, consider 9x9 if we had a generator for it, 
-    // but sticking to 7x7 for stability.
+    if (style == 'Dense' || style == 'Chaos') {
+      if (difficulty > 10) size = 7;
+    }
+    
     List<List<CrossNumbersCell>> grid = List.generate(
       size,
       (r) => List.generate(
@@ -29,21 +31,25 @@ class CrossNumbersEngine {
     }
 
     if (!success) {
-      // Emergency fallback with a very simple puzzle if generator fails
       _generateFallback(grid, size);
     }
 
-    // Adjust hidden count based on difficulty and size
+    // Adjust hidden count based on difficulty, size and style
     int hiddenCount;
     if (size == 5) {
-      // Levels 1-20: 5 to 12 hidden numbers (increased)
       hiddenCount = 5 + (difficulty - 1) ~/ 2; 
     } else {
-      // Levels 21-100: 12 to 28 hidden numbers
       hiddenCount = 12 + (difficulty - 21) ~/ 3;
       if (hiddenCount > 28) hiddenCount = 28;
     }
-    _hideRandomNumbers(grid, hiddenCount);
+
+    if (style == 'Chaos') {
+      hiddenCount = (hiddenCount * 1.5).toInt();
+    } else if (style == 'Dense') {
+      hiddenCount = (hiddenCount * 1.2).toInt();
+    }
+
+    _hideRandomNumbers(grid, hiddenCount, style: style);
 
     return CrossNumbersPuzzle(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
@@ -56,15 +62,14 @@ class CrossNumbersEngine {
   static List<String> _getAllowedOperators(int difficulty) {
     if (difficulty <= 5) return ['+', '-'];
     if (difficulty <= 15) return ['+', '-', '×'];
-    if (difficulty <= 25) return ['+', '-', '×', '÷'];
-    return ['+', '-', '×', '÷']; // Higher levels can stay with all 4 but maybe with larger numbers or more complexity
+    return ['+', '-', '×', '÷'];
   }
 
   static int? _eval(int a, String op, int b) {
     switch (op) {
       case '+': return a + b;
       case '-': 
-        if (a - b < 0) return null; // Avoid negative results for simpler puzzles
+        if (a - b < 0) return null; // Avoid negative results
         return a - b;
       case '×': return a * b;
       case '÷':
@@ -79,7 +84,7 @@ class CrossNumbersEngine {
     final maxNum = 10 + (difficulty * 2);
     final minNum = difficulty > 10 ? 5 : 1;
 
-    for (int attempt = 0; attempt < 1000; attempt++) {
+    for (int attempt = 0; attempt < 2000; attempt++) {
       int n00 = _random.nextInt(maxNum) + minNum;
       int n02 = _random.nextInt(maxNum) + minNum;
       int n20 = _random.nextInt(maxNum) + minNum;
@@ -97,14 +102,14 @@ class CrossNumbersEngine {
 
       if (n04 == null || n24 == null || n40 == null || n42 == null) continue;
       if (n04 <= 0 || n24 <= 0 || n40 <= 0 || n42 <= 0) continue;
-      if (n04 > 100 || n24 > 100 || n40 > 100 || n42 > 100) continue;
+      if (n04 > 200 || n24 > 200 || n40 > 200 || n42 > 200) continue;
 
       for (String o14 in ops) {
         for (String o41 in ops) {
           int? res1 = _eval(n04, o14, n24);
           int? res2 = _eval(n40, o41, n42);
 
-          if (res1 != null && res1 == res2 && res1 > 0 && res1 <= 200) {
+          if (res1 != null && res1 == res2 && res1 > 0 && res1 <= 500) {
             int n44 = res1;
             
             _setCell(grid, 0, 0, n00.toString());
@@ -142,10 +147,10 @@ class CrossNumbersEngine {
 
   static bool _generate7x7(List<List<CrossNumbersCell>> grid, int difficulty) {
     final ops = _getAllowedOperators(difficulty);
-    final maxNum = 20 + (difficulty - 20) * 2;
-    final minNum = 5 + (difficulty - 20);
+    final maxNum = 20 + (difficulty - 10) * 2;
+    final minNum = 2 + (difficulty ~/ 5);
 
-    for (int attempt = 0; attempt < 20000; attempt++) {
+    for (int attempt = 0; attempt < 30000; attempt++) {
       // Pick numbers for top-left 3x3 block
       int n00 = _random.nextInt(maxNum) + minNum;
       int n02 = _random.nextInt(maxNum) + minNum;
@@ -183,7 +188,7 @@ class CrossNumbersEngine {
       int? n62 = _evalChain(n02, op12, n22, op32, n42);
       int? n64 = _evalChain(n04, op14, n24, op34, n44);
 
-      if ([n06, n26, n46, n60, n62, n64].any((n) => n == null || n <= 0 || n > 500)) continue;
+      if ([n06, n26, n46, n60, n62, n64].any((n) => n == null || n <= 0 || n > 1000)) continue;
 
       // Now check if Row 6 and Col 6 can intersect at n66
       for (String op61 in ops) {
@@ -278,6 +283,8 @@ class CrossNumbersEngine {
       }
     } else if (val == '=') {
       type = CrossNumbersCellType.equals;
+    } else if (val == '') {
+       type = CrossNumbersCellType.empty;
     } else {
       type = CrossNumbersCellType.operator;
     }
@@ -285,32 +292,69 @@ class CrossNumbersEngine {
   }
 
   static void _generateFallback(List<List<CrossNumbersCell>> grid, int size) {
-    // Very basic 1 + 1 = 2 pattern
-    for (int r = 0; r < size; r += 2) {
-      _setCell(grid, r, 0, "1");
-      if (size > 1) {
-        _setCell(grid, r, 1, "+");
-        _setCell(grid, r, 2, "1");
-        _setCell(grid, r, 3, "=");
-        _setCell(grid, r, 4, "2");
+    if (size == 5) {
+      // Row 0: 1 + 2 = 3; Row 2: 4 + 5 = 9; Row 4: 5 + 7 = 12
+      // Col 0: 1 + 4 = 5; Col 2: 2 + 5 = 7; Col 4: 3 + 9 = 12
+      _setCell(grid, 0, 0, "1"); _setCell(grid, 0, 1, "+"); _setCell(grid, 0, 2, "2"); _setCell(grid, 0, 3, "="); _setCell(grid, 0, 4, "3");
+      _setCell(grid, 2, 0, "4"); _setCell(grid, 2, 1, "+"); _setCell(grid, 2, 2, "5"); _setCell(grid, 2, 3, "="); _setCell(grid, 2, 4, "9");
+      _setCell(grid, 4, 0, "5"); _setCell(grid, 4, 1, "+"); _setCell(grid, 4, 2, "7"); _setCell(grid, 4, 3, "="); _setCell(grid, 4, 4, "12");
+      
+      _setCell(grid, 1, 0, "+"); _setCell(grid, 3, 0, "=");
+      _setCell(grid, 1, 2, "+"); _setCell(grid, 3, 2, "=");
+      _setCell(grid, 1, 4, "+"); _setCell(grid, 3, 4, "=");
+    } else {
+      // 7x7 Fallback
+      // R0, R2, R4: 1 + 1 + 1 = 3
+      // R6: 3 + 3 + 3 = 9
+      // C0, C2, C4: 1 + 1 + 1 = 3
+      // C6: 3 + 3 + 3 = 9
+      for (int r = 0; r <= 4; r += 2) {
+        _setCell(grid, r, 0, "1"); _setCell(grid, r, 1, "+"); _setCell(grid, r, 2, "1"); _setCell(grid, r, 3, "+"); _setCell(grid, r, 4, "1"); _setCell(grid, r, 5, "="); _setCell(grid, r, 6, "3");
+      }
+      _setCell(grid, 6, 0, "3"); _setCell(grid, 6, 1, "+"); _setCell(grid, 6, 2, "3"); _setCell(grid, 6, 3, "+"); _setCell(grid, 6, 4, "3"); _setCell(grid, 6, 5, "="); _setCell(grid, 6, 6, "9");
+
+      for (int c = 0; c <= 6; c += 2) {
+        _setCell(grid, 1, c, "+"); _setCell(grid, 3, c, "+"); _setCell(grid, 5, c, "=");
       }
     }
   }
 
-  static void _hideRandomNumbers(List<List<CrossNumbersCell>> grid, int count) {
-    final numberCells = <CrossNumbersCell>[];
-    for (var row in grid) {
-      for (var cell in row) {
-        if (cell.type == CrossNumbersCellType.number) {
-          numberCells.add(cell);
+  static void _hideRandomNumbers(List<List<CrossNumbersCell>> grid, int count, {String style = 'Classic'}) {
+    final numberCells = <Point<int>>[];
+    for (int r = 0; r < grid.length; r++) {
+      for (int c = 0; c < grid[r].length; c++) {
+        final cell = grid[r][c];
+        if (cell.type == CrossNumbersCellType.number || cell.type == CrossNumbersCellType.result) {
+          numberCells.add(Point(r, c));
         }
       }
     }
     
-    numberCells.shuffle(_random);
-    for (int i = 0; i < count && i < numberCells.length; i++) {
-      final cell = numberCells[i];
-      grid[cell.row][cell.col] = CrossNumbersCell(
+    final toHide = <Point<int>>{};
+    
+    if (style == 'Symmetry') {
+      numberCells.shuffle(_random);
+      for (var p in numberCells) {
+        if (toHide.length >= count) break;
+        if (toHide.contains(p)) continue;
+        
+        toHide.add(p);
+        // Rotational symmetry pair
+        Point<int> symmetric = Point(grid.length - 1 - p.x, grid.length - 1 - p.y);
+        if (toHide.length < count) {
+           toHide.add(symmetric);
+        }
+      }
+    } else {
+      numberCells.shuffle(_random);
+      for (int i = 0; i < count && i < numberCells.length; i++) {
+        toHide.add(numberCells[i]);
+      }
+    }
+
+    for (var p in toHide) {
+      final cell = grid[p.x][p.y];
+      grid[p.x][p.y] = CrossNumbersCell(
         row: cell.row,
         col: cell.col,
         value: cell.value,

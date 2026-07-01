@@ -280,8 +280,8 @@
     "viewAchievement": "View Achievement",
     "startMission": "Start Mission",
     "viewProgress": "View Progress",
-    "hoursAgo": "h ago",
-    "daysAgo": "d ago",
+    "hoursAgo": "{count}h ago",
+    "daysAgo": "{count}d ago",
 
     "pleaseEnterYourName": "Please enter your name",
     "errorSavingProfile": "Error saving profile",
@@ -514,5 +514,15 @@
   "performanceInsights": "Performance Insights",
   "bestAccuracy": "Best Accuracy",
   "averageResponseTime": "Avg Response Time",
-  "completionRate": "Completion Rate"
+  "completionRate": "Completion Rate",
+  "engineIntensity": "ENGINE INTENSITY",
+  "averageHeat": "AVG HEAT",
+  "currentHeat": "CURRENT HEAT",
+  "maxHeat": "MAX HEAT",
+  "heatIndex": "Heat Index",
+  "intensityNormal": "NORMAL",
+  "intensityMedium": "MEDIUM",
+  "intensityHigh": "HIGH",
+  "intensityCritical": "CRITICAL",
+  "generatedOn": "Generated on {date}"
 }

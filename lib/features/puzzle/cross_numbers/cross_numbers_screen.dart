@@ -26,7 +26,7 @@ class _CrossNumbersScreenState extends ConsumerState<CrossNumbersScreen> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!_isDisposed) {
-        ref.read(crossNumbersProvider.notifier).initPuzzle(widget.difficulty);
+        ref.read(crossNumbersProvider.notifier).initLevel(widget.difficulty);
         _showTutorialIfNeeded();
       }
     });
@@ -124,14 +124,19 @@ class _CrossNumbersScreenState extends ConsumerState<CrossNumbersScreen> {
         title: Column(
           children: [
             Text(
-              'LEVEL ${widget.difficulty}',
+              'LEVEL ${widget.difficulty} - ${puzzleState.gridStyle}',
               style: theme.textTheme.labelSmall?.copyWith(
                 fontWeight: FontWeight.w900,
                 letterSpacing: 2,
                 color: theme.colorScheme.primary,
               ),
             ),
-            PuzzleTimer(remainingSeconds: puzzleState.elapsedSeconds),
+            Text(
+              'Question ${puzzleState.currentQuestionIndex} / ${puzzleState.totalQuestions}',
+              style: theme.textTheme.bodySmall?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
+            ),
           ],
         ),
         centerTitle: true,
@@ -283,12 +288,12 @@ class _CrossNumbersScreenState extends ConsumerState<CrossNumbersScreen> {
       } : null,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
-        width: 44,
-        height: 44,
-        margin: const EdgeInsets.all(2),
+        width: 48,
+        height: 48,
+        margin: const EdgeInsets.all(1.5),
         decoration: BoxDecoration(
           color: bgColor,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(10),
           border: Border.all(
             color: isSelected 
                 ? theme.colorScheme.primary 
@@ -303,9 +308,9 @@ class _CrossNumbersScreenState extends ConsumerState<CrossNumbersScreen> {
           child: Text(
             cell.isUserEditable ? cell.userValue : cell.value,
             style: theme.textTheme.titleMedium?.copyWith(
-              fontWeight: cell.isUserEditable ? FontWeight.w300 : FontWeight.w900,
+              fontWeight: cell.isUserEditable ? FontWeight.w500 : FontWeight.w900,
               color: textColor,
-              fontSize: isOperator ? 18 : 20,
+              fontSize: _getFontSize(cell, isOperator),
             ),
           ),
         ),
@@ -313,9 +318,18 @@ class _CrossNumbersScreenState extends ConsumerState<CrossNumbersScreen> {
     );
   }
 
+  double _getFontSize(CrossNumbersCell cell, bool isOperator) {
+    if (isOperator) return 18;
+    String val = cell.isUserEditable ? cell.userValue : cell.value;
+    if (val.length > 3) return 12;
+    if (val.length > 2) return 14;
+    if (val.length > 1) return 16;
+    return 20;
+  }
+
   Widget _buildNumpad(CrossNumbersState state, ThemeData theme) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 32),
+      padding: const EdgeInsets.symmetric(horizontal: 24),
       child: Column(
         children: [
           Row(
@@ -329,12 +343,15 @@ class _CrossNumbersScreenState extends ConsumerState<CrossNumbersScreen> {
           Row(
             children: [
               Expanded(
-                flex: 2,
+                child: _buildNumpadButton('BACK', state, theme, isSpecial: true),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
                 child: _buildNumpadButton('CLEAR', state, theme, isClear: true),
               ),
               const SizedBox(width: 8),
               Expanded(
-                flex: 3,
+                flex: 2,
                 child: PremiumPrimaryButton(
                   onPressed: () => _checkManualCompletion(state),
                   text: 'SUBMIT',
@@ -348,9 +365,9 @@ class _CrossNumbersScreenState extends ConsumerState<CrossNumbersScreen> {
     );
   }
 
-  Widget _buildNumpadButton(String label, CrossNumbersState state, ThemeData theme, {bool isClear = false}) {
+  Widget _buildNumpadButton(String label, CrossNumbersState state, ThemeData theme, {bool isClear = false, bool isSpecial = false}) {
     return Padding(
-      padding: const EdgeInsets.all(4),
+      padding: const EdgeInsets.all(3),
       child: InkWell(
         onTap: () {
           if (state.selectedRow != null && state.selectedCol != null) {
@@ -358,32 +375,40 @@ class _CrossNumbersScreenState extends ConsumerState<CrossNumbersScreen> {
             ref.read(crossNumbersProvider.notifier).updateCell(
               state.selectedRow!,
               state.selectedCol!,
-              isClear ? '' : label,
+              label,
             );
           }
         },
         borderRadius: BorderRadius.circular(12),
         child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 16),
+          padding: const EdgeInsets.symmetric(vertical: 14),
           decoration: BoxDecoration(
-            color: isClear ? theme.colorScheme.error.withValues(alpha: 0.05) : theme.colorScheme.surface,
+            color: isClear 
+                ? theme.colorScheme.error.withValues(alpha: 0.1) 
+                : isSpecial 
+                    ? theme.colorScheme.secondary.withValues(alpha: 0.1)
+                    : theme.colorScheme.surface,
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
               color: isClear 
-                  ? theme.colorScheme.error.withValues(alpha: 0.2)
-                  : theme.colorScheme.outline.withValues(alpha: 0.1),
+                  ? theme.colorScheme.error.withValues(alpha: 0.3)
+                  : isSpecial
+                      ? theme.colorScheme.secondary.withValues(alpha: 0.3)
+                      : theme.colorScheme.outline.withValues(alpha: 0.1),
             ),
           ),
           child: Center(
-            child: Text(
-              label,
-              style: theme.textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w900,
-                color: isClear ? theme.colorScheme.error : theme.colorScheme.onSurface,
-                fontSize: isClear ? 12 : 18,
-                letterSpacing: isClear ? 1 : 0,
-              ),
-            ),
+            child: label == 'BACK' 
+              ? Icon(Icons.backspace_outlined, size: 18, color: theme.colorScheme.secondary)
+              : Text(
+                  label,
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w900,
+                    color: isClear ? theme.colorScheme.error : isSpecial ? theme.colorScheme.secondary : theme.colorScheme.onSurface,
+                    fontSize: isClear ? 12 : 18,
+                    letterSpacing: isClear ? 1 : 0,
+                  ),
+                ),
           ),
         ),
       ),
@@ -392,7 +417,19 @@ class _CrossNumbersScreenState extends ConsumerState<CrossNumbersScreen> {
 
   void _checkManualCompletion(CrossNumbersState state) {
     if (state.isComplete) {
-      _onComplete();
+      ref.read(crossNumbersProvider.notifier).submitQuestion();
+      if (ref.read(crossNumbersProvider).isLevelFinished) {
+        _onLevelFinished();
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Correct! Next Question: ${ref.read(crossNumbersProvider).currentQuestionIndex}'),
+            backgroundColor: Colors.green,
+            duration: const Duration(seconds: 1),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -425,37 +462,58 @@ class _CrossNumbersScreenState extends ConsumerState<CrossNumbersScreen> {
     );
   }
 
-  void _onComplete() {
+  void _onLevelFinished() {
     _timer?.cancel();
-    final timeTaken = ref.read(crossNumbersProvider).elapsedSeconds;
-    int stars = 1;
-    if (timeTaken < 60) {
-      stars = 3;
-    } else if (timeTaken < 120) {
-      stars = 2;
+    final state = ref.read(crossNumbersProvider);
+    final correct = state.correctQuestions;
+    final total = state.totalQuestions;
+    
+    bool passed = correct >= 5; // User requirement: 5+ to open new levels
+    
+    int stars = 0;
+    if (passed) {
+      double ratio = correct / total;
+      if (ratio >= 1.0) {
+        stars = 3;
+      } else if (ratio >= 0.8) {
+        stars = 2;
+      } else {
+        stars = 1;
+      }
     }
 
-    final score = widget.difficulty * 100 + (stars * 50);
-    ref.read(levelProgressProvider.notifier).updateProgress(
-      'cross_numbers',
-      widget.difficulty,
-      stars,
-      score,
-    );
+    final score = correct * 50 + (stars * 100);
+    
+    if (passed) {
+      ref.read(levelProgressProvider.notifier).updateProgress(
+        'cross_numbers',
+        widget.difficulty,
+        stars,
+        score,
+      );
+      // Unlock next level if not already unlocked
+      ref.read(levelProgressProvider.notifier).unlockNextLevel('cross_numbers', widget.difficulty + 1);
+    }
+
     ref.read(userSessionProvider.notifier).addPoints(score);
-    _showSuccess(stars, score);
+    _showLevelSummary(passed, stars, score, correct, total);
   }
 
-  void _showSuccess(int stars, int score) {
+  void _showLevelSummary(bool passed, int stars, int score, int correct, int total) {
     final l10n = AppLocalizations.of(context)!;
-    HapticManager.instance.successPattern();
-    ref.read(soundManagerProvider).playComplete();
+    if (passed) {
+      HapticManager.instance.successPattern();
+      ref.read(soundManagerProvider).playComplete();
+    }
+    
     showDialog(
       context: context,
       barrierDismissible: false,
       builder: (context) => SuccessDialog(
-        title: l10n.excellent,
-        message: 'You solved Level ${widget.difficulty}!\nEarned $score points.',
+        title: passed ? l10n.excellent : 'Level Failed',
+        message: passed 
+          ? 'You solved $correct/$total questions!\nEarned $score points.'
+          : 'You only got $correct/$total questions.\nYou need at least 5 to pass.',
         stars: stars,
         onDone: () {
           Navigator.pop(context);

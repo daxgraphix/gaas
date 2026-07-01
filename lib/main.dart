@@ -47,7 +47,27 @@ class GAASApp extends ConsumerStatefulWidget {
   ConsumerState<GAASApp> createState() => _GAASAppState();
 }
 
-class _GAASAppState extends ConsumerState<GAASApp> {
+class _GAASAppState extends ConsumerState<GAASApp> with WidgetsBindingObserver {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      // Global check for session inactivity when returning to app
+      ref.read(sessionStatsProvider.notifier).checkInactivity();
+    }
+  }
+
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();

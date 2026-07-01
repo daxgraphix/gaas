@@ -41,4 +41,14 @@ class IsarService {
         .limit(limit)
         .findAll();
   }
+
+  List<PerformanceDataPoint> getRecentPerformanceDataSync(int limit) {
+    final isar = Isar.getInstance();
+    if (isar == null) return [];
+    return isar.performanceDataPoints
+        .where()
+        .sortByTimestampDesc()
+        .limit(limit)
+        .findAllSync();
+  }
 }

@@ -5,6 +5,8 @@ import '../../../core/utils/game_flow_optimizer.dart';
 import '../../../core/math_engine/math_engine.dart';
 import '../../../core/providers.dart';
 import '../../../core/notification_service.dart';
+import '../../../core/game_adaptability/dynamic_difficulty_system.dart';
+import '../../../data/content_library/achievement_system.dart';
 
 enum GameMode {
   campaign,
@@ -46,6 +48,7 @@ class GameSession {
   final VisualCountingData? currentVisualData;
   final List<Map<String, dynamic>> pendingStats;
   final int? ghostScore;
+  final double heatIndex;
 
   GameSession({
     required this.mode,
@@ -73,6 +76,7 @@ class GameSession {
     this.currentVisualData,
     this.pendingStats = const [],
     this.ghostScore,
+    this.heatIndex = 1.0,
   });
 
   MathQuestion? get currentQuestion {
@@ -108,6 +112,7 @@ class GameSession {
     VisualCountingData? currentVisualData,
     List<Map<String, dynamic>>? pendingStats,
     int? ghostScore,
+    double? heatIndex,
   }) {
     return GameSession(
       mode: mode ?? this.mode,
@@ -133,6 +138,7 @@ class GameSession {
       currentVisualData: currentVisualData ?? this.currentVisualData,
       pendingStats: pendingStats ?? this.pendingStats,
       ghostScore: ghostScore ?? this.ghostScore,
+      heatIndex: heatIndex ?? this.heatIndex,
     );
   }
 }
@@ -260,6 +266,7 @@ class GameSessionNotifier extends StateNotifier<GameSession?> {
             isArcade: isArcade,
             excludeQuestions: generatedQuestions,
             skillRating: skillRating,
+            heatIndex: 1.0, // Initial heat is 1.0
           );
           generatedQuestions.add(q.displayString);
           questions.add(q);
@@ -270,6 +277,8 @@ class GameSessionNotifier extends StateNotifier<GameSession?> {
           level,
           totalQuestions,
           isArcade: isArcade,
+          skillRating: skillRating,
+          heatIndex: 1.0, // Initial heat is 1.0
         );
         questions.addAll(batch);
       }
@@ -294,6 +303,7 @@ class GameSessionNotifier extends StateNotifier<GameSession?> {
       isBossLevel: isBossLevel,
       currentVisualData: isVisualCounting ? _generateVisualCountingData(level) : null,
       ghostScore: (ghostScore ?? 0) > 0 ? ghostScore : null,
+      heatIndex: user?.lastHeatIndex ?? 1.0,
     );
 
     if (mode == GameMode.scoreAttack ||
@@ -307,7 +317,17 @@ class GameSessionNotifier extends StateNotifier<GameSession?> {
   void _startTimer() {
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (state != null && state!.timeRemaining > 0) {
-        state = state!.copyWith(timeRemaining: state!.timeRemaining - 1);
+        // Apply Heat Index Decay: slightly decrease heat every few seconds if no answer
+        double newHeat = state!.heatIndex;
+        if (state!.timeRemaining % 3 == 0) {
+          newHeat = (newHeat - 0.05).clamp(1.0, 3.0);
+        }
+
+        state = state!.copyWith(
+          timeRemaining: state!.timeRemaining - 1,
+          heatIndex: newHeat,
+        );
+        ref.read(soundManagerProvider).updateHeat(newHeat);
       } else if (state != null && state!.timeRemaining <= 0) {
         _endGame();
       }
@@ -435,6 +455,35 @@ class GameSessionNotifier extends StateNotifier<GameSession?> {
         ? 0
         : now.difference(state!.lastAnswerTime!).inSeconds.clamp(1, 120);
 
+    // Calculate Heat Index: increases if answering quickly and correctly
+    double newHeat = state!.heatIndex;
+    if (isCorrect) {
+      if (timeSpent <= 3) {
+        newHeat += 0.1;
+      } else if (timeSpent <= 5) {
+        newHeat += 0.05;
+      }
+    } else {
+      newHeat = (newHeat - 0.2).clamp(1.0, 3.0);
+    }
+    newHeat = newHeat.clamp(1.0, 3.0);
+
+    // If heat increased significantly, inject a tougher question
+    List<MathQuestion> updatedQuestions = List.from(state!.questions);
+    if (newHeat > state!.heatIndex + 0.15 && state!.currentQuestionIndex + 1 < state!.totalQuestions) {
+       final user = ref.read(userSessionProvider);
+       final skillRating = user?.skillRating ?? 1000;
+       
+       final toughQuestion = MathEngine.generateQuestion(
+         state!.operation,
+         state!.level,
+         isArcade: state!.mode != GameMode.campaign,
+         skillRating: skillRating,
+         heatIndex: newHeat,
+       );
+       updatedQuestions[state!.currentQuestionIndex + 1] = toughQuestion;
+    }
+
     final questionScore = isCorrect 
         ? (_getScoreForMode() * newCombo) 
         : 0;
@@ -444,6 +493,8 @@ class GameSessionNotifier extends StateNotifier<GameSession?> {
       'score': hintUsed ? (questionScore ~/ 2) : questionScore,
       'isCorrect': isCorrect,
       'timeSpent': timeSpent,
+      'mode': state!.mode.name,
+      'levelKey': '${state!.operation}_${state!.level}',
     });
 
     state = state!.copyWith(
@@ -454,7 +505,27 @@ class GameSessionNotifier extends StateNotifier<GameSession?> {
       comboMultiplier: newCombo,
       lastAnswerTime: now,
       pendingStats: newPendingStats,
+      heatIndex: newHeat,
+      questions: updatedQuestions,
     );
+    ref.read(soundManagerProvider).updateHeat(newHeat);
+
+    // Record per-answer session stats
+    ref.read(sessionStatsProvider.notifier).recordAnswer(
+      state!.operation,
+      isCorrect,
+      timeSpent,
+      hintUsed,
+    );
+
+    // Record for dynamic difficulty
+    ref.read(playerPerformanceProvider.notifier).recordAnswer(
+      operation: state!.operation,
+      isCorrect: isCorrect,
+      responseTimeMs: timeSpent * 1000,
+      hintsUsed: hintUsed ? 1 : 0,
+    );
+    ref.read(dynamicDifficultyProvider.notifier).recordAssessment(isCorrect: isCorrect);
 
     if (state!.mode == GameMode.duel) {
       _duelAnswered = true;
@@ -586,7 +657,7 @@ class GameSessionNotifier extends StateNotifier<GameSession?> {
     newPendingStats.add({
       'operationId': 'visual_counting',
       'isCorrect': isCorrect,
-      'timeSpent': 0,
+      'timeSpent': 0, // Visual counting doesn't track time per item yet
     });
 
     state = state!.copyWith(
@@ -595,6 +666,23 @@ class GameSessionNotifier extends StateNotifier<GameSession?> {
       lives: newLives,
       pendingStats: newPendingStats,
     );
+
+    // Record per-answer session stats
+    ref.read(sessionStatsProvider.notifier).recordAnswer(
+      'visual_counting',
+      isCorrect,
+      0,
+      false,
+    );
+
+    // Record for dynamic difficulty
+    ref.read(playerPerformanceProvider.notifier).recordAnswer(
+      operation: 'visual_counting',
+      isCorrect: isCorrect,
+      responseTimeMs: 0,
+      hintsUsed: 0,
+    );
+    ref.read(dynamicDifficultyProvider.notifier).recordAssessment(isCorrect: isCorrect);
 
     _goToNextOrEnd();
   }
@@ -693,14 +781,40 @@ class GameSessionNotifier extends StateNotifier<GameSession?> {
     // Batch update stats
     if (state!.pendingStats.isNotEmpty) {
       final statsRepo = ref.read(statisticsRepositoryProvider);
+      
+      int sessionTotalTime = 0;
+      int sessionCorrect = 0;
+      
       for (final stat in state!.pendingStats) {
+        sessionTotalTime += stat['timeSpent'] as int;
+        if (stat['isCorrect'] as bool) sessionCorrect++;
+        
         statsRepo.updateStatistics(
           operationId: stat['operationId'] as String,
           score: stat['score'] as int,
           isCorrect: stat['isCorrect'] as bool,
           timeSpent: stat['timeSpent'] as int,
+          mode: stat['mode'] as String?,
+          levelKey: stat['levelKey'] as String?,
         );
       }
+
+      // Update Skill Rating based on session performance
+      _updateSkillRating(sessionCorrect, state!.totalQuestions, sessionTotalTime);
+      
+      // Update Performance Trends
+      final avgTime = state!.totalQuestions > 0 ? sessionTotalTime / state!.totalQuestions : 0.0;
+      ref.read(performanceTrendsProvider.notifier).addDataPoint(
+        (sessionCorrect / state!.totalQuestions) * 100,
+        avgTime.toInt(),
+        state!.comboMultiplier,
+        heat: state!.heatIndex,
+      );
+      
+      // Refresh real-time providers
+      ref.invalidate(overallAccuracyProvider);
+      ref.invalidate(totalTimePlayedProvider);
+      ref.invalidate(bestStreakProvider);
     }
 
     final isCampaign = state!.mode == GameMode.campaign;
@@ -741,12 +855,38 @@ class GameSessionNotifier extends StateNotifier<GameSession?> {
           );
         }
         
-        ref.read(userSessionProvider.notifier).addPoints(totalReward);
+        ref.read(userSessionProvider.notifier).updateUser(
+          totalPoints: (ref.read(userSessionProvider)?.totalPoints ?? 0) + totalReward,
+          lastPlayedMode: state!.mode.name,
+          lastPlayedOperation: state!.operation,
+          lastPlayedLevel: state!.level,
+          lastHeatIndex: state!.heatIndex,
+        );
+      } else {
+         ref.read(userSessionProvider.notifier).updateUser(
+          lastPlayedMode: state!.mode.name,
+          lastPlayedOperation: state!.operation,
+          lastPlayedLevel: state!.level,
+          lastHeatIndex: state!.heatIndex,
+        );
       }
     } else {
       if (state!.score > 0) {
         final userNotifier = ref.read(userSessionProvider.notifier);
-        userNotifier.addPoints(state!.score);
+        userNotifier.updateUser(
+          totalPoints: (ref.read(userSessionProvider)?.totalPoints ?? 0) + state!.score,
+          lastPlayedMode: state!.mode.name,
+          lastPlayedOperation: state!.operation,
+          lastPlayedLevel: state!.level,
+          lastHeatIndex: state!.heatIndex,
+        );
+      } else {
+        ref.read(userSessionProvider.notifier).updateUser(
+          lastPlayedMode: state!.mode.name,
+          lastPlayedOperation: state!.operation,
+          lastPlayedLevel: state!.level,
+          lastHeatIndex: state!.heatIndex,
+        );
       }
 
       // Update Daily Challenges for Arcade modes
@@ -771,31 +911,31 @@ class GameSessionNotifier extends StateNotifier<GameSession?> {
     // Record performance trends for completed sessions
     if (state!.totalQuestions > 0) {
       final accuracy = (state!.correctAnswers / state!.totalQuestions) * 100;
-      final avgTime = state!.totalQuestions > 0 ? (600 - state!.timeRemaining) ~/ state!.totalQuestions : 0; // Rough estimate
+      final durationSeconds = 600 - state!.timeRemaining;
+      final avgTime = state!.totalQuestions > 0 ? durationSeconds / state!.totalQuestions : 0.0;
       
       final hintsUsed = state!.hintsUsed.values.where((used) => used).length;
 
       ref.read(performanceTrendsProvider.notifier).addDataPoint(
         accuracy,
-        avgTime,
-        state!.correctAnswers, // Use correct answers as a proxy for 'performance' until streak is properly tracked per session
+        avgTime.toInt(),
+        state!.correctAnswers.toInt(), 
       );
 
-      // Also record session stats
-      ref.read(sessionStatsProvider.notifier).recordAnswer(
-        state!.operation,
-        true, // Session completed
-        avgTime,
-        hintsUsed > 0,
-      );
+      // Check Achievements
+      final achievements = ref.read(achievementDatabaseProvider);
+      final achievementNotifier = ref.read(achievementStateProvider.notifier);
+      
+      achievementNotifier.checkAndUnlock('accuracy', accuracy.toInt(), achievements);
+      achievementNotifier.checkAndUnlock('speed_run', state!.correctAnswers.toInt(), achievements, timeValue: durationSeconds.toInt());
+      achievementNotifier.checkAndUnlock('questions', state!.totalQuestions, achievements);
 
       // Unify analytics recording
-      final durationSeconds = 600 - state!.timeRemaining;
       ref.read(analyticsProvider.notifier).recordSession(
         state!.operation,
-        durationSeconds,
+        durationSeconds.toInt(),
         state!.totalQuestions,
-        state!.correctAnswers,
+        state!.correctAnswers.toInt(),
         hintsUsed,
         mode: state!.mode.name,
       );
@@ -822,8 +962,12 @@ class GameSessionNotifier extends StateNotifier<GameSession?> {
     // Time Bonus: If the player is exceptionally fast (more than 20s remaining)
     // and they were close to the next star tier, give them a boost.
     if (timeRemaining > 20 && stars > 0 && stars < 3) {
-      if (percentage >= 90 && stars == 2) stars = 3;
-      if (percentage >= 80 && stars == 1) stars = 2;
+      if (percentage >= 90 && stars == 2) {
+        stars = 3;
+      }
+      if (percentage >= 80 && stars == 1) {
+        stars = 2;
+      }
     }
 
     return stars;
@@ -840,6 +984,39 @@ class GameSessionNotifier extends StateNotifier<GameSession?> {
     } catch (e) {
       // Repository might not be initialized yet
     }
+  }
+
+  void _updateSkillRating(int correct, int total, int totalTime) {
+    if (total == 0) return;
+    
+    final user = ref.read(userSessionProvider);
+    if (user == null) return;
+
+    final accuracy = correct / total;
+    final avgTime = totalTime / total;
+    
+    // Skill rating logic:
+    // Base gain/loss from accuracy
+    double delta = (accuracy - 0.7) * 50; 
+    
+    // Time-based adjustment (bonus for speed)
+    if (accuracy > 0.8) {
+      if (avgTime < 3.0) {
+        delta += 15;
+      } else if (avgTime < 5.0) {
+        delta += 10;
+      } else if (avgTime > 10.0) {
+        delta -= 5;
+      }
+    }
+
+    // Heat Bonus: If the player sustained high heat, give a rating boost
+    if (state != null && state!.heatIndex > 2.0) {
+      delta += (state!.heatIndex - 2.0) * 20;
+    }
+
+    final newRating = (user.skillRating + delta).toInt().clamp(100, 3000);
+    ref.read(userSessionProvider.notifier).updateUser(skillRating: newRating);
   }
 
   void pauseGame() {

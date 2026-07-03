@@ -626,6 +626,96 @@ abstract class AppLocalizations {
   /// **'Mix Mode Protocol'**
   String get mixModeProtocol;
 
+  /// No description provided for @standard.
+  ///
+  /// In en, this message translates to:
+  /// **'Standard'**
+  String get standard;
+
+  /// No description provided for @suddenDeath.
+  ///
+  /// In en, this message translates to:
+  /// **'Sudden Death'**
+  String get suddenDeath;
+
+  /// No description provided for @zen.
+  ///
+  /// In en, this message translates to:
+  /// **'Zen'**
+  String get zen;
+
+  /// No description provided for @timeAttack.
+  ///
+  /// In en, this message translates to:
+  /// **'Time Attack'**
+  String get timeAttack;
+
+  /// No description provided for @gameMode.
+  ///
+  /// In en, this message translates to:
+  /// **'Game Mode'**
+  String get gameMode;
+
+  /// No description provided for @intensity.
+  ///
+  /// In en, this message translates to:
+  /// **'Intensity'**
+  String get intensity;
+
+  /// No description provided for @initializeMix.
+  ///
+  /// In en, this message translates to:
+  /// **'Initialize Mix'**
+  String get initializeMix;
+
+  /// No description provided for @nextSequence.
+  ///
+  /// In en, this message translates to:
+  /// **'Next Sequence'**
+  String get nextSequence;
+
+  /// No description provided for @abortSession.
+  ///
+  /// In en, this message translates to:
+  /// **'ABORT SESSION'**
+  String get abortSession;
+
+  /// No description provided for @abortSessionConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Abort current session? Progress will be recorded.'**
+  String get abortSessionConfirm;
+
+  /// No description provided for @modeProtocols.
+  ///
+  /// In en, this message translates to:
+  /// **'Mode Protocols'**
+  String get modeProtocols;
+
+  /// No description provided for @standardDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'STANDARD: Classic practice mode.'**
+  String get standardDesc;
+
+  /// No description provided for @suddenDeathDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'SUDDEN DEATH: One wrong answer ends the session.'**
+  String get suddenDeathDesc;
+
+  /// No description provided for @zenDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'ZEN: No timers, focus on accuracy.'**
+  String get zenDesc;
+
+  /// No description provided for @timeAttackDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'TIME ATTACK: Score as much as possible in 60s.'**
+  String get timeAttackDesc;
+
   /// No description provided for @coreMetrics.
   ///
   /// In en, this message translates to:
@@ -2006,6 +2096,12 @@ abstract class AppLocalizations {
   /// **'Exit'**
   String get exit;
 
+  /// No description provided for @operation.
+  ///
+  /// In en, this message translates to:
+  /// **'Operation'**
+  String get operation;
+
   /// No description provided for @dailyRewardClaimed.
   ///
   /// In en, this message translates to:
@@ -2077,12 +2173,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Generating PDF...'**
   String get generatingPdf;
-
-  /// No description provided for @abortSession.
-  ///
-  /// In en, this message translates to:
-  /// **'ABORT SESSION'**
-  String get abortSession;
 
   /// No description provided for @skip.
   ///
@@ -2252,6 +2342,12 @@ abstract class AppLocalizations {
   /// **'First Steps'**
   String get firstSteps;
 
+  /// No description provided for @firstStepsDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Answer your first question correctly'**
+  String get firstStepsDesc;
+
   /// No description provided for @speedDemonTitle.
   ///
   /// In en, this message translates to:
@@ -2293,6 +2389,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'On Fire'**
   String get onFire;
+
+  /// No description provided for @onFireDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Get 5 correct answers in a row'**
+  String get onFireDesc;
 
   /// No description provided for @perfectScore.
   ///
@@ -2371,6 +2473,462 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Math Genius'**
   String get mathGenius;
+
+  /// No description provided for @unstoppableDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Get 10 correct answers in a row'**
+  String get unstoppableDesc;
+
+  /// No description provided for @heatIndexDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Maintain a Heat Index above 2.5 for an entire session'**
+  String get heatIndexDesc;
+
+  /// No description provided for @flashCalculator.
+  ///
+  /// In en, this message translates to:
+  /// **'Flash Calculator'**
+  String get flashCalculator;
+
+  /// No description provided for @flashCalculatorDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Answer 50 questions with an average time under 2 seconds'**
+  String get flashCalculatorDesc;
+
+  /// No description provided for @dedicated.
+  ///
+  /// In en, this message translates to:
+  /// **'Dedicated'**
+  String get dedicated;
+
+  /// No description provided for @dedicatedDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Answer 500 questions'**
+  String get dedicatedDesc;
+
+  /// No description provided for @stargazerDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Earn your first 10 stars'**
+  String get stargazerDesc;
+
+  /// No description provided for @centuryDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Answer 100 questions'**
+  String get centuryDesc;
+
+  /// No description provided for @mathGeniusDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Answer 1000 questions'**
+  String get mathGeniusDesc;
+
+  /// No description provided for @perfectScoreDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Get 100% accuracy in any game'**
+  String get perfectScoreDesc;
+
+  /// No description provided for @weeklyChampionDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Play for 7 days in a row'**
+  String get weeklyChampionDesc;
+
+  /// No description provided for @campaignMasterDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete all campaign levels'**
+  String get campaignMasterDesc;
+
+  /// No description provided for @duelMasterDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Win 10 duel matches'**
+  String get duelMasterDesc;
+
+  /// No description provided for @legendDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Get 25 correct answers in a row'**
+  String get legendDesc;
+
+  /// No description provided for @sharpMind.
+  ///
+  /// In en, this message translates to:
+  /// **'Sharp Mind'**
+  String get sharpMind;
+
+  /// No description provided for @sharpMindDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Achieve {percentage}% accuracy in any game mode'**
+  String sharpMindDesc(Object percentage);
+
+  /// No description provided for @speedRun.
+  ///
+  /// In en, this message translates to:
+  /// **'Speed Run'**
+  String get speedRun;
+
+  /// No description provided for @speedRunDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Answer 10 questions in under {seconds} seconds'**
+  String speedRunDesc(Object seconds);
+
+  /// No description provided for @committed.
+  ///
+  /// In en, this message translates to:
+  /// **'Committed'**
+  String get committed;
+
+  /// No description provided for @committedDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Play for 30 days in a row'**
+  String get committedDesc;
+
+  /// No description provided for @masterOfOperations.
+  ///
+  /// In en, this message translates to:
+  /// **'Master of Operations'**
+  String get masterOfOperations;
+
+  /// No description provided for @masterOfOperationsDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Use all four operations'**
+  String get masterOfOperationsDesc;
+
+  /// No description provided for @highScorer.
+  ///
+  /// In en, this message translates to:
+  /// **'High Scorer'**
+  String get highScorer;
+
+  /// No description provided for @highScorerDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Score {points} points in one game'**
+  String highScorerDesc(Object points);
+
+  /// No description provided for @earlyBird.
+  ///
+  /// In en, this message translates to:
+  /// **'Early Bird'**
+  String get earlyBird;
+
+  /// No description provided for @earlyBirdDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Play your first game of the day before 8 AM'**
+  String get earlyBirdDesc;
+
+  /// No description provided for @precisionExpert.
+  ///
+  /// In en, this message translates to:
+  /// **'Precision Expert'**
+  String get precisionExpert;
+
+  /// No description provided for @accuracyMaster.
+  ///
+  /// In en, this message translates to:
+  /// **'Accuracy Master'**
+  String get accuracyMaster;
+
+  /// No description provided for @lightningFast.
+  ///
+  /// In en, this message translates to:
+  /// **'Lightning Fast'**
+  String get lightningFast;
+
+  /// No description provided for @lightningFastDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete a level in under {seconds} seconds'**
+  String lightningFastDesc(Object seconds);
+
+  /// No description provided for @instantReaction.
+  ///
+  /// In en, this message translates to:
+  /// **'Instant Reaction'**
+  String get instantReaction;
+
+  /// No description provided for @comboKing.
+  ///
+  /// In en, this message translates to:
+  /// **'Combo King'**
+  String get comboKing;
+
+  /// No description provided for @comboKingDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Achieve a {multiplier}x combo multiplier'**
+  String comboKingDesc(Object multiplier);
+
+  /// No description provided for @performanceMasterDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Achieve 95% accuracy with average time under 15 seconds'**
+  String get performanceMasterDesc;
+
+  /// No description provided for @consistentPlayer.
+  ///
+  /// In en, this message translates to:
+  /// **'Consistent Player'**
+  String get consistentPlayer;
+
+  /// No description provided for @consistentPlayerDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Maintain {percentage}% accuracy over {count} consecutive questions'**
+  String consistentPlayerDesc(Object count, Object percentage);
+
+  /// No description provided for @nightOwl.
+  ///
+  /// In en, this message translates to:
+  /// **'Night Owl'**
+  String get nightOwl;
+
+  /// No description provided for @nightOwlDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Play a game after 10 PM'**
+  String get nightOwlDesc;
+
+  /// No description provided for @weekendWarrior.
+  ///
+  /// In en, this message translates to:
+  /// **'Weekend Warrior'**
+  String get weekendWarrior;
+
+  /// No description provided for @weekendWarriorDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Play on both Saturday and Sunday'**
+  String get weekendWarriorDesc;
+
+  /// No description provided for @firstPlace.
+  ///
+  /// In en, this message translates to:
+  /// **'First Place'**
+  String get firstPlace;
+
+  /// No description provided for @firstPlaceDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Reach #1 on the leaderboard'**
+  String get firstPlaceDesc;
+
+  /// No description provided for @modeExplorer.
+  ///
+  /// In en, this message translates to:
+  /// **'Mode Explorer'**
+  String get modeExplorer;
+
+  /// No description provided for @modeExplorerDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Play all game modes'**
+  String get modeExplorerDesc;
+
+  /// No description provided for @precisionStrike.
+  ///
+  /// In en, this message translates to:
+  /// **'Precision Strike'**
+  String get precisionStrike;
+
+  /// No description provided for @precisionStrikeDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete a level with 35+ correct answers'**
+  String get precisionStrikeDesc;
+
+  /// No description provided for @masterLevel.
+  ///
+  /// In en, this message translates to:
+  /// **'Master Level'**
+  String get masterLevel;
+
+  /// No description provided for @masterLevelDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete a level with 40+ correct answers'**
+  String get masterLevelDesc;
+
+  /// No description provided for @perfectLevel.
+  ///
+  /// In en, this message translates to:
+  /// **'Perfect Level'**
+  String get perfectLevel;
+
+  /// No description provided for @perfectLevelDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete a level with all 45 questions correct'**
+  String get perfectLevelDesc;
+
+  /// No description provided for @risingStar.
+  ///
+  /// In en, this message translates to:
+  /// **'Rising Star'**
+  String get risingStar;
+
+  /// No description provided for @risingStarDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlock 10 campaign levels'**
+  String get risingStarDesc;
+
+  /// No description provided for @mathWarrior.
+  ///
+  /// In en, this message translates to:
+  /// **'Math Warrior'**
+  String get mathWarrior;
+
+  /// No description provided for @mathWarriorDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlock 25 campaign levels'**
+  String get mathWarriorDesc;
+
+  /// No description provided for @campaignConqueror.
+  ///
+  /// In en, this message translates to:
+  /// **'Campaign Conqueror'**
+  String get campaignConqueror;
+
+  /// No description provided for @campaignConquerorDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete all 50 campaign levels'**
+  String get campaignConquerorDesc;
+
+  /// No description provided for @questionMaster.
+  ///
+  /// In en, this message translates to:
+  /// **'Question Master'**
+  String get questionMaster;
+
+  /// No description provided for @questionMasterDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Answer 1000 questions across different categories'**
+  String get questionMasterDesc;
+
+  /// No description provided for @lightningLevel.
+  ///
+  /// In en, this message translates to:
+  /// **'Lightning Level'**
+  String get lightningLevel;
+
+  /// No description provided for @lightningLevelDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete a 45-question level in under 45 seconds'**
+  String get lightningLevelDesc;
+
+  /// No description provided for @consistencyMaster.
+  ///
+  /// In en, this message translates to:
+  /// **'Consistency Master'**
+  String get consistencyMaster;
+
+  /// No description provided for @starCollector.
+  ///
+  /// In en, this message translates to:
+  /// **'Star Collector'**
+  String get starCollector;
+
+  /// No description provided for @stellarPerformer.
+  ///
+  /// In en, this message translates to:
+  /// **'Stellar Performer'**
+  String get stellarPerformer;
+
+  /// No description provided for @stellarPerformerDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Earn 50 stars'**
+  String get stellarPerformerDesc;
+
+  /// No description provided for @celestialMaster.
+  ///
+  /// In en, this message translates to:
+  /// **'Celestial Master'**
+  String get celestialMaster;
+
+  /// No description provided for @celestialMasterDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Earn 100 stars'**
+  String get celestialMasterDesc;
+
+  /// No description provided for @riddleMaster.
+  ///
+  /// In en, this message translates to:
+  /// **'Riddle Master'**
+  String get riddleMaster;
+
+  /// No description provided for @riddleMasterDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete all 30 riddle levels'**
+  String get riddleMasterDesc;
+
+  /// No description provided for @hintHoarder.
+  ///
+  /// In en, this message translates to:
+  /// **'Hint Hoarder'**
+  String get hintHoarder;
+
+  /// No description provided for @hintHoarderDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Obtain 50 hints'**
+  String get hintHoarderDesc;
+
+  /// No description provided for @gridExplorer.
+  ///
+  /// In en, this message translates to:
+  /// **'Grid Explorer'**
+  String get gridExplorer;
+
+  /// No description provided for @gridExplorerDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete 5 Cross Numbers puzzles'**
+  String get gridExplorerDesc;
+
+  /// No description provided for @lightningGrid.
+  ///
+  /// In en, this message translates to:
+  /// **'Lightning Grid'**
+  String get lightningGrid;
+
+  /// No description provided for @lightningGridDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete a 7x7 Cross Numbers puzzle in under 90 seconds'**
+  String get lightningGridDesc;
+
+  /// No description provided for @logicArchitect.
+  ///
+  /// In en, this message translates to:
+  /// **'Logic Architect'**
+  String get logicArchitect;
+
+  /// No description provided for @logicArchitectDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete 50 Cross Numbers puzzles'**
+  String get logicArchitectDesc;
 
   /// No description provided for @campaignGrinder.
   ///
@@ -2695,6 +3253,102 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'CRITICAL'**
   String get intensityCritical;
+
+  /// No description provided for @totalScore.
+  ///
+  /// In en, this message translates to:
+  /// **'TOTAL SCORE'**
+  String get totalScore;
+
+  /// No description provided for @xpToLevelFull.
+  ///
+  /// In en, this message translates to:
+  /// **'{xp} XP to NEXT LEVEL'**
+  String xpToLevelFull(Object xp);
+
+  /// No description provided for @achiever.
+  ///
+  /// In en, this message translates to:
+  /// **'ACHIEVER'**
+  String get achiever;
+
+  /// No description provided for @avatarUnlocks.
+  ///
+  /// In en, this message translates to:
+  /// **'AVATAR UNLOCKS'**
+  String get avatarUnlocks;
+
+  /// No description provided for @requiresLevelAndStars.
+  ///
+  /// In en, this message translates to:
+  /// **'Requires Level {level} and {stars} stars!'**
+  String requiresLevelAndStars(Object level, Object stars);
+
+  /// No description provided for @requiresStarsToUnlock.
+  ///
+  /// In en, this message translates to:
+  /// **'Requires {stars} stars to unlock!'**
+  String requiresStarsToUnlock(Object stars);
+
+  /// No description provided for @requiresLevelToUnlock.
+  ///
+  /// In en, this message translates to:
+  /// **'Requires Level {level} to unlock!'**
+  String requiresLevelToUnlock(Object level);
+
+  /// No description provided for @unlockAvatarQuestion.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlock Avatar?'**
+  String get unlockAvatarQuestion;
+
+  /// No description provided for @unlockAvatarConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Do you want to spend {cost} points to unlock the {name} avatar?'**
+  String unlockAvatarConfirm(Object cost, Object name);
+
+  /// No description provided for @unlock.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlock'**
+  String get unlock;
+
+  /// No description provided for @rarityCommon.
+  ///
+  /// In en, this message translates to:
+  /// **'Common'**
+  String get rarityCommon;
+
+  /// No description provided for @rarityUncommon.
+  ///
+  /// In en, this message translates to:
+  /// **'Uncommon'**
+  String get rarityUncommon;
+
+  /// No description provided for @rarityRare.
+  ///
+  /// In en, this message translates to:
+  /// **'Rare'**
+  String get rarityRare;
+
+  /// No description provided for @rarityEpic.
+  ///
+  /// In en, this message translates to:
+  /// **'Epic'**
+  String get rarityEpic;
+
+  /// No description provided for @rarityLegendary.
+  ///
+  /// In en, this message translates to:
+  /// **'Legendary'**
+  String get rarityLegendary;
+
+  /// No description provided for @rarityMythic.
+  ///
+  /// In en, this message translates to:
+  /// **'Mythic'**
+  String get rarityMythic;
 
   /// No description provided for @generatedOn.
   ///

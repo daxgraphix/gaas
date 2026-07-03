@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../core/themes/app_themes.dart';
+import '../../l10n/generated/app_localizations.dart';
 
 enum AchievementCategory {
   gameplay,
@@ -10,7 +12,7 @@ enum AchievementCategory {
   collection,
 }
 
-enum AchievementRarity { common, uncommon, rare, epic, legendary }
+typedef AchievementRarity = AppRarity;
 
 class Achievement {
   final String id;
@@ -34,6 +36,126 @@ class Achievement {
     this.isUnlockable = true,
     this.trigger,
   });
+
+  String getLocalizedTitle(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    switch (id) {
+      case 'first_correct': return l10n.firstSteps;
+      case 'streak_5': return l10n.onFire;
+      case 'streak_10': return l10n.unstoppable;
+      case 'heat_master': return l10n.heatIndex;
+      case 'flash_calculator': return l10n.flashCalculator;
+      case 'streak_25': return l10n.legend;
+      case 'accuracy_80_bronze':
+      case 'accuracy_80_silver':
+      case 'accuracy_80_gold':
+      case 'accuracy_80': return l10n.sharpMind;
+      case 'accuracy_90': return l10n.precisionExpert;
+      case 'accuracy_95': return l10n.accuracyMaster;
+      case 'questions_100': return l10n.century;
+      case 'questions_500': return l10n.dedicated;
+      case 'questions_1000': return l10n.mathGenius;
+      case 'perfect_game': return l10n.perfectScore;
+      case 'daily_streak_7': return l10n.weeklyChampion;
+      case 'daily_streak_30': return l10n.committed;
+      case 'campaign_complete': return l10n.campaignMaster;
+      case 'duel_master': return l10n.duelMaster;
+      case 'stars_10': return l10n.starCollector;
+      case 'stars_50': return l10n.stellarPerformer;
+      case 'stars_100': return l10n.celestialMaster;
+      case 'speed_demon_bronze':
+      case 'speed_demon_silver':
+      case 'speed_demon_gold': return l10n.speedRun;
+      case 'all_operations': return l10n.masterOfOperations;
+      case 'high_scorer_1000':
+      case 'high_scorer_5000': return l10n.highScorer;
+      case 'early_bird': return l10n.earlyBird;
+      case 'speed_20_sec': return l10n.lightningFast;
+      case 'speed_10_sec': return l10n.instantReaction;
+      case 'combo_20': return l10n.comboKing;
+      case 'performance_master': return l10n.achiever;
+      case 'consistent_player': return l10n.consistentPlayer;
+      case 'night_owl': return l10n.nightOwl;
+      case 'weekend_warrior': return l10n.weekendWarrior;
+      case 'first_place': return l10n.firstPlace;
+      case 'all_modes': return l10n.modeExplorer;
+      case 'level_perfect_35': return l10n.precisionStrike;
+      case 'level_perfect_40': return l10n.masterLevel;
+      case 'level_perfect_45': return l10n.perfectLevel;
+      case 'campaign_progress_10': return l10n.risingStar;
+      case 'campaign_progress_25': return l10n.mathWarrior;
+      case 'campaign_progress_50': return l10n.campaignConqueror;
+      case 'question_variety': return l10n.questionMaster;
+      case 'speed_45_sec_level': return l10n.lightningLevel;
+      case 'consistency_master': return l10n.consistencyMaster;
+      case 'riddle_master': return l10n.riddleMaster;
+      case 'hint_hoarder': return l10n.hintHoarder;
+      case 'cross_numbers_novice': return l10n.gridExplorer;
+      case 'cross_numbers_speed': return l10n.lightningGrid;
+      case 'cross_numbers_master': return l10n.logicArchitect;
+      default: return title;
+    }
+  }
+
+  String getLocalizedDescription(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    switch (id) {
+      case 'first_correct': return l10n.firstStepsDesc;
+      case 'streak_5': return l10n.onFireDesc;
+      case 'streak_10': return l10n.unstoppableDesc;
+      case 'heat_master': return l10n.heatIndexDesc;
+      case 'flash_calculator': return l10n.flashCalculatorDesc;
+      case 'streak_25': return l10n.legendDesc;
+      case 'accuracy_80_bronze': return l10n.sharpMindDesc(80);
+      case 'accuracy_80_silver': return l10n.sharpMindDesc(85);
+      case 'accuracy_80_gold': return l10n.sharpMindDesc(90);
+      case 'accuracy_80': return l10n.sharpMindDesc(80);
+      case 'accuracy_90': return l10n.sharpMindDesc(90);
+      case 'accuracy_95': return l10n.sharpMindDesc(95);
+      case 'questions_100': return l10n.centuryDesc;
+      case 'questions_500': return l10n.dedicatedDesc;
+      case 'questions_1000': return l10n.mathGeniusDesc;
+      case 'perfect_game': return l10n.perfectScoreDesc;
+      case 'daily_streak_7': return l10n.weeklyChampionDesc;
+      case 'daily_streak_30': return l10n.committedDesc;
+      case 'campaign_complete': return l10n.campaignMasterDesc;
+      case 'duel_master': return l10n.duelMasterDesc;
+      case 'stars_10': return l10n.stargazerDesc;
+      case 'stars_50': return l10n.stellarPerformerDesc;
+      case 'stars_100': return l10n.celestialMasterDesc;
+      case 'speed_demon_bronze': return l10n.speedRunDesc(45);
+      case 'speed_demon_silver': return l10n.speedRunDesc(30);
+      case 'speed_demon_gold': return l10n.speedRunDesc(15);
+      case 'all_operations': return l10n.masterOfOperationsDesc;
+      case 'high_scorer_1000': return l10n.highScorerDesc(1000);
+      case 'high_scorer_5000': return l10n.highScorerDesc(5000);
+      case 'early_bird': return l10n.earlyBirdDesc;
+      case 'speed_20_sec': return l10n.lightningFastDesc(20);
+      case 'speed_10_sec': return l10n.lightningFastDesc(10);
+      case 'combo_20': return l10n.comboKingDesc(20);
+      case 'performance_master': return l10n.performanceMasterDesc;
+      case 'consistent_player': return l10n.consistentPlayerDesc(85, 100);
+      case 'night_owl': return l10n.nightOwlDesc;
+      case 'weekend_warrior': return l10n.weekendWarriorDesc;
+      case 'first_place': return l10n.firstPlaceDesc;
+      case 'all_modes': return l10n.modeExplorerDesc;
+      case 'level_perfect_35': return l10n.precisionStrikeDesc;
+      case 'level_perfect_40': return l10n.masterLevelDesc;
+      case 'level_perfect_45': return l10n.perfectLevelDesc;
+      case 'campaign_progress_10': return l10n.risingStarDesc;
+      case 'campaign_progress_25': return l10n.mathWarriorDesc;
+      case 'campaign_progress_50': return l10n.campaignConquerorDesc;
+      case 'question_variety': return l10n.questionMasterDesc;
+      case 'speed_45_sec_level': return l10n.lightningLevelDesc;
+      case 'consistency_master': return l10n.consistentPlayerDesc(90, 50);
+      case 'riddle_master': return l10n.riddleMasterDesc;
+      case 'hint_hoarder': return l10n.hintHoarderDesc;
+      case 'cross_numbers_novice': return l10n.gridExplorerDesc;
+      case 'cross_numbers_speed': return l10n.lightningGridDesc;
+      case 'cross_numbers_master': return l10n.logicArchitectDesc;
+      default: return description;
+    }
+  }
 }
 
 class AchievementTrigger {
@@ -110,7 +232,7 @@ final List<Achievement> _defaultAchievements = [
     trigger: AchievementTrigger(type: 'heat', targetValue: 250), // 2.5 * 100 for integer comparison
   ),
   const Achievement(
-    id: 'speed_demon_gold',
+    id: 'flash_calculator',
     title: 'Flash Calculator',
     description: 'Answer 50 questions with an average time under 2 seconds',
     category: AchievementCategory.time,

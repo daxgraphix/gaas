@@ -49,8 +49,12 @@ class _CrossNumbersScreenState extends ConsumerState<CrossNumbersScreen> {
   void _showTutorial() {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+      builder: (context) => PremiumGlassOverlay(
+        borderRadius: 24,
+        child: AlertDialog(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
         title: Row(
           children: [
             Icon(Icons.help_outline_rounded, color: Theme.of(context).colorScheme.primary),
@@ -75,7 +79,7 @@ class _CrossNumbersScreenState extends ConsumerState<CrossNumbersScreen> {
           ),
         ],
       ),
-    );
+    ));
   }
 
   Widget _buildTutorialItem(IconData icon, String text) {
@@ -112,13 +116,12 @@ class _CrossNumbersScreenState extends ConsumerState<CrossNumbersScreen> {
     }
 
     return Scaffold(
-      backgroundColor: theme.scaffoldBackgroundColor,
       extendBodyBehindAppBar: true,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.close_rounded),
+          icon: Icon(Icons.close_rounded, color: theme.colorScheme.onSurface.withValues(alpha: 0.7)),
           onPressed: () => _showExitDialog(),
         ),
         title: Column(
@@ -164,7 +167,11 @@ class _CrossNumbersScreenState extends ConsumerState<CrossNumbersScreen> {
               child: Center(
                 child: SingleChildScrollView(
                   physics: const BouncingScrollPhysics(),
-                  child: _buildGrid(puzzleState),
+                  scrollDirection: Axis.horizontal,
+                  child: SingleChildScrollView(
+                    physics: const BouncingScrollPhysics(),
+                    child: _buildGrid(puzzleState),
+                  ),
                 ),
               ),
             ),
@@ -226,105 +233,170 @@ class _CrossNumbersScreenState extends ConsumerState<CrossNumbersScreen> {
 
   Widget _buildGrid(CrossNumbersState state) {
     final puzzle = state.puzzle!;
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.05),
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.1)),
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: List.generate(puzzle.gridSize, (r) {
-          return Row(
+    final gameTheme = Theme.of(context).extension<GameThemeExtension>()!;
+    final screenWidth = MediaQuery.of(context).size.width;
+    
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        // Use screen width if constraints are unbounded (common in scroll views)
+        double width = constraints.maxWidth.isFinite ? constraints.maxWidth : screenWidth;
+        double availableWidth = width - 32; // Allow for screen padding and margins
+        double cellSize = (availableWidth / puzzle.gridSize).floorToDouble();
+        
+        // Ensure cells are not too large or too small
+        cellSize = cellSize.clamp(32.0, 52.0);
+        
+        double cellMargin = puzzle.gridSize >= 9 ? 0.5 : 1.0;
+        double innerCellSize = cellSize - (cellMargin * 2);
+
+        return Container(
+          padding: const EdgeInsets.all(6),
+          decoration: BoxDecoration(
+            color: gameTheme.numpadBackground,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: gameTheme.gridLineColor),
+            boxShadow: [
+              BoxShadow(
+                color: gameTheme.gridLineColor.withValues(alpha: 0.1),
+                blurRadius: 10,
+                spreadRadius: 2,
+              ),
+            ],
+          ),
+          child: Column(
             mainAxisSize: MainAxisSize.min,
-            children: List.generate(puzzle.gridSize, (c) {
-              final cell = puzzle.grid[r][c];
-              return _buildCell(cell, state.selectedRow == r && state.selectedCol == c);
+            children: List.generate(puzzle.gridSize, (r) {
+              return Row(
+                mainAxisSize: MainAxisSize.min,
+                children: List.generate(puzzle.gridSize, (c) {
+                  final cell = puzzle.grid[r][c];
+                  final isSelected = state.selectedRow == r && state.selectedCol == c;
+                  
+                  bool isInSatisfiedEq = false;
+                  for (int eqIdx in state.satisfiedEquations) {
+                    if (puzzle.equations[eqIdx].cells.any((p) => p.x == r && p.y == c)) {
+                      isInSatisfiedEq = true;
+                      break;
+                    }
+                  }
+
+                  return _buildCell(cell, isSelected, innerCellSize, cellMargin, isInSatisfiedEq);
+                }),
+              );
             }),
-          );
-        }),
-      ),
-    ).animate().scale(duration: 400.ms, curve: Curves.easeOutBack);
+          ),
+        ).animate().fadeIn(duration: 600.ms).scale(begin: const Offset(0.95, 0.95), end: const Offset(1, 1));
+      },
+    );
   }
 
-  Widget _buildCell(CrossNumbersCell cell, bool isSelected) {
-    final theme = Theme.of(context);
-    
+  Widget _buildCell(CrossNumbersCell cell, bool isSelected, double size, double margin, bool isInSatisfiedEq) {
     if (cell.type == CrossNumbersCellType.empty) {
-      return const SizedBox(width: 44, height: 44);
+      return Padding(
+        padding: EdgeInsets.all(margin),
+        child: SizedBox(width: size, height: size),
+      );
     }
 
-    bool isOperator = cell.type == CrossNumbersCellType.operator;
-    bool isResult = cell.type == CrossNumbersCellType.result;
+    final theme = Theme.of(context);
+    final gameTheme = theme.extension<GameThemeExtension>()!;
+    final isOperator = cell.type == CrossNumbersCellType.operator || cell.type == CrossNumbersCellType.equals;
+    final isEditable = cell.isUserEditable;
     
-    Color bgColor = theme.colorScheme.surface;
-    Color textColor = theme.colorScheme.onSurface;
-    double elevation = 0;
+    Color bgColor = gameTheme.cellBackground;
+    Color textColor = gameTheme.numpadText;
+    Color borderColor = gameTheme.gridLineColor;
     
-    if (cell.isUserEditable) {
+    double fontSize = _getFontSize(cell, isOperator, size);
+
+    if (isOperator) {
+      textColor = gameTheme.operatorColor;
+      bgColor = Colors.transparent;
+      borderColor = Colors.transparent;
+    } else if (isEditable) {
+      if (cell.userValue.isEmpty) {
+        borderColor = gameTheme.gridLineColor.withValues(alpha: 0.2);
+        bgColor = gameTheme.numpadBackground.withValues(alpha: 0.3);
+      }
+      
       if (isSelected) {
-        bgColor = theme.colorScheme.primaryContainer;
-        textColor = theme.colorScheme.onPrimaryContainer;
-        elevation = 4;
-      } else if (cell.isRevealed) {
-        bgColor = Colors.amber.withValues(alpha: 0.1);
-        textColor = Colors.amber.shade800;
+        borderColor = gameTheme.cellSelectedBorder;
+        bgColor = gameTheme.cellSelectedBackground;
       }
-    } else {
-      if (isResult) {
-        bgColor = theme.colorScheme.primary.withValues(alpha: 0.1);
-        textColor = theme.colorScheme.primary;
-      } else {
-        bgColor = isOperator ? theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3) : theme.colorScheme.surfaceContainerHighest;
-        textColor = isOperator ? theme.colorScheme.primary : theme.colorScheme.onSurface;
-      }
+    }
+
+    if (cell.isRevealed) {
+      textColor = Colors.amberAccent;
+      bgColor = theme.colorScheme.primary.withValues(alpha: 0.1);
+    }
+    
+    if (isInSatisfiedEq && !isSelected && !isOperator) {
+      borderColor = Colors.green.withValues(alpha: 0.5);
+      // bgColor = Colors.green.withValues(alpha: 0.05); // Too subtle?
     }
 
     return GestureDetector(
-      onTap: cell.isUserEditable ? () {
+      onTap: isEditable ? () {
         HapticManager.instance.selectionClick();
         ref.read(crossNumbersProvider.notifier).selectCell(cell.row, cell.col);
       } : null,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        width: 48,
-        height: 48,
-        margin: const EdgeInsets.all(1.5),
-        decoration: BoxDecoration(
-          color: bgColor,
-          borderRadius: BorderRadius.circular(10),
-          border: Border.all(
-            color: isSelected 
-                ? theme.colorScheme.primary 
-                : theme.colorScheme.outline.withValues(alpha: isSelected ? 1 : 0.1),
-            width: isSelected ? 2 : 1,
-          ),
-          boxShadow: elevation > 0 ? [
-            BoxShadow(color: theme.colorScheme.primary.withValues(alpha: 0.2), blurRadius: 8, offset: const Offset(0, 2))
-          ] : null,
-        ),
-        child: Center(
-          child: Text(
-            cell.isUserEditable ? cell.userValue : cell.value,
-            style: theme.textTheme.titleMedium?.copyWith(
-              fontWeight: cell.isUserEditable ? FontWeight.w500 : FontWeight.w900,
-              color: textColor,
-              fontSize: _getFontSize(cell, isOperator),
+      child: Stack(
+        children: [
+          AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            width: size,
+            height: size,
+            margin: EdgeInsets.all(margin),
+            decoration: BoxDecoration(
+              color: bgColor,
+              borderRadius: BorderRadius.circular(size > 42 ? 8 : (size > 36 ? 6 : 4)),
+              border: Border.all(color: borderColor, width: isSelected ? 2 : 1),
+            ),
+            child: Center(
+              child: Text(
+                isEditable ? cell.userValue : cell.value,
+                style: TextStyle(
+                  color: textColor,
+                  fontSize: fontSize,
+                  height: 1.0,
+                  fontWeight: isOperator ? FontWeight.w900 : FontWeight.w700,
+                  fontFamily: 'Monospace',
+                ),
+              ),
             ),
           ),
-        ),
+          if (isInSatisfiedEq && !isOperator && !isEditable)
+             Positioned(
+              right: 2,
+              bottom: 2,
+              child: Icon(Icons.check_circle, size: size * 0.25, color: Colors.green.withValues(alpha: 0.8)),
+            ),
+          if (cell.clueNumber != null)
+            Positioned(
+              top: size > 40 ? 4 : 2,
+              left: size > 40 ? 5 : 3,
+              child: Text(
+                '${cell.clueNumber}',
+                style: TextStyle(
+                  fontSize: size > 40 ? 9 : 7,
+                  color: (isSelected && isEditable) ? theme.colorScheme.primary : textColor.withValues(alpha: 0.6),
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+            ),
+        ],
       ),
     );
   }
 
-  double _getFontSize(CrossNumbersCell cell, bool isOperator) {
-    if (isOperator) return 18;
+  double _getFontSize(CrossNumbersCell cell, bool isOperator, double cellSize) {
+    double base = cellSize * 0.45;
+    if (isOperator) return base;
     String val = cell.isUserEditable ? cell.userValue : cell.value;
-    if (val.length > 3) return 12;
-    if (val.length > 2) return 14;
-    if (val.length > 1) return 16;
-    return 20;
+    if (val.length > 3) return base * 0.6;
+    if (val.length > 2) return base * 0.7;
+    if (val.length > 1) return base * 0.8;
+    return base * 1.0;
   }
 
   Widget _buildNumpad(CrossNumbersState state, ThemeData theme) {
@@ -333,11 +405,11 @@ class _CrossNumbersScreenState extends ConsumerState<CrossNumbersScreen> {
       child: Column(
         children: [
           Row(
-            children: [1, 2, 3, 4, 5].map((i) => Expanded(child: _buildNumpadButton(i.toString(), state, theme))).toList(),
+            children: ['1', '2', '3', '4', '5'].map((i) => Expanded(child: _buildNumpadButton(i, state, theme))).toList(),
           ),
           const SizedBox(height: 8),
           Row(
-            children: [6, 7, 8, 9, 0].map((i) => Expanded(child: _buildNumpadButton(i.toString(), state, theme))).toList(),
+            children: ['6', '7', '8', '9', '0'].map((i) => Expanded(child: _buildNumpadButton(i, state, theme))).toList(),
           ),
           const SizedBox(height: 12),
           Row(
@@ -349,13 +421,23 @@ class _CrossNumbersScreenState extends ConsumerState<CrossNumbersScreen> {
               Expanded(
                 child: _buildNumpadButton('CLEAR', state, theme, isClear: true),
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: 12),
               Expanded(
                 flex: 2,
-                child: PremiumPrimaryButton(
+                child: PremiumAnimatedButton(
                   onPressed: () => _checkManualCompletion(state),
-                  text: 'SUBMIT',
-                  icon: Icons.check_circle_outline_rounded,
+                  backgroundColor: theme.colorScheme.primary,
+                  borderColor: theme.colorScheme.primary,
+                  padding: EdgeInsets.zero,
+                  child: const SizedBox(
+                    height: 54,
+                    child: Center(
+                      child: Text(
+                        'SUBMIT',
+                        style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900, letterSpacing: 1),
+                      ),
+                    ),
+                  ),
                 ),
               ),
             ],
@@ -366,10 +448,11 @@ class _CrossNumbersScreenState extends ConsumerState<CrossNumbersScreen> {
   }
 
   Widget _buildNumpadButton(String label, CrossNumbersState state, ThemeData theme, {bool isClear = false, bool isSpecial = false}) {
+    final gameTheme = theme.extension<GameThemeExtension>()!;
     return Padding(
       padding: const EdgeInsets.all(3),
-      child: InkWell(
-        onTap: () {
+      child: PremiumAnimatedButton(
+        onPressed: () {
           if (state.selectedRow != null && state.selectedCol != null) {
             HapticManager.instance.lightImpact();
             ref.read(crossNumbersProvider.notifier).updateCell(
@@ -379,34 +462,24 @@ class _CrossNumbersScreenState extends ConsumerState<CrossNumbersScreen> {
             );
           }
         },
-        borderRadius: BorderRadius.circular(12),
+        padding: EdgeInsets.zero,
+        backgroundColor: gameTheme.numpadButtonBackground,
+        borderColor: isClear 
+            ? Colors.red.withValues(alpha: 0.5)
+            : isSpecial
+                ? Colors.orange.withValues(alpha: 0.5)
+                : gameTheme.gridLineColor,
         child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 14),
-          decoration: BoxDecoration(
-            color: isClear 
-                ? theme.colorScheme.error.withValues(alpha: 0.1) 
-                : isSpecial 
-                    ? theme.colorScheme.secondary.withValues(alpha: 0.1)
-                    : theme.colorScheme.surface,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(
-              color: isClear 
-                  ? theme.colorScheme.error.withValues(alpha: 0.3)
-                  : isSpecial
-                      ? theme.colorScheme.secondary.withValues(alpha: 0.3)
-                      : theme.colorScheme.outline.withValues(alpha: 0.1),
-            ),
-          ),
+          padding: const EdgeInsets.symmetric(vertical: 16),
           child: Center(
             child: label == 'BACK' 
-              ? Icon(Icons.backspace_outlined, size: 18, color: theme.colorScheme.secondary)
+              ? Icon(Icons.backspace_outlined, size: 20, color: gameTheme.numpadText.withValues(alpha: 0.7))
               : Text(
                   label,
-                  style: theme.textTheme.titleMedium?.copyWith(
+                  style: TextStyle(
                     fontWeight: FontWeight.w900,
-                    color: isClear ? theme.colorScheme.error : isSpecial ? theme.colorScheme.secondary : theme.colorScheme.onSurface,
-                    fontSize: isClear ? 12 : 18,
-                    letterSpacing: isClear ? 1 : 0,
+                    color: isClear ? Colors.redAccent : isSpecial ? Colors.orangeAccent : gameTheme.numpadText,
+                    fontSize: 20,
                   ),
                 ),
           ),
@@ -445,19 +518,24 @@ class _CrossNumbersScreenState extends ConsumerState<CrossNumbersScreen> {
   void _showExitDialog() {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Quit Game?'),
-        content: const Text('Your progress for this level will be lost.'),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('CANCEL')),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              Navigator.pop(context);
-            },
-            child: const Text('QUIT', style: TextStyle(color: Colors.red)),
-          ),
-        ],
+      builder: (context) => PremiumGlassOverlay(
+        borderRadius: 24,
+        child: AlertDialog(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          title: const Text('Quit Game?'),
+          content: const Text('Your progress for this level will be lost.'),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(context), child: const Text('CANCEL')),
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+                Navigator.pop(context);
+              },
+              child: Text('QUIT', style: TextStyle(color: Theme.of(context).colorScheme.error)),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -515,6 +593,7 @@ class _CrossNumbersScreenState extends ConsumerState<CrossNumbersScreen> {
           ? 'You solved $correct/$total questions!\nEarned $score points.'
           : 'You only got $correct/$total questions.\nYou need at least 5 to pass.',
         stars: stars,
+        isSuccess: passed,
         onDone: () {
           Navigator.pop(context);
           Navigator.pop(context);

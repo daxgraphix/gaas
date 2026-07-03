@@ -3,8 +3,60 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../accessibility/accessibility_settings.dart';
+import '../../l10n/generated/app_localizations.dart';
 
 enum AppThemeType { midnight, solar, cyber }
+
+enum AppRarity { common, uncommon, rare, epic, legendary, mythic }
+
+class RarityUIConfig {
+  static Color getColor(AppRarity rarity, ThemeData theme) {
+    switch (rarity) {
+      case AppRarity.common:
+        return theme.colorScheme.onSurface.withValues(alpha: 0.6);
+      case AppRarity.uncommon:
+        return theme.colorScheme.secondary;
+      case AppRarity.rare:
+        return theme.colorScheme.primary;
+      case AppRarity.epic:
+        return theme.colorScheme.tertiary;
+      case AppRarity.legendary:
+        return theme.colorScheme.tertiary;
+      case AppRarity.mythic:
+        return theme.colorScheme.error;
+    }
+  }
+
+  static List<Color> getGradient(AppRarity rarity, ThemeData theme) {
+    final baseColor = getColor(rarity, theme);
+    switch (rarity) {
+      case AppRarity.common:
+        return [theme.colorScheme.surface, theme.colorScheme.surface.withValues(alpha: 0.7)];
+      case AppRarity.uncommon:
+        return [baseColor, theme.colorScheme.secondary.withValues(alpha: 0.7)];
+      case AppRarity.rare:
+        return [theme.colorScheme.primary, theme.colorScheme.secondary];
+      case AppRarity.epic:
+        return [theme.colorScheme.tertiary, theme.colorScheme.primary];
+      case AppRarity.legendary:
+        return [theme.colorScheme.tertiary, theme.colorScheme.secondary];
+      case AppRarity.mythic:
+        return [theme.colorScheme.inversePrimary, theme.colorScheme.error];
+    }
+  }
+
+  static String getName(AppRarity rarity, BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    switch (rarity) {
+      case AppRarity.common: return l10n.rarityCommon;
+      case AppRarity.uncommon: return l10n.rarityUncommon;
+      case AppRarity.rare: return l10n.rarityRare;
+      case AppRarity.epic: return l10n.rarityEpic;
+      case AppRarity.legendary: return l10n.rarityLegendary;
+      case AppRarity.mythic: return l10n.rarityMythic;
+    }
+  }
+}
 
 class AppDesignTokens {
   static const double radiusSmall = 8.0;
@@ -75,6 +127,66 @@ class Material3Tokens {
   static const double springStiffness = 400.0;
 }
 
+class GameThemeExtension extends ThemeExtension<GameThemeExtension> {
+  final Color operatorColor;
+  final Color gridLineColor;
+  final Color cellBackground;
+  final Color cellSelectedBorder;
+  final Color cellSelectedBackground;
+  final Color numpadBackground;
+  final Color numpadButtonBackground;
+  final Color numpadText;
+
+  const GameThemeExtension({
+    required this.operatorColor,
+    required this.gridLineColor,
+    required this.cellBackground,
+    required this.cellSelectedBorder,
+    required this.cellSelectedBackground,
+    required this.numpadBackground,
+    required this.numpadButtonBackground,
+    required this.numpadText,
+  });
+
+  @override
+  GameThemeExtension copyWith({
+    Color? operatorColor,
+    Color? gridLineColor,
+    Color? cellBackground,
+    Color? cellSelectedBorder,
+    Color? cellSelectedBackground,
+    Color? numpadBackground,
+    Color? numpadButtonBackground,
+    Color? numpadText,
+  }) {
+    return GameThemeExtension(
+      operatorColor: operatorColor ?? this.operatorColor,
+      gridLineColor: gridLineColor ?? this.gridLineColor,
+      cellBackground: cellBackground ?? this.cellBackground,
+      cellSelectedBorder: cellSelectedBorder ?? this.cellSelectedBorder,
+      cellSelectedBackground: cellSelectedBackground ?? this.cellSelectedBackground,
+      numpadBackground: numpadBackground ?? this.numpadBackground,
+      numpadButtonBackground: numpadButtonBackground ?? this.numpadButtonBackground,
+      numpadText: numpadText ?? this.numpadText,
+    );
+  }
+
+  @override
+  GameThemeExtension lerp(ThemeExtension<GameThemeExtension>? other, double t) {
+    if (other is! GameThemeExtension) return this;
+    return GameThemeExtension(
+      operatorColor: Color.lerp(operatorColor, other.operatorColor, t)!,
+      gridLineColor: Color.lerp(gridLineColor, other.gridLineColor, t)!,
+      cellBackground: Color.lerp(cellBackground, other.cellBackground, t)!,
+      cellSelectedBorder: Color.lerp(cellSelectedBorder, other.cellSelectedBorder, t)!,
+      cellSelectedBackground: Color.lerp(cellSelectedBackground, other.cellSelectedBackground, t)!,
+      numpadBackground: Color.lerp(numpadBackground, other.numpadBackground, t)!,
+      numpadButtonBackground: Color.lerp(numpadButtonBackground, other.numpadButtonBackground, t)!,
+      numpadText: Color.lerp(numpadText, other.numpadText, t)!,
+    );
+  }
+}
+
 class AppThemes {
   static ThemeData getTheme(AppThemeType type) {
     switch (type) {
@@ -110,6 +222,18 @@ class AppThemes {
       onTertiary: Colors.white,
       error: AppDesignTokens.error,
     ),
+    extensions: [
+      GameThemeExtension(
+        operatorColor: AppDesignTokens.solarPrimary,
+        gridLineColor: Colors.black.withValues(alpha: 0.1),
+        cellBackground: Colors.white,
+        cellSelectedBorder: AppDesignTokens.solarPrimary,
+        cellSelectedBackground: AppDesignTokens.solarPrimary.withValues(alpha: 0.1),
+        numpadBackground: const Color(0xFFFFFBEB),
+        numpadButtonBackground: Colors.white,
+        numpadText: AppDesignTokens.solarOnSurface,
+      ),
+    ],
     scaffoldBackgroundColor: AppDesignTokens.solarBackground,
     dialogTheme: const DialogThemeData(
       backgroundColor: AppDesignTokens.solarSurface,
@@ -219,6 +343,18 @@ class AppThemes {
       error: AppDesignTokens.error,
       outline: AppDesignTokens.cyberPrimary.withValues(alpha: 0.5),
     ),
+    extensions: [
+      GameThemeExtension(
+        operatorColor: const Color(0xFF00E5FF),
+        gridLineColor: AppDesignTokens.cyberPrimary.withValues(alpha: 0.3),
+        cellBackground: const Color(0xFF09090B),
+        cellSelectedBorder: AppDesignTokens.cyberPrimary,
+        cellSelectedBackground: AppDesignTokens.cyberPrimary.withValues(alpha: 0.15),
+        numpadBackground: Colors.black,
+        numpadButtonBackground: const Color(0xFF09090B),
+        numpadText: AppDesignTokens.cyberOnSurface,
+      ),
+    ],
     scaffoldBackgroundColor: AppDesignTokens.cyberBackground,
     cardTheme: CardThemeData(
       elevation: 0,
@@ -279,6 +415,18 @@ class AppThemes {
       error: AppDesignTokens.error,
       outline: AppDesignTokens.midnightOnSurfaceVariant.withValues(alpha: 0.4),
     ),
+    extensions: [
+      GameThemeExtension(
+        operatorColor: AppDesignTokens.midnightSecondary,
+        gridLineColor: Colors.white.withValues(alpha: 0.1),
+        cellBackground: const Color(0xFF1E293B),
+        cellSelectedBorder: AppDesignTokens.midnightPrimary,
+        cellSelectedBackground: AppDesignTokens.midnightPrimary.withValues(alpha: 0.1),
+        numpadBackground: const Color(0xFF020617),
+        numpadButtonBackground: const Color(0xFF0F172A),
+        numpadText: Colors.white,
+      ),
+    ],
     scaffoldBackgroundColor: AppDesignTokens.midnightBackground,
     cardTheme: CardThemeData(
       elevation: 0,

@@ -687,9 +687,12 @@ class ProfileScreen extends ConsumerWidget {
     final l10n = AppLocalizations.of(context)!;
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: Theme.of(context).colorScheme.surface,
-        title: Text(
+      builder: (context) => PremiumGlassOverlay(
+        borderRadius: 24,
+        child: AlertDialog(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          title: Text(
           l10n.language,
           style: TextStyle(
             color: Theme.of(context).colorScheme.primary,
@@ -730,7 +733,7 @@ onTap: () {
           ),
         ],
       ),
-    );
+    ));
   }
 
   void _showThemeDialog(
@@ -743,9 +746,12 @@ onTap: () {
     final l10n = AppLocalizations.of(context)!;
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: theme.colorScheme.surface,
-        title: Text(
+      builder: (context) => PremiumGlassOverlay(
+        borderRadius: 24,
+        child: AlertDialog(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          title: Text(
           l10n.selectTheme,
           style: TextStyle(
             color: theme.colorScheme.primary,
@@ -796,7 +802,7 @@ onTap: () {
           ),
         ],
       ),
-    );
+    ));
   }
 
   IconData _getAvatarIcon(String shape) {

@@ -269,6 +269,10 @@ class SuccessDialog extends StatelessWidget {
   final String message;
   final int stars;
   final VoidCallback onDone;
+  final bool isSuccess;
+  final String? primaryButtonText;
+  final String? secondaryButtonText;
+  final VoidCallback? onSecondaryAction;
 
   const SuccessDialog({
     super.key,
@@ -276,6 +280,10 @@ class SuccessDialog extends StatelessWidget {
     required this.message,
     required this.stars,
     required this.onDone,
+    this.isSuccess = true,
+    this.primaryButtonText,
+    this.secondaryButtonText,
+    this.onSecondaryAction,
   });
 
   @override
@@ -285,54 +293,79 @@ class SuccessDialog extends StatelessWidget {
     return Dialog(
       backgroundColor: Colors.transparent,
       elevation: 0,
+      insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
       child: PremiumGlassOverlay(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const SizedBox(height: 16),
-            Icon(
-              Icons.stars_rounded,
-              color: Colors.amber,
-              size: 64,
-            ).animate(onPlay: (c) => c.repeat()).shimmer(duration: 2.seconds),
-            const SizedBox(height: 24),
-            Text(
-              title.toUpperCase(),
-              style: theme.textTheme.headlineSmall?.copyWith(
-                letterSpacing: 4,
-                fontWeight: FontWeight.w900,
+        borderRadius: 32,
+        child: Padding(
+          padding: const EdgeInsets.all(32.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                isSuccess ? Icons.stars_rounded : Icons.error_outline_rounded,
+                color: isSuccess ? Colors.amber : theme.colorScheme.error,
+                size: 64,
+              ).animate(onPlay: (c) => c.repeat()).shimmer(duration: 2.seconds),
+              const SizedBox(height: 24),
+              Text(
+                title.toUpperCase(),
+                style: theme.textTheme.headlineSmall?.copyWith(
+                  letterSpacing: 4,
+                  fontWeight: FontWeight.w900,
+                  color: isSuccess ? theme.colorScheme.onSurface : theme.colorScheme.error,
+                ),
+                textAlign: TextAlign.center,
               ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 16),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: List.generate(3, (index) {
-                return Icon(
-                  index < stars ? Icons.star_rounded : Icons.star_outline_rounded,
-                  color: Colors.amber,
-                  size: 40,
-                ).animate(delay: (200 * index).ms).scale(
-                      duration: 400.ms,
-                      curve: Curves.easeOutBack,
-                    );
-              }),
-            ),
-            const SizedBox(height: 24),
-            Text(
-              message,
-              style: theme.textTheme.bodyLarge?.copyWith(
-                height: 1.5,
-                color: theme.colorScheme.onSurface.withValues(alpha: 0.8),
+              if (isSuccess && stars > 0) ...[
+                const SizedBox(height: 16),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: List.generate(3, (index) {
+                    return Icon(
+                      index < stars ? Icons.star_rounded : Icons.star_outline_rounded,
+                      color: Colors.amber,
+                      size: 40,
+                    ).animate(delay: (200 * index).ms).scale(
+                          duration: 400.ms,
+                          curve: Curves.easeOutBack,
+                        );
+                  }),
+                ),
+              ],
+              const SizedBox(height: 24),
+              Text(
+                message,
+                style: theme.textTheme.bodyLarge?.copyWith(
+                  height: 1.5,
+                  color: theme.colorScheme.onSurface.withValues(alpha: 0.8),
+                ),
+                textAlign: TextAlign.center,
               ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 32),
-            PremiumPrimaryButton(
-              text: 'CONTINUE',
-              onPressed: onDone,
-            ),
-          ],
+              const SizedBox(height: 32),
+              Column(
+                children: [
+                  PremiumPrimaryButton(
+                    text: primaryButtonText ?? (isSuccess ? 'CONTINUE' : 'TRY AGAIN'),
+                    onPressed: onDone,
+                  ),
+                  if (secondaryButtonText != null && onSecondaryAction != null) ...[
+                    const SizedBox(height: 12),
+                    TextButton(
+                      onPressed: onSecondaryAction,
+                      child: Text(
+                        secondaryButtonText!,
+                        style: TextStyle(
+                          color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 1,
+                        ),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );

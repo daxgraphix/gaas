@@ -697,8 +697,12 @@ class _ChallengePuzzleScreenState extends ConsumerState<ChallengePuzzleScreen> {
       barrierDismissible: false,
       builder: (context) {
         final l10n = AppLocalizations.of(context);
-        return AlertDialog(
-          title: Text(l10n?.timesUp ?? "Time's Up!"),
+        return PremiumGlassOverlay(
+          borderRadius: 24,
+          child: AlertDialog(
+            backgroundColor: Colors.transparent,
+            elevation: 0,
+            title: Text(l10n?.timesUp ?? "Time's Up!"),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -726,7 +730,7 @@ class _ChallengePuzzleScreenState extends ConsumerState<ChallengePuzzleScreen> {
               child: Text(l10n?.tryAgain ?? 'Try Again'),
             ),
           ],
-        );
+        ));
       },
     );
   }

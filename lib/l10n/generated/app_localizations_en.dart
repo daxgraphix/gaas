@@ -279,6 +279,53 @@ class AppLocalizationsEn extends AppLocalizations {
   String get mixModeProtocol => 'Mix Mode Protocol';
 
   @override
+  String get standard => 'Standard';
+
+  @override
+  String get suddenDeath => 'Sudden Death';
+
+  @override
+  String get zen => 'Zen';
+
+  @override
+  String get timeAttack => 'Time Attack';
+
+  @override
+  String get gameMode => 'Game Mode';
+
+  @override
+  String get intensity => 'Intensity';
+
+  @override
+  String get initializeMix => 'Initialize Mix';
+
+  @override
+  String get nextSequence => 'Next Sequence';
+
+  @override
+  String get abortSession => 'ABORT SESSION';
+
+  @override
+  String get abortSessionConfirm =>
+      'Abort current session? Progress will be recorded.';
+
+  @override
+  String get modeProtocols => 'Mode Protocols';
+
+  @override
+  String get standardDesc => 'STANDARD: Classic practice mode.';
+
+  @override
+  String get suddenDeathDesc =>
+      'SUDDEN DEATH: One wrong answer ends the session.';
+
+  @override
+  String get zenDesc => 'ZEN: No timers, focus on accuracy.';
+
+  @override
+  String get timeAttackDesc => 'TIME ATTACK: Score as much as possible in 60s.';
+
+  @override
   String get coreMetrics => 'Core Metrics';
 
   @override
@@ -985,6 +1032,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get exit => 'Exit';
 
   @override
+  String get operation => 'Operation';
+
+  @override
   String get dailyRewardClaimed => 'Daily reward claimed!';
 
   @override
@@ -1023,9 +1073,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get generatingPdf => 'Generating PDF...';
-
-  @override
-  String get abortSession => 'ABORT SESSION';
 
   @override
   String get skip => 'SKIP';
@@ -1116,6 +1163,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get firstSteps => 'First Steps';
 
   @override
+  String get firstStepsDesc => 'Answer your first question correctly';
+
+  @override
   String get speedDemonTitle => 'Speed Demon';
 
   @override
@@ -1135,6 +1185,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get onFire => 'On Fire';
+
+  @override
+  String get onFireDesc => 'Get 5 correct answers in a row';
 
   @override
   String get perfectScore => 'Perfect Score';
@@ -1174,6 +1227,253 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get mathGenius => 'Math Genius';
+
+  @override
+  String get unstoppableDesc => 'Get 10 correct answers in a row';
+
+  @override
+  String get heatIndexDesc =>
+      'Maintain a Heat Index above 2.5 for an entire session';
+
+  @override
+  String get flashCalculator => 'Flash Calculator';
+
+  @override
+  String get flashCalculatorDesc =>
+      'Answer 50 questions with an average time under 2 seconds';
+
+  @override
+  String get dedicated => 'Dedicated';
+
+  @override
+  String get dedicatedDesc => 'Answer 500 questions';
+
+  @override
+  String get stargazerDesc => 'Earn your first 10 stars';
+
+  @override
+  String get centuryDesc => 'Answer 100 questions';
+
+  @override
+  String get mathGeniusDesc => 'Answer 1000 questions';
+
+  @override
+  String get perfectScoreDesc => 'Get 100% accuracy in any game';
+
+  @override
+  String get weeklyChampionDesc => 'Play for 7 days in a row';
+
+  @override
+  String get campaignMasterDesc => 'Complete all campaign levels';
+
+  @override
+  String get duelMasterDesc => 'Win 10 duel matches';
+
+  @override
+  String get legendDesc => 'Get 25 correct answers in a row';
+
+  @override
+  String get sharpMind => 'Sharp Mind';
+
+  @override
+  String sharpMindDesc(Object percentage) {
+    return 'Achieve $percentage% accuracy in any game mode';
+  }
+
+  @override
+  String get speedRun => 'Speed Run';
+
+  @override
+  String speedRunDesc(Object seconds) {
+    return 'Answer 10 questions in under $seconds seconds';
+  }
+
+  @override
+  String get committed => 'Committed';
+
+  @override
+  String get committedDesc => 'Play for 30 days in a row';
+
+  @override
+  String get masterOfOperations => 'Master of Operations';
+
+  @override
+  String get masterOfOperationsDesc => 'Use all four operations';
+
+  @override
+  String get highScorer => 'High Scorer';
+
+  @override
+  String highScorerDesc(Object points) {
+    return 'Score $points points in one game';
+  }
+
+  @override
+  String get earlyBird => 'Early Bird';
+
+  @override
+  String get earlyBirdDesc => 'Play your first game of the day before 8 AM';
+
+  @override
+  String get precisionExpert => 'Precision Expert';
+
+  @override
+  String get accuracyMaster => 'Accuracy Master';
+
+  @override
+  String get lightningFast => 'Lightning Fast';
+
+  @override
+  String lightningFastDesc(Object seconds) {
+    return 'Complete a level in under $seconds seconds';
+  }
+
+  @override
+  String get instantReaction => 'Instant Reaction';
+
+  @override
+  String get comboKing => 'Combo King';
+
+  @override
+  String comboKingDesc(Object multiplier) {
+    return 'Achieve a ${multiplier}x combo multiplier';
+  }
+
+  @override
+  String get performanceMasterDesc =>
+      'Achieve 95% accuracy with average time under 15 seconds';
+
+  @override
+  String get consistentPlayer => 'Consistent Player';
+
+  @override
+  String consistentPlayerDesc(Object count, Object percentage) {
+    return 'Maintain $percentage% accuracy over $count consecutive questions';
+  }
+
+  @override
+  String get nightOwl => 'Night Owl';
+
+  @override
+  String get nightOwlDesc => 'Play a game after 10 PM';
+
+  @override
+  String get weekendWarrior => 'Weekend Warrior';
+
+  @override
+  String get weekendWarriorDesc => 'Play on both Saturday and Sunday';
+
+  @override
+  String get firstPlace => 'First Place';
+
+  @override
+  String get firstPlaceDesc => 'Reach #1 on the leaderboard';
+
+  @override
+  String get modeExplorer => 'Mode Explorer';
+
+  @override
+  String get modeExplorerDesc => 'Play all game modes';
+
+  @override
+  String get precisionStrike => 'Precision Strike';
+
+  @override
+  String get precisionStrikeDesc => 'Complete a level with 35+ correct answers';
+
+  @override
+  String get masterLevel => 'Master Level';
+
+  @override
+  String get masterLevelDesc => 'Complete a level with 40+ correct answers';
+
+  @override
+  String get perfectLevel => 'Perfect Level';
+
+  @override
+  String get perfectLevelDesc =>
+      'Complete a level with all 45 questions correct';
+
+  @override
+  String get risingStar => 'Rising Star';
+
+  @override
+  String get risingStarDesc => 'Unlock 10 campaign levels';
+
+  @override
+  String get mathWarrior => 'Math Warrior';
+
+  @override
+  String get mathWarriorDesc => 'Unlock 25 campaign levels';
+
+  @override
+  String get campaignConqueror => 'Campaign Conqueror';
+
+  @override
+  String get campaignConquerorDesc => 'Complete all 50 campaign levels';
+
+  @override
+  String get questionMaster => 'Question Master';
+
+  @override
+  String get questionMasterDesc =>
+      'Answer 1000 questions across different categories';
+
+  @override
+  String get lightningLevel => 'Lightning Level';
+
+  @override
+  String get lightningLevelDesc =>
+      'Complete a 45-question level in under 45 seconds';
+
+  @override
+  String get consistencyMaster => 'Consistency Master';
+
+  @override
+  String get starCollector => 'Star Collector';
+
+  @override
+  String get stellarPerformer => 'Stellar Performer';
+
+  @override
+  String get stellarPerformerDesc => 'Earn 50 stars';
+
+  @override
+  String get celestialMaster => 'Celestial Master';
+
+  @override
+  String get celestialMasterDesc => 'Earn 100 stars';
+
+  @override
+  String get riddleMaster => 'Riddle Master';
+
+  @override
+  String get riddleMasterDesc => 'Complete all 30 riddle levels';
+
+  @override
+  String get hintHoarder => 'Hint Hoarder';
+
+  @override
+  String get hintHoarderDesc => 'Obtain 50 hints';
+
+  @override
+  String get gridExplorer => 'Grid Explorer';
+
+  @override
+  String get gridExplorerDesc => 'Complete 5 Cross Numbers puzzles';
+
+  @override
+  String get lightningGrid => 'Lightning Grid';
+
+  @override
+  String get lightningGridDesc =>
+      'Complete a 7x7 Cross Numbers puzzle in under 90 seconds';
+
+  @override
+  String get logicArchitect => 'Logic Architect';
+
+  @override
+  String get logicArchitectDesc => 'Complete 50 Cross Numbers puzzles';
 
   @override
   String get campaignGrinder => 'Campaign Grinder';
@@ -1336,6 +1636,64 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get intensityCritical => 'CRITICAL';
+
+  @override
+  String get totalScore => 'TOTAL SCORE';
+
+  @override
+  String xpToLevelFull(Object xp) {
+    return '$xp XP to NEXT LEVEL';
+  }
+
+  @override
+  String get achiever => 'ACHIEVER';
+
+  @override
+  String get avatarUnlocks => 'AVATAR UNLOCKS';
+
+  @override
+  String requiresLevelAndStars(Object level, Object stars) {
+    return 'Requires Level $level and $stars stars!';
+  }
+
+  @override
+  String requiresStarsToUnlock(Object stars) {
+    return 'Requires $stars stars to unlock!';
+  }
+
+  @override
+  String requiresLevelToUnlock(Object level) {
+    return 'Requires Level $level to unlock!';
+  }
+
+  @override
+  String get unlockAvatarQuestion => 'Unlock Avatar?';
+
+  @override
+  String unlockAvatarConfirm(Object cost, Object name) {
+    return 'Do you want to spend $cost points to unlock the $name avatar?';
+  }
+
+  @override
+  String get unlock => 'Unlock';
+
+  @override
+  String get rarityCommon => 'Common';
+
+  @override
+  String get rarityUncommon => 'Uncommon';
+
+  @override
+  String get rarityRare => 'Rare';
+
+  @override
+  String get rarityEpic => 'Epic';
+
+  @override
+  String get rarityLegendary => 'Legendary';
+
+  @override
+  String get rarityMythic => 'Mythic';
 
   @override
   String generatedOn(Object date) {

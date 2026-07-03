@@ -68,6 +68,7 @@ class _SyncMapState extends State<SyncMap> with TickerProviderStateMixin {
 
   Widget _buildLevelNodes(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
     final List<Widget> children = [];
     
     for (int index = 0; index < 100; index++) {
@@ -105,11 +106,13 @@ class _SyncMapState extends State<SyncMap> with TickerProviderStateMixin {
                 padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                 decoration: BoxDecoration(
                   color: isUnlocked 
-                      ? Colors.black.withValues(alpha: 0.3)
-                      : Colors.red.withValues(alpha: 0.1),
+                      ? theme.colorScheme.surface.withValues(alpha: 0.3)
+                      : theme.colorScheme.error.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(20),
                   border: Border.all(
-                    color: isUnlocked ? Colors.white10 : Colors.red.withValues(alpha: 0.3)
+                    color: isUnlocked 
+                        ? theme.colorScheme.outline.withValues(alpha: 0.1) 
+                        : theme.colorScheme.error.withValues(alpha: 0.3)
                   ),
                 ),
                 child: Column(
@@ -117,7 +120,7 @@ class _SyncMapState extends State<SyncMap> with TickerProviderStateMixin {
                     Text(
                       '${l10n.chapter} $chapterNum',
                       style: TextStyle(
-                        color: isUnlocked ? Colors.white70 : Colors.redAccent.withValues(alpha: 0.7),
+                        color: isUnlocked ? theme.colorScheme.onSurface.withValues(alpha: 0.7) : theme.colorScheme.error.withValues(alpha: 0.7),
                         fontWeight: FontWeight.w900,
                         letterSpacing: 4,
                         fontSize: 14,
@@ -129,7 +132,7 @@ class _SyncMapState extends State<SyncMap> with TickerProviderStateMixin {
                           ? l10n.chapterStarsProgress(chapterStars, 30) 
                           : l10n.lockedNeedStars(starsNeeded),
                       style: TextStyle(
-                        color: isUnlocked ? Colors.white38 : Colors.redAccent.withValues(alpha: 0.5),
+                        color: isUnlocked ? theme.colorScheme.onSurface.withValues(alpha: 0.38) : theme.colorScheme.error.withValues(alpha: 0.5),
                         fontSize: 10,
                         fontWeight: FontWeight.bold,
                         letterSpacing: 1,

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../l10n/generated/app_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'dart:async';
@@ -7,8 +8,9 @@ import '../../../core/providers.dart';
 import '../../../core/sound_manager.dart';
 import '../../../core/utils/game_flow_optimizer.dart';
 import '../../../core/game_adaptability/dynamic_difficulty_system.dart';
+import '../../../core/themes/app_themes.dart';
 import '../../../data/models/math_riddle.dart';
-import '../../../l10n/generated/app_localizations.dart';
+import '../../../shared/widgets/puzzle_widgets.dart';
 
 class MathRiddleScreen extends ConsumerStatefulWidget {
   final MathRiddleType riddleType;
@@ -317,23 +319,32 @@ class _MathRiddleScreenState extends ConsumerState<MathRiddleScreen> with Single
   Widget _buildNumpad(MathRiddleState state) {
     final theme = Theme.of(context);
     return Container(
-      color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surface,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.1),
+            blurRadius: 20,
+            offset: const Offset(0, -5),
+          ),
+        ],
+      ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
-        children: [_buildInputBar(state, theme), _buildGrid()],
+        children: [
+          const SizedBox(height: 8),
+          _buildInputBar(state, theme),
+          _buildGrid(),
+          const SizedBox(height: 16),
+        ],
       ),
     );
   }
 
   Widget _buildInputBar(MathRiddleState state, ThemeData theme) {
     return Container(
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
-        border: Border(
-          top: BorderSide(color: theme.colorScheme.outline.withValues(alpha: 0.1)),
-          bottom: BorderSide(color: theme.colorScheme.outline.withValues(alpha: 0.1)),
-        ),
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 16),
       height: 72,
       child: Row(
         children: [
@@ -367,20 +378,29 @@ class _MathRiddleScreenState extends ConsumerState<MathRiddleScreen> with Single
           ),
           Expanded(
             flex: 3,
-            child: Padding(
+            child: GlassmorphicContainer(
+              borderRadius: 16,
               padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: TextField(
-                controller: _answerController,
-                readOnly: true,
-                style: TextStyle(
-                  color: theme.colorScheme.onSurface,
-                  fontSize: 16,
-                  letterSpacing: 1,
-                ),
-                decoration: InputDecoration(
-                  hintText: 'Answer',
-                  hintStyle: TextStyle(color: theme.colorScheme.onSurface.withValues(alpha: 0.5)),
-                  border: InputBorder.none,
+              margin: const EdgeInsets.symmetric(vertical: 8),
+              backgroundColor: theme.colorScheme.onSurface.withValues(alpha: 0.05),
+              opacity: 0.1,
+              child: Center(
+                child: TextField(
+                  controller: _answerController,
+                  readOnly: true,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: theme.colorScheme.onSurface,
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 4,
+                  ),
+                  decoration: InputDecoration(
+                    hintText: '?',
+                    hintStyle: TextStyle(color: theme.colorScheme.onSurface.withValues(alpha: 0.2)),
+                    border: InputBorder.none,
+                    contentPadding: EdgeInsets.zero,
+                  ),
                 ),
               ),
             ),
@@ -396,7 +416,7 @@ class _MathRiddleScreenState extends ConsumerState<MathRiddleScreen> with Single
                 ref.read(mathRiddleProvider.notifier).selectAnswer(_answerController.text);
               }
             },
-            icon: Icon(Icons.close, color: theme.colorScheme.onSurface.withValues(alpha: 0.3), size: 18),
+            icon: Icon(Icons.backspace_outlined, color: theme.colorScheme.onSurface.withValues(alpha: 0.5), size: 20),
           ),
           IconButton(
             onPressed: () {
@@ -405,53 +425,47 @@ class _MathRiddleScreenState extends ConsumerState<MathRiddleScreen> with Single
             },
             icon: Icon(
               Icons.lightbulb_outline,
-              color: theme.colorScheme.onSurface.withValues(alpha: 0.3),
+              color: Colors.amber.withValues(alpha: 0.7),
               size: 20,
             ),
           ),
-          SizedBox(
-            width: 90,
-            child: FilledButton(
-              style: FilledButton.styleFrom(
-                backgroundColor: theme.colorScheme.primary,
-                foregroundColor: theme.colorScheme.onPrimary,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                padding: const EdgeInsets.symmetric(vertical: 14),
-              ),
-              onPressed: () {
-                HapticManager.instance.mediumImpact();
-                if (_answerController.text.isNotEmpty) {
-                  final previousCorrect = state.correctAnswers;
-                  ref.read(mathRiddleProvider.notifier).submitAnswer();
-                  final newState = ref.read(mathRiddleProvider);
-                  
-                  if (newState.isCorrect || newState.correctAnswers > previousCorrect) {
-                     // Add dynamic score
-                     final difficultyLevel = DifficultyLevel.values[((widget.difficulty - 1) ~/ 10).clamp(0, 2)];
-                     final points = GameDynamicsController.calculateDynamicScore(
-                       isCorrect: true,
-                       basePoints: state.currentRiddle?.basePoints ?? 10,
-                       currentStreak: newState.currentStreak,
-                       responseTime: state.timeSpentSeconds * 1000.0,
-                       difficulty: difficultyLevel,
-                     );
-                     ref.read(userSessionProvider.notifier).addPoints(points);
-                  } else {
-                    _showIncorrectFeedback();
-                  }
-                  _answerController.clear();
+          const SizedBox(width: 8),
+          PremiumAnimatedButton(
+            onPressed: () {
+              HapticManager.instance.mediumImpact();
+              if (_answerController.text.isNotEmpty) {
+                final previousCorrect = state.correctAnswers;
+                ref.read(mathRiddleProvider.notifier).submitAnswer();
+                final newState = ref.read(mathRiddleProvider);
+                
+                if (newState.isCorrect || newState.correctAnswers > previousCorrect) {
+                   // Add dynamic score
+                   final difficultyLevel = DifficultyLevel.values[((widget.difficulty - 1) ~/ 10).clamp(0, 2)];
+                   final points = GameDynamicsController.calculateDynamicScore(
+                     isCorrect: true,
+                     basePoints: state.currentRiddle?.basePoints ?? 10,
+                     currentStreak: newState.currentStreak,
+                     responseTime: state.timeSpentSeconds * 1000.0,
+                     difficulty: difficultyLevel,
+                   );
+                   ref.read(userSessionProvider.notifier).addPoints(points);
+                } else {
+                  _showIncorrectFeedback();
                 }
-              },
-              child: Text(
-                'ENTER',
-                style: TextStyle(
-                  color: theme.colorScheme.onPrimary,
-                  letterSpacing: 1,
-                  fontWeight: FontWeight.w600,
-                  fontSize: 12,
-                ),
+                _answerController.clear();
+              }
+            },
+            backgroundColor: theme.colorScheme.primary,
+            borderColor: theme.colorScheme.primary,
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+            borderRadius: 12,
+            child: Text(
+              'ENTER',
+              style: TextStyle(
+                color: theme.colorScheme.onPrimary,
+                letterSpacing: 1,
+                fontWeight: FontWeight.bold,
+                fontSize: 14,
               ),
             ),
           ),
@@ -463,56 +477,45 @@ class _MathRiddleScreenState extends ConsumerState<MathRiddleScreen> with Single
   Widget _buildGrid() {
     final theme = Theme.of(context);
     final keys = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0'];
-    final screenWidth = MediaQuery.of(context).size.width;
-    final crossAxisCount = screenWidth < 400 ? 4 : 5;
 
-    return GridView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: crossAxisCount,
-        childAspectRatio: 1.5,
-      ),
-      itemCount: keys.length,
-      itemBuilder: (context, index) {
-        return InkWell(
-          onTap: () {
-            HapticManager.instance.lightImpact();
-            if (_answerController.text.length < 6) {
-              _answerController.text += keys[index];
-              ref.read(mathRiddleProvider.notifier).selectAnswer(_answerController.text);
-            }
-          },
-          child: Container(
-            margin: const EdgeInsets.all(6),
-            decoration: BoxDecoration(
-              color: theme.colorScheme.surface,
-              border: Border.all(
-                color: theme.colorScheme.outline.withValues(alpha: 0.1),
-                width: 1,
-              ),
-              borderRadius: BorderRadius.circular(14),
-              boxShadow: [
-                BoxShadow(
-                  color: theme.colorScheme.shadow.withValues(alpha: 0.05),
-                  blurRadius: 6,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: GridView.builder(
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 5,
+          childAspectRatio: 1.2,
+          mainAxisSpacing: 8,
+          crossAxisSpacing: 8,
+        ),
+        itemCount: keys.length,
+        itemBuilder: (context, index) {
+          return PremiumAnimatedButton(
+            onPressed: () {
+              HapticManager.instance.lightImpact();
+              if (_answerController.text.length < 6) {
+                _answerController.text += keys[index];
+                ref.read(mathRiddleProvider.notifier).selectAnswer(_answerController.text);
+              }
+            },
+            backgroundColor: theme.colorScheme.surface,
+            borderColor: theme.colorScheme.outline.withValues(alpha: 0.1),
+            padding: EdgeInsets.zero,
+            borderRadius: 12,
             child: Center(
               child: Text(
                 keys[index],
                 style: TextStyle(
                   color: theme.colorScheme.onSurface,
-                  fontSize: (screenWidth * 0.045).clamp(14.0, 20.0),
-                  fontWeight: FontWeight.w600,
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
                 ),
               ),
             ),
-          ),
-        );
-      },
+          );
+        },
+      ),
     );
   }
 
@@ -564,86 +567,43 @@ class _MathRiddleScreenState extends ConsumerState<MathRiddleScreen> with Single
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (context) => AlertDialog(
-        backgroundColor: Theme.of(context).colorScheme.surface,
-        shape: RoundedRectangleBorder(
-          side: BorderSide(color: theme.colorScheme.outline.withValues(alpha: 0.1), width: 0.5),
-        ),
-        title: Center(
-          child: Text(
-            passed ? 'LEVEL COMPLETE' : 'NOT PASSED',
-            style: TextStyle(
-              color: passed ? theme.colorScheme.primary : theme.colorScheme.error,
-              letterSpacing: 4,
-              fontWeight: FontWeight.w100,
-              fontSize: 18,
-            ),
-          ),
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              '$correctAnswers/$totalQuestions correct',
-              style: TextStyle(
-                color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
-                fontWeight: FontWeight.w200,
+      builder: (context) => SuccessDialog(
+        title: passed ? 'LEVEL COMPLETE' : 'NOT PASSED',
+        message: passed 
+            ? '$correctAnswers/$totalQuestions correct\nNext level unlocked!'
+            : '$correctAnswers/$totalQuestions correct\nNeed 35+ correct to pass',
+        stars: passed ? (correctAnswers >= totalQuestions ? 3 : (correctAnswers >= totalQuestions * 0.8 ? 2 : 1)) : 0,
+        isSuccess: passed,
+        primaryButtonText: passed ? 'NEXT LEVEL' : 'TRY AGAIN',
+        secondaryButtonText: 'BACK',
+        onSecondaryAction: () {
+          Navigator.pop(context);
+          Navigator.pop(context);
+          ref.read(mathRiddleProvider.notifier).reset();
+        },
+        onDone: () {
+          if (passed) {
+            Navigator.pop(context);
+            ref.read(mathRiddleProvider.notifier).reset();
+            Navigator.pushReplacement(
+              context,
+              PageRouteBuilder(
+                pageBuilder: (context, animation, secondaryAnimation) =>
+                    MathRiddleScreen(
+                      riddleType: widget.riddleType,
+                      difficulty: widget.difficulty + 1,
+                      operationId: widget.operationId,
+                    ),
+                transitionsBuilder: (context, animation, secondaryAnimation, child) {
+                  return FadeTransition(opacity: animation, child: child);
+                },
               ),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              passed ? 'Next level unlocked!' : 'Need 35+ correct to pass',
-              style: TextStyle(
-                color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
-                fontSize: 12,
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              Navigator.pop(context);
-              ref.read(mathRiddleProvider.notifier).reset();
-            },
-            child: Text(
-              'BACK TO LEVELS',
-              style: TextStyle(
-                color: theme.colorScheme.onSurface.withValues(alpha: 0.3),
-                fontWeight: FontWeight.w200,
-              ),
-            ),
-          ),
-          if (passed)
-            TextButton(
-              onPressed: () {
-                Navigator.pop(context);
-                ref.read(mathRiddleProvider.notifier).reset();
-                Navigator.pushReplacement(
-                  context,
-                  PageRouteBuilder(
-                    pageBuilder: (context, animation, secondaryAnimation) =>
-                        MathRiddleScreen(
-                          riddleType: widget.riddleType,
-                          difficulty: widget.difficulty + 1,
-                          operationId: widget.operationId,
-                        ),
-                    transitionsBuilder: (context, animation, secondaryAnimation, child) {
-                      return FadeTransition(opacity: animation, child: child);
-                    },
-                  ),
-                );
-              },
-              child: Text(
-                'NEXT LEVEL',
-                style: TextStyle(
-                  color: theme.colorScheme.primary,
-                  fontWeight: FontWeight.w300,
-                ),
-              ),
-            ),
-        ],
+            );
+          } else {
+            Navigator.pop(context);
+            _loadPuzzle();
+          }
+        },
       ),
     );
   }

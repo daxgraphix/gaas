@@ -279,6 +279,53 @@ class AppLocalizationsSw extends AppLocalizations {
   String get mixModeProtocol => 'Itifaki ya Hali ya Mchanganyiko';
 
   @override
+  String get standard => 'Standard';
+
+  @override
+  String get suddenDeath => 'Sudden Death';
+
+  @override
+  String get zen => 'Zen';
+
+  @override
+  String get timeAttack => 'Time Attack';
+
+  @override
+  String get gameMode => 'Game Mode';
+
+  @override
+  String get intensity => 'Intensity';
+
+  @override
+  String get initializeMix => 'Initialize Mix';
+
+  @override
+  String get nextSequence => 'Next Sequence';
+
+  @override
+  String get abortSession => 'GHAIRI KIPINDI';
+
+  @override
+  String get abortSessionConfirm =>
+      'Abort current session? Progress will be recorded.';
+
+  @override
+  String get modeProtocols => 'Mode Protocols';
+
+  @override
+  String get standardDesc => 'STANDARD: Classic practice mode.';
+
+  @override
+  String get suddenDeathDesc =>
+      'SUDDEN DEATH: One wrong answer ends the session.';
+
+  @override
+  String get zenDesc => 'ZEN: No timers, focus on accuracy.';
+
+  @override
+  String get timeAttackDesc => 'TIME ATTACK: Score as much as possible in 60s.';
+
+  @override
   String get coreMetrics => 'Vipimo Vikuu';
 
   @override
@@ -450,7 +497,7 @@ class AppLocalizationsSw extends AppLocalizations {
   String get hotStreak => '🔥 MFULULIZO MKALI!';
 
   @override
-  String get unstoppable => '🌟 HAIWEZI KUZUIWA!';
+  String get unstoppable => 'Haiwezi Kuzuiwa!';
 
   @override
   String get keepItUp => '⚡ ENDELEA!';
@@ -986,6 +1033,9 @@ class AppLocalizationsSw extends AppLocalizations {
   String get exit => 'Toka';
 
   @override
+  String get operation => 'Operesheni';
+
+  @override
   String get dailyRewardClaimed => 'Zawadi ya kila siku imenukuliwa!';
 
   @override
@@ -1024,9 +1074,6 @@ class AppLocalizationsSw extends AppLocalizations {
 
   @override
   String get generatingPdf => 'Inaundwa PDF...';
-
-  @override
-  String get abortSession => 'GHAIRI KIPINDI';
 
   @override
   String get skip => 'RUKIA';
@@ -1119,6 +1166,9 @@ class AppLocalizationsSw extends AppLocalizations {
   String get firstSteps => 'Hatua za Mwanzo';
 
   @override
+  String get firstStepsDesc => 'Jibu swali lako la kwanza kwa usahihi';
+
+  @override
   String get speedDemonTitle => 'Shetani wa Kasi';
 
   @override
@@ -1138,6 +1188,9 @@ class AppLocalizationsSw extends AppLocalizations {
 
   @override
   String get onFire => 'Anawaka!';
+
+  @override
+  String get onFireDesc => 'Pata majibu 5 sahihi mfululizo';
 
   @override
   String get perfectScore => 'Alama Kamili';
@@ -1179,7 +1232,253 @@ class AppLocalizationsSw extends AppLocalizations {
   String get mathGenius => 'Genius wa Hesabu';
 
   @override
-  String get campaignGrinder => 'Msafiri wa Msafara';
+  String get unstoppableDesc => 'Pata majibu 10 sahihi mfululizo';
+
+  @override
+  String get heatIndexDesc =>
+      'Dumisha Kielezo cha Joto juu ya 2.5 kwa kipindi chote';
+
+  @override
+  String get flashCalculator => 'Kikokotoo cha Haraka';
+
+  @override
+  String get flashCalculatorDesc =>
+      'Jibu maswali 50 kwa wastani wa muda chini ya sekunde 2';
+
+  @override
+  String get dedicated => 'Aliyejitolea';
+
+  @override
+  String get dedicatedDesc => 'Jibu maswali 500';
+
+  @override
+  String get stargazerDesc => 'Pata nyota zako 10 za kwanza';
+
+  @override
+  String get centuryDesc => 'Jibu maswali 100';
+
+  @override
+  String get mathGeniusDesc => 'Jibu maswali 1000';
+
+  @override
+  String get perfectScoreDesc => 'Pata usahihi wa 100% katika mchezo wowote';
+
+  @override
+  String get weeklyChampionDesc => 'Cheza kwa siku 7 mfululizo';
+
+  @override
+  String get campaignMasterDesc => 'Kamilisha ngazi zote za kampeni';
+
+  @override
+  String get duelMasterDesc => 'Shinda mechi 10 za pambano';
+
+  @override
+  String get legendDesc => 'Pata majibu 25 sahihi mfululizo';
+
+  @override
+  String get sharpMind => 'Akili Kali';
+
+  @override
+  String sharpMindDesc(Object percentage) {
+    return 'Fikia usahihi wa $percentage% katika hali yoyote ya mchezo';
+  }
+
+  @override
+  String get speedRun => 'Mbio za Kasi';
+
+  @override
+  String speedRunDesc(Object seconds) {
+    return 'Jibu maswali 10 chini ya sekunde $seconds';
+  }
+
+  @override
+  String get committed => 'Aliyejitolea';
+
+  @override
+  String get committedDesc => 'Cheza kwa siku 30 mfululizo';
+
+  @override
+  String get masterOfOperations => 'Mwalimu wa Operesheni';
+
+  @override
+  String get masterOfOperationsDesc => 'Tumia operesheni zote nne';
+
+  @override
+  String get highScorer => 'Mfungaji Bora';
+
+  @override
+  String highScorerDesc(Object points) {
+    return 'Pata pointi $points katika mchezo mmoja';
+  }
+
+  @override
+  String get earlyBird => 'Ndege wa Mapema';
+
+  @override
+  String get earlyBirdDesc =>
+      'Cheza mchezo wako wa kwanza wa siku kabla ya saa 2 asubuhi';
+
+  @override
+  String get precisionExpert => 'Mtaalamu wa Usahihi';
+
+  @override
+  String get accuracyMaster => 'Mwalimu wa Usahihi';
+
+  @override
+  String get lightningFast => 'Kasi ya Umeme';
+
+  @override
+  String lightningFastDesc(Object seconds) {
+    return 'Kamilisha ngazi chini ya sekunde $seconds';
+  }
+
+  @override
+  String get instantReaction => 'Mwitikio wa Papo hapo';
+
+  @override
+  String get comboKing => 'Mfalme wa Combo';
+
+  @override
+  String comboKingDesc(Object multiplier) {
+    return 'Fikia kizidishio cha combo cha ${multiplier}x';
+  }
+
+  @override
+  String get performanceMasterDesc =>
+      'Fikia usahihi wa 95% na wastani wa muda chini ya sekunde 15';
+
+  @override
+  String get consistentPlayer => 'Mchezaji Thabiti';
+
+  @override
+  String consistentPlayerDesc(Object count, Object percentage) {
+    return 'Dumisha usahihi wa $percentage% kwa maswali $count mfululizo';
+  }
+
+  @override
+  String get nightOwl => 'Bundi wa Usiku';
+
+  @override
+  String get nightOwlDesc => 'Cheza mchezo baada ya saa 4 usiku';
+
+  @override
+  String get weekendWarrior => 'Shujaa wa Wikiendi';
+
+  @override
+  String get weekendWarriorDesc => 'Cheza Jumamosi na Jumapili';
+
+  @override
+  String get firstPlace => 'Nafasi ya Kwanza';
+
+  @override
+  String get firstPlaceDesc => 'Fikia nafasi ya #1 kwenye ubao wa wanaoongoza';
+
+  @override
+  String get modeExplorer => 'Mvumbuzi wa Njia';
+
+  @override
+  String get modeExplorerDesc => 'Cheza njia zote za mchezo';
+
+  @override
+  String get precisionStrike => 'Shambulio la Usahihi';
+
+  @override
+  String get precisionStrikeDesc => 'Kamilisha ngazi yenye majibu 35+ sahihi';
+
+  @override
+  String get masterLevel => 'Ngazi ya Ustadi';
+
+  @override
+  String get masterLevelDesc => 'Kamilisha ngazi yenye majibu 40+ sahihi';
+
+  @override
+  String get perfectLevel => 'Ngazi Kamilifu';
+
+  @override
+  String get perfectLevelDesc => 'Kamilisha ngazi yenye maswali yote 45 sahihi';
+
+  @override
+  String get risingStar => 'Nyota Inayochomoza';
+
+  @override
+  String get risingStarDesc => 'Fungua ngazi 10 za kampeni';
+
+  @override
+  String get mathWarrior => 'Shujaa wa Hesabu';
+
+  @override
+  String get mathWarriorDesc => 'Fungua ngazi 25 za kampeni';
+
+  @override
+  String get campaignConqueror => 'Mshindi wa Kampeni';
+
+  @override
+  String get campaignConquerorDesc => 'Kamilisha ngazi zote 50 za kampeni';
+
+  @override
+  String get questionMaster => 'Mwalimu wa Maswali';
+
+  @override
+  String get questionMasterDesc => 'Jibu maswali 1000 katika kategoria tofauti';
+
+  @override
+  String get lightningLevel => 'Ngazi ya Umeme';
+
+  @override
+  String get lightningLevelDesc =>
+      'Kamilisha ngazi ya maswali 45 chini ya sekunde 45';
+
+  @override
+  String get consistencyMaster => 'Mwalimu wa Uthabiti';
+
+  @override
+  String get starCollector => 'Mkusanyaji wa Nyota';
+
+  @override
+  String get stellarPerformer => 'Mtendaji Bora';
+
+  @override
+  String get stellarPerformerDesc => 'Pata nyota 50';
+
+  @override
+  String get celestialMaster => 'Mwalimu wa Mbinguni';
+
+  @override
+  String get celestialMasterDesc => 'Pata nyota 100';
+
+  @override
+  String get riddleMaster => 'Mwalimu wa Vitendawili';
+
+  @override
+  String get riddleMasterDesc => 'Kamilisha ngazi zote 30 za vitendawili';
+
+  @override
+  String get hintHoarder => 'Mkusanyaji wa Vidokezo';
+
+  @override
+  String get hintHoarderDesc => 'Pata vidokezo 50';
+
+  @override
+  String get gridExplorer => 'Mvumbuzi wa Gridi';
+
+  @override
+  String get gridExplorerDesc => 'Kamilisha mafumbo 5 ya Nambari Mtambuka';
+
+  @override
+  String get lightningGrid => 'Gridi ya Umeme';
+
+  @override
+  String get lightningGridDesc =>
+      'Kamilisha fumbo la 7x7 la Nambari Mtambuka chini ya sekunde 90';
+
+  @override
+  String get logicArchitect => 'Mbunifu wa Mantiki';
+
+  @override
+  String get logicArchitectDesc => 'Kamilisha mafumbo 50 ya Nambari Mtambuka';
+
+  @override
+  String get campaignGrinder => 'Mshiriki wa Kampeni';
 
   @override
   String get duelMaster => 'Bingwa wa Pambano';
@@ -1339,6 +1638,64 @@ class AppLocalizationsSw extends AppLocalizations {
 
   @override
   String get intensityCritical => 'HATARI';
+
+  @override
+  String get totalScore => 'JUMLA YA ALAMA';
+
+  @override
+  String xpToLevelFull(Object xp) {
+    return '$xp XP hadi NGAZI INAYOFUATA';
+  }
+
+  @override
+  String get achiever => 'MFIKIAJI';
+
+  @override
+  String get avatarUnlocks => 'UFUNGUAJI WA AVATAR';
+
+  @override
+  String requiresLevelAndStars(Object level, Object stars) {
+    return 'Inahitaji Ngazi ya $level na nyota $stars!';
+  }
+
+  @override
+  String requiresStarsToUnlock(Object stars) {
+    return 'Inahitaji nyota $stars ili kufungua!';
+  }
+
+  @override
+  String requiresLevelToUnlock(Object level) {
+    return 'Inahitaji Ngazi ya $level ili kufungua!';
+  }
+
+  @override
+  String get unlockAvatarQuestion => 'Fungua Avatar?';
+
+  @override
+  String unlockAvatarConfirm(Object cost, Object name) {
+    return 'Je, unataka kutumia pointi $cost kufungua avatar ya $name?';
+  }
+
+  @override
+  String get unlock => 'Fungua';
+
+  @override
+  String get rarityCommon => 'Kawaida';
+
+  @override
+  String get rarityUncommon => 'Si ya Kawaida';
+
+  @override
+  String get rarityRare => 'Adimu';
+
+  @override
+  String get rarityEpic => 'Epic';
+
+  @override
+  String get rarityLegendary => 'Hadithi';
+
+  @override
+  String get rarityMythic => 'Mythic';
 
   @override
   String generatedOn(Object date) {

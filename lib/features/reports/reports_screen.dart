@@ -94,25 +94,23 @@ class ReportsScreen extends ConsumerWidget {
         onPressed: () => Navigator.pop(context),
       ) : null,
       actions: [
-        IconButton(
-          icon: Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: theme.colorScheme.surface.withValues(alpha: 0.8),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: theme.colorScheme.outline.withValues(alpha: 0.3),
-                width: 1,
+        Padding(
+          padding: const EdgeInsets.only(right: 12.0),
+          child: GlassmorphicContainer(
+            borderRadius: 12,
+            padding: EdgeInsets.zero,
+            opacity: 0.1,
+            overflowProtected: false,
+            child: IconButton(
+              icon: Icon(
+                Icons.more_vert,
+                size: 20,
+                color: theme.colorScheme.primary,
               ),
-            ),
-            child: Icon(
-              Icons.more_vert,
-              size: 16,
-              color: theme.colorScheme.primary,
+              onPressed: () => _showExportOptions(context, ref, l10n),
+              tooltip: l10n.exportOptions,
             ),
           ),
-          onPressed: () => _showExportOptions(context, ref, l10n),
-          tooltip: l10n.exportOptions,
         ),
       ],
     );
@@ -193,11 +191,11 @@ class ReportsScreen extends ConsumerWidget {
   Widget _buildStatCard(String title, String value, IconData icon, Color color, ThemeData theme) {
     return PremiumCard(
       padding: const EdgeInsets.all(16),
-      borderColor: color.withValues(alpha: 0.2),
+      borderColor: color.withValues(alpha: 0.3),
       child: Column(
         children: [
-          Icon(icon, color: color, size: 24),
-          const SizedBox(height: 8),
+          Icon(icon, color: color, size: 28),
+          const SizedBox(height: 12),
           Text(
             value,
             style: theme.textTheme.headlineSmall?.copyWith(
@@ -209,7 +207,7 @@ class ReportsScreen extends ConsumerWidget {
           Text(
             title,
             style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
             ),
             textAlign: TextAlign.center,
           ),
@@ -284,6 +282,12 @@ class ReportsScreen extends ConsumerWidget {
                             localizedMode = l10n.practice;
                           } else if (mode.toLowerCase() == 'campaign') {
                             localizedMode = l10n.campaign;
+                          } else if (mode.toLowerCase() == 'mathriddles') {
+                            localizedMode = l10n.mathRiddles;
+                          } else if (mode.toLowerCase() == 'cross_numbers' || mode.toLowerCase() == 'crossnumbers') {
+                            localizedMode = l10n.crossNumbers;
+                          } else if (mode.toLowerCase() == 'custommix') {
+                            localizedMode = l10n.customMix;
                           }
                           
                           return PopupMenuItem(
@@ -319,7 +323,7 @@ class ReportsScreen extends ConsumerWidget {
                     const SizedBox(height: 16),
                     _buildAccuracyChart(displayTrends, theme, l10n),
                     const SizedBox(height: 20),
-                    const Divider(height: 1, color: Colors.white10),
+                    Divider(height: 1, color: theme.colorScheme.outline.withValues(alpha: 0.1)),
                     const SizedBox(height: 20),
                     Text(
                       l10n.engineIntensity,
@@ -340,7 +344,7 @@ class ReportsScreen extends ConsumerWidget {
                     const SizedBox(height: 16),
                     _buildHeatTrendChart(displayTrends, theme, l10n),
                     const SizedBox(height: 20),
-                    const Divider(height: 1, color: Colors.white10),
+                    Divider(height: 1, color: theme.colorScheme.outline.withValues(alpha: 0.1)),
                     const SizedBox(height: 20),
                     Text(
                       l10n.realTimeStats,
@@ -383,7 +387,7 @@ class ReportsScreen extends ConsumerWidget {
         Text(
           label,
           style: theme.textTheme.bodySmall?.copyWith(
-            color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+            color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
             fontSize: 10,
           ),
         ),
@@ -407,7 +411,8 @@ class ReportsScreen extends ConsumerWidget {
           borderData: FlBorderData(show: false),
           lineTouchData: LineTouchData(
             touchTooltipData: LineTouchTooltipData(
-              getTooltipColor: (touchedSpot) => theme.colorScheme.surface.withValues(alpha: 0.9),
+              getTooltipColor: (touchedSpot) => theme.colorScheme.surface.withValues(alpha: 0.95),
+              tooltipBorder: BorderSide(color: theme.colorScheme.primary.withValues(alpha: 0.2)),
               getTooltipItems: (List<LineBarSpot> touchedBarSpots) {
                 return touchedBarSpots.map((barSpot) {
                   final index = barSpot.x.toInt();
@@ -483,7 +488,8 @@ class ReportsScreen extends ConsumerWidget {
           borderData: FlBorderData(show: false),
           lineTouchData: LineTouchData(
             touchTooltipData: LineTouchTooltipData(
-              getTooltipColor: (touchedSpot) => theme.colorScheme.surface.withValues(alpha: 0.9),
+              getTooltipColor: (touchedSpot) => theme.colorScheme.surface.withValues(alpha: 0.95),
+              tooltipBorder: BorderSide(color: theme.colorScheme.error.withValues(alpha: 0.2)),
               getTooltipItems: (List<LineBarSpot> touchedBarSpots) {
                 return touchedBarSpots.map((barSpot) {
                   final index = barSpot.x.toInt();
@@ -568,7 +574,7 @@ class ReportsScreen extends ConsumerWidget {
         Text(
           label,
           style: theme.textTheme.bodySmall?.copyWith(
-            color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+            color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
           ),
         ),
       ],
@@ -635,7 +641,7 @@ class ReportsScreen extends ConsumerWidget {
                               ),
                               Row(
                                 children: [
-                                  Icon(Icons.star_rounded, size: 16, color: Colors.amber),
+                                  Icon(Icons.star_rounded, size: 16, color: theme.colorScheme.primary),
                                   const SizedBox(width: 4),
                                   Text(
                                     '$totalStarsEarned',
@@ -647,13 +653,15 @@ class ReportsScreen extends ConsumerWidget {
                                   const SizedBox(width: 12),
                                   Text(
                                     '$completed/${levels.length}',
-                                    style: theme.textTheme.bodySmall,
+                                    style: theme.textTheme.bodySmall?.copyWith(
+                                      color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                                    ),
                                   ),
                                   const SizedBox(width: 8),
                                   Text(
                                     '($unlocked ${l10n.unlocked})',
                                     style: theme.textTheme.labelSmall?.copyWith(
-                                      color: theme.colorScheme.onSurfaceVariant,
+                                      color: theme.colorScheme.primary.withValues(alpha: 0.7),
                                     ),
                                   ),
                                 ],
@@ -673,7 +681,7 @@ class ReportsScreen extends ConsumerWidget {
                       ),
                     ],
                     const SizedBox(height: 16),
-                    Divider(height: 1, color: theme.colorScheme.outline.withValues(alpha: 0.1)),
+                    Divider(height: 1, color: theme.colorScheme.outline.withValues(alpha: 0.05)),
                     const SizedBox(height: 16),
                     Text(
                       l10n.gameModeDistribution,
@@ -702,6 +710,10 @@ class ReportsScreen extends ConsumerWidget {
                         localizedMode = l10n.practice;
                       } else if (mode.toLowerCase() == 'campaign') {
                         localizedMode = l10n.campaign;
+                      } else if (mode.toLowerCase() == 'mathriddles') {
+                        localizedMode = l10n.mathRiddles;
+                      } else if (mode.toLowerCase() == 'cross_numbers' || mode.toLowerCase() == 'crossnumbers') {
+                        localizedMode = l10n.crossNumbers;
                       }
                       
                       return Padding(
@@ -713,7 +725,7 @@ class ReportsScreen extends ConsumerWidget {
                             Text(
                               '$count ${l10n.sessions}',
                               style: theme.textTheme.bodyMedium?.copyWith(
-                                color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+                                color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
                               ),
                             ),
                           ],
@@ -819,7 +831,7 @@ class ReportsScreen extends ConsumerWidget {
               width: 40,
               height: 4,
               decoration: BoxDecoration(
-                color: theme.colorScheme.onSurface.withValues(alpha: 0.2),
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -969,7 +981,7 @@ class ReportsScreen extends ConsumerWidget {
                 borderRadius: BorderRadius.circular(16),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.5),
+                    color: Theme.of(context).shadowColor.withValues(alpha: 0.5),
                     blurRadius: 20,
                   ),
                 ],

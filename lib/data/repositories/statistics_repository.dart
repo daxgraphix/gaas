@@ -77,6 +77,11 @@ class StatisticsRepository {
     // Update mode usage
     if (mode != null) {
       stats.modeUsage[mode] = (stats.modeUsage[mode] ?? 0) + 1;
+      
+      // Update per-mode high scores
+      if (score > (stats.highScoresByMode[mode] ?? 0)) {
+        stats.highScoresByMode[mode] = score;
+      }
     }
 
     // Update level completion if it's a "win"

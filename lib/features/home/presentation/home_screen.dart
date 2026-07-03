@@ -317,8 +317,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
               operation: lastOp,
               level: lastLevel,
             );
-            _navigateToScreen(const CampaignScreen()); // Or directly to GameScreen if possible
+            _navigateToScreen(const CampaignScreen());
+          } else if (lastMode == 'arcade') {
+            _navigateToScreen(const ArcadeScreen());
+          } else if (lastMode == 'practice') {
+            _navigateToScreen(const PracticeScreen());
+          } else if (lastMode == 'mathriddles') {
+            _navigateToScreen(const MathRiddleLevelSelectionScreen());
+          } else if (lastMode == 'crossnumbers') {
+            _navigateToScreen(const CrossNumbersLevelSelectionScreen());
           } else {
+            // Default fallback
             _navigateToScreen(const CampaignScreen());
           }
         }

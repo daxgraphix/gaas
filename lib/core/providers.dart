@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -1103,6 +1104,12 @@ class PerformanceTrendsNotifier extends StateNotifier<PerformanceTrends> {
     // Use operation name as the primary tag to allow granular filtering in reports
     // Fallback to mode name if operation is not available
     String? modeTag = activeGame?.operation ?? activeGame?.mode.name;
+    
+    // Check if Custom Mix is active
+    final customMix = ref.read(customMixArithmeticProvider);
+    if (customMix.isActive || (customMix.isFinished && modeTag == null)) {
+      modeTag = 'customMix';
+    }
 
     final dataPoint = PerformanceDataPoint(
       timestamp: DateTime.now(),
@@ -1801,6 +1808,7 @@ class CrossNumbersState {
   final int totalQuestions;
   final bool isLevelFinished;
   final String gridStyle;
+  final Set<int> satisfiedEquations;
 
   CrossNumbersState({
     this.allPuzzles = const [],
@@ -1816,6 +1824,7 @@ class CrossNumbersState {
     this.totalQuestions = 7,
     this.isLevelFinished = false,
     this.gridStyle = 'Classic',
+    this.satisfiedEquations = const {},
   });
 
   CrossNumbersState copyWith({
@@ -1832,6 +1841,7 @@ class CrossNumbersState {
     int? totalQuestions,
     bool? isLevelFinished,
     String? gridStyle,
+    Set<int>? satisfiedEquations,
   }) {
     return CrossNumbersState(
       allPuzzles: allPuzzles ?? this.allPuzzles,
@@ -1847,6 +1857,7 @@ class CrossNumbersState {
       totalQuestions: totalQuestions ?? this.totalQuestions,
       isLevelFinished: isLevelFinished ?? this.isLevelFinished,
       gridStyle: gridStyle ?? this.gridStyle,
+      satisfiedEquations: satisfiedEquations ?? this.satisfiedEquations,
     );
   }
 }
@@ -1858,29 +1869,84 @@ class CrossNumbersNotifier extends StateNotifier<CrossNumbersState> {
   void initLevel(int level) {
     int totalQuestions = 7 + (level ~/ 10);
     
-    // Pre-generate all puzzles for the level
-    final List<CrossNumbersPuzzle> puzzles = [];
-    for (int i = 0; i < totalQuestions; i++) {
-      String style = _getGridStyle(level, i + 1);
-      puzzles.add(CrossNumbersEngine.generatePuzzle(
-        difficulty: level,
-        style: style,
-      ));
-    }
+    // Generate ONLY the first puzzle immediately to avoid blocking UI
+    String style = _getGridStyle(level, 1);
+    if (level % 10 == 0) style = 'Chaos';
+
+    final firstPuzzle = CrossNumbersEngine.generatePuzzle(
+      difficulty: level,
+      style: style,
+    );
 
     state = CrossNumbersState(
-      allPuzzles: puzzles,
-      puzzle: puzzles.isNotEmpty ? puzzles[0] : null,
+      allPuzzles: [firstPuzzle],
+      puzzle: firstPuzzle,
       totalQuestions: totalQuestions,
       currentQuestionIndex: 1,
       correctQuestions: 0,
       isLevelFinished: false,
-      gridStyle: puzzles.isNotEmpty ? _getGridStyle(level, 1) : 'Classic',
+      gridStyle: style,
+      satisfiedEquations: _getSatisfiedEquations(firstPuzzle),
     );
+
+    // Start pre-generating the next puzzle in the background
+    _preGenerateNextPuzzle();
+  }
+
+  Set<int> _getSatisfiedEquations(CrossNumbersPuzzle puzzle) {
+    final satisfied = <int>{};
+    for (int i = 0; i < puzzle.equations.length; i++) {
+      if (puzzle.equations[i].isSatisfied(puzzle.grid)) {
+        satisfied.add(i);
+      }
+    }
+    return satisfied;
+  }
+
+  void _preGenerateNextPuzzle() {
+    if (state.allPuzzles.length >= state.totalQuestions) return;
+    
+    // Use a microtask to avoid blocking the current execution flow
+    Future.microtask(() {
+      if (state.allPuzzles.length < state.totalQuestions) {
+        final currentLevel = state.allPuzzles[0].difficulty;
+        final nextIndex = state.allPuzzles.length;
+        String style = _getGridStyle(currentLevel, nextIndex + 1);
+        if (currentLevel % 10 == 0) style = 'Chaos';
+        
+        final nextPuzzle = CrossNumbersEngine.generatePuzzle(
+          difficulty: currentLevel,
+          style: style,
+        );
+        
+        if (mounted) {
+          state = state.copyWith(
+            allPuzzles: [...state.allPuzzles, nextPuzzle],
+          );
+        }
+      }
+    });
   }
 
   void _loadPuzzleAt(int index) {
-    if (index < 0 || index >= state.allPuzzles.length) return;
+    if (index < 0 || index >= state.totalQuestions) return;
+    
+    // If we haven't generated this puzzle yet, generate it now (safety fallback)
+    if (index >= state.allPuzzles.length) {
+      final currentLevel = state.allPuzzles[0].difficulty;
+      final newPuzzles = List<CrossNumbersPuzzle>.from(state.allPuzzles);
+      
+      while (newPuzzles.length <= index) {
+        String style = _getGridStyle(currentLevel, newPuzzles.length + 1);
+        if (currentLevel % 10 == 0) style = 'Chaos';
+        
+        newPuzzles.add(CrossNumbersEngine.generatePuzzle(
+          difficulty: currentLevel,
+          style: style,
+        ));
+      }
+      state = state.copyWith(allPuzzles: newPuzzles);
+    }
     
     final puzzle = state.allPuzzles[index];
     state = state.copyWith(
@@ -1889,7 +1955,11 @@ class CrossNumbersNotifier extends StateNotifier<CrossNumbersState> {
       gridStyle: _getGridStyle(puzzle.difficulty, index + 1),
       selectedRow: null,
       selectedCol: null,
+      satisfiedEquations: _getSatisfiedEquations(puzzle),
     );
+
+    // Try to pre-generate the one AFTER this one
+    _preGenerateNextPuzzle();
   }
 
 
@@ -1897,9 +1967,10 @@ class CrossNumbersNotifier extends StateNotifier<CrossNumbersState> {
   String _getGridStyle(int level, int questionIndex) {
     if (level < 5) return 'Classic';
     final styles = ['Classic', 'Dense', 'Symmetry', 'Chaos'];
-    // More complex styles as level increases
-    int styleCount = min(styles.length, (level ~/ 5) + 1);
-    return styles[(questionIndex + level) % styleCount];
+    // Difficulty thresholds for different styles
+    if (level >= 30) return styles[(questionIndex + level) % 4]; // All styles
+    if (level >= 15) return styles[(questionIndex + level) % 3]; // Classic, Dense, Symmetry
+    return styles[(questionIndex + level) % 2]; // Classic, Dense
   }
 
   void selectCell(int r, int c) {
@@ -1955,13 +2026,20 @@ class CrossNumbersNotifier extends StateNotifier<CrossNumbersState> {
         id: state.puzzle!.id,
         gridSize: state.puzzle!.gridSize,
         grid: newGrid,
+        equations: state.puzzle!.equations,
         difficulty: state.puzzle!.difficulty,
       );
       
+      final newSatisfied = _getSatisfiedEquations(newPuzzle);
+      if (newSatisfied.length > state.satisfiedEquations.length) {
+        ref.read(soundManagerProvider).playEffect('correct');
+      }
+
       state = state.copyWith(
         puzzle: newPuzzle,
-        isComplete: newPuzzle.isComplete && newPuzzle.isAllCorrect,
+        isComplete: newPuzzle.isComplete,
         isNewSelection: nextIsNewSelection,
+        satisfiedEquations: newSatisfied,
       );
     }
   }
@@ -1991,6 +2069,26 @@ class CrossNumbersNotifier extends StateNotifier<CrossNumbersState> {
     ref.read(dynamicDifficultyProvider.notifier).recordAssessment(isCorrect: isCorrect);
 
     if (nextIndex > state.totalQuestions) {
+      // Calculate stars based on performance
+      final accuracy = newCorrectCount / state.totalQuestions;
+      int stars = 0;
+      if (accuracy >= 0.95) {
+        stars = 3;
+      } else if (accuracy >= 0.8) {
+        stars = 2;
+      } else if (accuracy >= 0.6) {
+        stars = 1;
+      }
+
+      // Save level progress
+      final currentLevel = state.allPuzzles.isNotEmpty ? state.allPuzzles[0].difficulty : 1;
+      ref.read(levelProgressRepositoryProvider).updateStars(
+        'cross_numbers',
+        currentLevel,
+        stars,
+        newCorrectCount,
+      );
+
       state = state.copyWith(
         correctQuestions: newCorrectCount,
         isLevelFinished: true,
@@ -2005,36 +2103,40 @@ class CrossNumbersNotifier extends StateNotifier<CrossNumbersState> {
   }
 
 
+  void incrementTime() {
+    if (state.puzzle != null && !state.isLevelFinished) {
+      state = state.copyWith(elapsedSeconds: state.elapsedSeconds + 1);
+    }
+  }
+
   void useHint() {
-    if (state.puzzle == null || state.isComplete) return;
-
+    if (state.puzzle == null || state.isLevelFinished) return;
+    
+    // Check points
     final user = ref.read(userSessionProvider);
-    if (user == null || user.totalPoints < hintCostPoints) return;
+    if ((user?.totalPoints ?? 0) < 50) return;
 
-    // Find all incorrect or empty editable cells
-    final emptyCells = <Point<int>>[];
-    for (int r = 0; r < state.puzzle!.gridSize; r++) {
-      for (int c = 0; c < state.puzzle!.gridSize; c++) {
-        final cell = state.puzzle!.grid[r][c];
+    // Find a random editable cell that is either empty or incorrect
+    final editableCells = <CrossNumbersCell>[];
+    for (var row in state.puzzle!.grid) {
+      for (var cell in row) {
         if (cell.isUserEditable && (cell.userValue.isEmpty || cell.userValue != cell.value)) {
-          emptyCells.add(Point(r, c));
+          editableCells.add(cell);
         }
       }
     }
 
-    if (emptyCells.isEmpty) return;
+    if (editableCells.isEmpty) return;
 
-    // Select a random cell to reveal
-    final random = Random();
-    final target = emptyCells[random.nextInt(emptyCells.length)];
+    final target = editableCells[Random().nextInt(editableCells.length)];
     
+    // Create new grid with revealed hint
     final newGrid = List<List<CrossNumbersCell>>.from(
       state.puzzle!.grid.map((row) => List<CrossNumbersCell>.from(row))
     );
     
-    final cell = newGrid[target.x][target.y];
-    newGrid[target.x][target.y] = cell.copyWith(
-      userValue: cell.value,
+    newGrid[target.row][target.col] = newGrid[target.row][target.col].copyWith(
+      userValue: target.value,
       isRevealed: true,
     );
 
@@ -2042,23 +2144,19 @@ class CrossNumbersNotifier extends StateNotifier<CrossNumbersState> {
       id: state.puzzle!.id,
       gridSize: state.puzzle!.gridSize,
       grid: newGrid,
+      equations: state.puzzle!.equations,
       difficulty: state.puzzle!.difficulty,
     );
-
-    ref.read(userSessionProvider.notifier).addPoints(-hintCostPoints);
-    ref.read(soundManagerProvider).playEffect('hint');
-
+    
     state = state.copyWith(
       puzzle: newPuzzle,
+      isComplete: newPuzzle.isComplete,
       hintsUsed: state.hintsUsed + 1,
-      isComplete: newPuzzle.isComplete && newPuzzle.isAllCorrect,
+      satisfiedEquations: _getSatisfiedEquations(newPuzzle),
     );
-  }
 
-  void incrementTime() {
-    if (!state.isLevelFinished && state.puzzle != null) {
-      state = state.copyWith(elapsedSeconds: state.elapsedSeconds + 1);
-    }
+    ref.read(userSessionProvider.notifier).addPoints(-50);
+    ref.read(soundManagerProvider).playEffect('hint');
   }
 
   void resetLevel() {
@@ -2483,6 +2581,7 @@ class ChallengeModeNotifier extends StateNotifier<ChallengeModeState> {
     : super(
         ChallengeModeState(
           leaderboard: {
+            'You': 0,
             'Player1': 950,
             'Player2': 875,
             'Player3': 820,
@@ -2531,11 +2630,23 @@ class ChallengeModeNotifier extends StateNotifier<ChallengeModeState> {
 
   void endChallenge() {
     state = state.copyWith(isComplete: true, isActive: false);
+    
+    // Update leaderboard with user's score if it's a high score
+    final currentScore = state.score;
+    if (currentScore > 0) {
+      final newLeaderboard = Map<String, int>.from(state.leaderboard);
+      final userScore = newLeaderboard['You'] ?? 0;
+      if (currentScore > userScore) {
+        newLeaderboard['You'] = currentScore;
+        state = state.copyWith(leaderboard: newLeaderboard);
+      }
+    }
   }
 
   void reset() {
     state = ChallengeModeState(
       leaderboard: {
+        'You': state.leaderboard['You'] ?? 0,
         'Player1': 950,
         'Player2': 875,
         'Player3': 820,
@@ -2887,8 +2998,11 @@ class CustomLevelNotifier extends StateNotifier<CustomLevelState> {
   }
 }
 
+enum CustomMixMode { standard, suddenDeath, zen, timeAttack }
+
 class CustomMixArithmeticState {
   final bool isActive;
+  final bool isFinished;
   final List<ArithmeticOperation> selectedOperations;
   final int selectedDifficulty;
   final MathRiddle? currentQuestion;
@@ -2902,9 +3016,17 @@ class CustomMixArithmeticState {
   final String? reactionMessage;
   final bool questionAnswered;
   final DateTime? sessionStartTime;
+  final CustomMixMode mode;
+  final int timeLimit; // seconds, 0 for no limit
+  final int remainingTime;
+  final int targetQuestions; // 0 for unlimited
+  final bool isPaused;
+  final double averageResponseTime;
+  final List<double> responseTimes;
 
   CustomMixArithmeticState({
     this.isActive = false,
+    this.isFinished = false,
     this.selectedOperations = const [],
     this.selectedDifficulty = 1,
     this.currentQuestion,
@@ -2918,10 +3040,18 @@ class CustomMixArithmeticState {
     this.reactionMessage,
     this.questionAnswered = false,
     this.sessionStartTime,
+    this.mode = CustomMixMode.standard,
+    this.timeLimit = 0,
+    this.remainingTime = 0,
+    this.targetQuestions = 0,
+    this.isPaused = false,
+    this.averageResponseTime = 0.0,
+    this.responseTimes = const [],
   });
 
   CustomMixArithmeticState copyWith({
     bool? isActive,
+    bool? isFinished,
     List<ArithmeticOperation>? selectedOperations,
     int? selectedDifficulty,
     MathRiddle? currentQuestion,
@@ -2935,9 +3065,17 @@ class CustomMixArithmeticState {
     String? reactionMessage,
     bool? questionAnswered,
     DateTime? sessionStartTime,
+    CustomMixMode? mode,
+    int? timeLimit,
+    int? remainingTime,
+    int? targetQuestions,
+    bool? isPaused,
+    double? averageResponseTime,
+    List<double>? responseTimes,
   }) {
     return CustomMixArithmeticState(
       isActive: isActive ?? this.isActive,
+      isFinished: isFinished ?? this.isFinished,
       selectedOperations: selectedOperations ?? this.selectedOperations,
       selectedDifficulty: selectedDifficulty ?? this.selectedDifficulty,
       currentQuestion: currentQuestion ?? this.currentQuestion,
@@ -2951,15 +3089,24 @@ class CustomMixArithmeticState {
       reactionMessage: reactionMessage ?? this.reactionMessage,
       questionAnswered: questionAnswered ?? this.questionAnswered,
       sessionStartTime: sessionStartTime ?? this.sessionStartTime,
+      mode: mode ?? this.mode,
+      timeLimit: timeLimit ?? this.timeLimit,
+      remainingTime: remainingTime ?? this.remainingTime,
+      targetQuestions: targetQuestions ?? this.targetQuestions,
+      isPaused: isPaused ?? this.isPaused,
+      averageResponseTime: averageResponseTime ?? this.averageResponseTime,
+      responseTimes: responseTimes ?? this.responseTimes,
     );
   }
 }
 
 class CustomMixArithmeticNotifier extends StateNotifier<CustomMixArithmeticState> {
-  final Ref ref;
+  final Ref _ref;
   final Random _random = Random();
+  Timer? _timer;
+  DateTime? _questionStartTime;
 
-  CustomMixArithmeticNotifier(this.ref) : super(CustomMixArithmeticState());
+  CustomMixArithmeticNotifier(this._ref) : super(CustomMixArithmeticState());
 
   void toggleOperation(ArithmeticOperation operation) {
     final newOps = List<ArithmeticOperation>.from(state.selectedOperations);
@@ -2975,38 +3122,92 @@ class CustomMixArithmeticNotifier extends StateNotifier<CustomMixArithmeticState
     state = state.copyWith(selectedDifficulty: difficulty);
   }
 
+  void setMode(CustomMixMode mode) {
+    state = state.copyWith(mode: mode);
+    if (mode == CustomMixMode.timeAttack && state.timeLimit == 0) {
+      state = state.copyWith(timeLimit: 60);
+    }
+  }
+
+  void setTimeLimit(int seconds) {
+    state = state.copyWith(timeLimit: seconds);
+  }
+
+  void setTargetQuestions(int count) {
+    state = state.copyWith(targetQuestions: count);
+  }
+
   void startMix({List<MathRiddle>? preloadedQuestions}) {
     if (state.selectedOperations.isEmpty) return;
     
-    // If we have preloaded questions, use the first one
+    _timer?.cancel();
+    
     final firstQuestion = (preloadedQuestions != null && preloadedQuestions.isNotEmpty) 
         ? preloadedQuestions.first 
         : _generateMixedQuestion();
 
     state = state.copyWith(
       isActive: true,
+      isFinished: false,
       currentQuestion: firstQuestion,
       questionsCompleted: 0,
       correctAnswers: 0,
       currentStreak: 0,
-      bestStreak: state.bestStreak, // Keep best streak
+      bestStreak: state.bestStreak,
       questionHistory: [],
       lastAnswerCorrect: null,
       canUndo: false,
       reactionMessage: null,
       questionAnswered: false,
       sessionStartTime: DateTime.now(),
+      remainingTime: state.timeLimit,
+      isPaused: false,
+      responseTimes: [],
+      averageResponseTime: 0,
     );
+
+    _questionStartTime = DateTime.now();
+
+    if (state.timeLimit > 0) {
+      _startTimer();
+    }
+  }
+
+  void _startTimer() {
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (state.isPaused || !state.isActive) return;
+      
+      if (state.remainingTime > 0) {
+        state = state.copyWith(remainingTime: state.remainingTime - 1);
+      } else {
+        timer.cancel();
+        endMix();
+      }
+    });
+  }
+
+  void togglePause() {
+    state = state.copyWith(isPaused: !state.isPaused);
   }
 
   void answerQuestion(String answer) {
-    if (!state.isActive || state.currentQuestion == null) return;
+    if (!state.isActive || state.currentQuestion == null || state.questionAnswered) return;
 
+    final responseTime = DateTime.now().difference(_questionStartTime!).inMilliseconds / 1000.0;
     final isCorrect = answer == state.currentQuestion!.correctAnswer;
+    
+    // Sudden Death logic
+    if (state.mode == CustomMixMode.suddenDeath && !isCorrect) {
+      _handleSuddenDeath(answer);
+      return;
+    }
+
     final newStreak = isCorrect ? state.currentStreak + 1 : 0;
     final newBestStreak = newStreak > state.bestStreak ? newStreak : state.bestStreak;
+    
+    final newResponseTimes = List<double>.from(state.responseTimes)..add(responseTime);
+    final avgResponseTime = newResponseTimes.reduce((a, b) => a + b) / newResponseTimes.length;
 
-    // Store current question in history for undo
     final historyEntry = {
       'question': state.currentQuestion!,
       'userAnswer': answer,
@@ -3014,12 +3215,12 @@ class CustomMixArithmeticNotifier extends StateNotifier<CustomMixArithmeticState
       'previousStreak': state.currentStreak,
       'previousCorrectAnswers': state.correctAnswers,
       'previousQuestionsCompleted': state.questionsCompleted,
+      'responseTime': responseTime,
     };
 
     final newHistory = List<Map<String, dynamic>>.from(state.questionHistory)..add(historyEntry);
 
-    // Generate reaction message
-    String? reaction;
+    String reaction;
     if (isCorrect) {
       if (newStreak == 5) {
         reaction = '🔥 HOT STREAK!';
@@ -3031,11 +3232,7 @@ class CustomMixArithmeticNotifier extends StateNotifier<CustomMixArithmeticState
         reaction = '✅ CORRECT!';
       }
     } else {
-      if (state.currentStreak >= 5) {
-        reaction = '💔 STREAK BROKEN!';
-      } else {
-        reaction = '❌ INCORRECT!';
-      }
+      reaction = state.currentStreak >= 5 ? '💔 STREAK BROKEN!' : '❌ INCORRECT!';
     }
 
     state = state.copyWith(
@@ -3045,63 +3242,98 @@ class CustomMixArithmeticNotifier extends StateNotifier<CustomMixArithmeticState
       bestStreak: newBestStreak,
       questionHistory: newHistory,
       lastAnswerCorrect: isCorrect,
-      canUndo: true,
+      canUndo: state.mode != CustomMixMode.suddenDeath,
       reactionMessage: reaction,
       questionAnswered: true,
+      responseTimes: newResponseTimes,
+      averageResponseTime: avgResponseTime,
     );
 
-    // Record per-answer session stats
-    final operation = 'mixed';
-    ref.read(sessionStatsProvider.notifier).recordAnswer(
-      operation,
-      isCorrect,
-      0, // Time per question not tracked in custom mix UI yet
-      false, // Hints not used in custom mix
+    _recordStats(isCorrect, (responseTime * 1000).toInt());
+
+    // Update performance trends in real-time
+    _ref.read(performanceTrendsProvider.notifier).addDataPoint(
+      isCorrect ? 100.0 : 0.0,
+      (responseTime * 1000).toInt(),
+      newStreak,
+      heat: 1.0, // Default or derived if needed
     );
 
-    // Record for dynamic difficulty
-    ref.read(playerPerformanceProvider.notifier).recordAnswer(
-      operation: operation,
-      isCorrect: isCorrect,
-      responseTimeMs: 0,
-      hintsUsed: 0,
-    );
-    ref.read(dynamicDifficultyProvider.notifier).recordAssessment(isCorrect: isCorrect);
-
-    // Batch analytics updates - don't record every single question immediately 
-    // to reduce UI thread load during rapid input.
-    if (state.questionsCompleted % 5 == 0) {
-       _syncBatchAnalytics();
+    if (state.targetQuestions > 0 && state.questionsCompleted >= state.targetQuestions) {
+      // Auto next or end? Usually auto-next until the last one is answered.
+      // If we've reached the target, we'll let the user see the result then they can click finish or next (which might end it).
     }
   }
 
-  void _syncBatchAnalytics() {
-    // Optional: Sync intermediate progress to a more persistent store if needed
+  void _handleSuddenDeath(String answer) {
+    state = state.copyWith(
+      lastAnswerCorrect: false,
+      reactionMessage: '💀 SUDDEN DEATH - GAME OVER',
+      questionAnswered: true,
+      questionsCompleted: state.questionsCompleted + 1,
+    );
+    _timer?.cancel();
+    // Maybe show a specific dialog or end after a delay
+    Future.delayed(const Duration(seconds: 2), () {
+      if (mounted) endMix();
+    });
+  }
+
+  void _recordStats(bool isCorrect, int responseTimeMs) {
+    const operation = 'mixed';
+    _ref.read(sessionStatsProvider.notifier).recordAnswer(operation, isCorrect, responseTimeMs, false);
+    _ref.read(playerPerformanceProvider.notifier).recordAnswer(
+      operation: operation,
+      isCorrect: isCorrect,
+      responseTimeMs: responseTimeMs,
+      hintsUsed: 0,
+    );
+    _ref.read(dynamicDifficultyProvider.notifier).recordAssessment(isCorrect: isCorrect);
   }
 
   void endMix() {
-    // Record analytics before ending the session
+    _timer?.cancel();
     if (state.questionsCompleted > 0 && state.sessionStartTime != null) {
       final duration = DateTime.now().difference(state.sessionStartTime!).inSeconds;
       final selectedOps = state.selectedOperations.map((op) => op.name).join(',');
-      ref.read(analyticsProvider.notifier).recordSession(
+      _ref.read(analyticsProvider.notifier).recordSession(
         selectedOps,
         duration,
         state.questionsCompleted,
         state.correctAnswers,
-        0, // Hints not tracked in custom mix yet
+        0,
         mode: 'customMix',
       );
+
+      // Add points based on performance
+      final points = (state.correctAnswers * 10) + (state.bestStreak * 5);
+      if (points > 0) {
+        _ref.read(userSessionProvider.notifier).addPoints(points);
+      }
     }
 
-    state = state.copyWith(isActive: false, sessionStartTime: null);
+    state = state.copyWith(
+      isActive: false,
+      isFinished: true,
+      sessionStartTime: null,
+      isPaused: false,
+    );
+  }
+
+  void resetMix() {
+    _timer?.cancel();
+    state = CustomMixArithmeticState();
   }
 
   void undoLastAnswer() {
-    if (!state.canUndo || state.questionHistory.isEmpty) return;
+    if (!state.canUndo || state.questionHistory.isEmpty || state.mode == CustomMixMode.suddenDeath) return;
 
     final lastEntry = state.questionHistory.last;
     final newHistory = List<Map<String, dynamic>>.from(state.questionHistory)..removeLast();
+    
+    final newResponseTimes = List<double>.from(state.responseTimes);
+    if (newResponseTimes.isNotEmpty) newResponseTimes.removeLast();
+    final avgResponseTime = newResponseTimes.isEmpty ? 0.0 : newResponseTimes.reduce((a, b) => a + b) / newResponseTimes.length;
 
     state = state.copyWith(
       questionsCompleted: lastEntry['previousQuestionsCompleted'],
@@ -3113,15 +3345,20 @@ class CustomMixArithmeticNotifier extends StateNotifier<CustomMixArithmeticState
       reactionMessage: null,
       questionAnswered: false,
       currentQuestion: lastEntry['question'],
+      responseTimes: newResponseTimes,
+      averageResponseTime: avgResponseTime,
     );
-  }
-
-  void clearReaction() {
-    state = state.copyWith(reactionMessage: null);
+    _questionStartTime = DateTime.now();
   }
 
   void nextQuestion({MathRiddle? preloadedQuestion}) {
     if (!state.isActive) return;
+    
+    if (state.targetQuestions > 0 && state.questionsCompleted >= state.targetQuestions) {
+      endMix();
+      return;
+    }
+
     state = state.copyWith(
       currentQuestion: preloadedQuestion ?? _generateMixedQuestion(),
       lastAnswerCorrect: null,
@@ -3129,12 +3366,29 @@ class CustomMixArithmeticNotifier extends StateNotifier<CustomMixArithmeticState
       reactionMessage: null,
       questionAnswered: false,
     );
+    _questionStartTime = DateTime.now();
   }
 
   MathRiddle _generateMixedQuestion() {
-    // Generate arithmetic problem with specific operations
     final operation = state.selectedOperations[_random.nextInt(state.selectedOperations.length)];
+    
+    // Occasionally generate more complex problems for higher difficulty
+    if (state.selectedDifficulty > 15 && _random.nextDouble() > 0.7) {
+       return _generateMultiStepArithmetic(state.selectedDifficulty);
+    }
+    
     return _generateCustomArithmetic(operation, state.selectedDifficulty);
+  }
+
+  MathRiddle _generateMultiStepArithmetic(int difficulty) {
+    // Implementation for (a + b) * c or similar
+    // For now, fall back to standard but maybe with larger numbers
+    final op1 = state.selectedOperations[_random.nextInt(state.selectedOperations.length)];
+    return _generateCustomArithmetic(op1, (difficulty * 1.2).toInt().clamp(1, 30));
+  }
+
+  void clearReaction() {
+    state = state.copyWith(reactionMessage: null);
   }
 
   MathRiddle _generateCustomArithmetic(ArithmeticOperation operation, int difficulty) {

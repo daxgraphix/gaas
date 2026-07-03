@@ -92,26 +92,9 @@ class _CampaignPuzzleScreenState extends ConsumerState<CampaignPuzzleScreen> {
           child: Column(
             children: [
               const Spacer(),
-              Container(
+              PremiumGlassOverlay(
+                borderRadius: AppDesignTokens.radiusXLarge,
                 padding: const EdgeInsets.all(28),
-                margin: const EdgeInsets.all(24),
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.surface.withValues(alpha: 0.95),
-                  borderRadius: BorderRadius.circular(
-                    AppDesignTokens.radiusXLarge,
-                  ),
-                  border: Border.all(
-                    color: theme.colorScheme.primary.withValues(alpha: 0.2),
-                    width: 1.5,
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.1),
-                      blurRadius: 20,
-                      offset: const Offset(0, 10),
-                    ),
-                  ],
-                ),
                 child: Column(
                   children: [
                     Text(
@@ -132,14 +115,10 @@ class _CampaignPuzzleScreenState extends ConsumerState<CampaignPuzzleScreen> {
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: 24),
-                    Container(
+                    GlassmorphicContainer(
+                      borderRadius: AppDesignTokens.radiusLarge,
                       padding: const EdgeInsets.all(20),
-                       decoration: BoxDecoration(
-                         color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
-                         borderRadius: BorderRadius.circular(
-                           AppDesignTokens.radiusLarge,
-                         ),
-                       ),
+                      backgroundColor: theme.colorScheme.surface.withValues(alpha: 0.3),
                       child: Text(
                         chapter.storyline,
                          style: theme.textTheme.bodyLarge?.copyWith(
@@ -164,29 +143,13 @@ class _CampaignPuzzleScreenState extends ConsumerState<CampaignPuzzleScreen> {
               const Spacer(),
               Padding(
                 padding: const EdgeInsets.all(24),
-                child: SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: () {
-                      setState(() {
-                        _showStoryline = false;
-                      });
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: theme.colorScheme.primary,
-                      foregroundColor: theme.colorScheme.onPrimary,
-                      padding: const EdgeInsets.symmetric(vertical: 18),
-                      elevation: 4,
-                    ),
-                    child: const Text(
-                      'Begin Chapter',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: 0.5,
-                      ),
-                    ),
-                  ),
+                child: PremiumPrimaryButton(
+                  text: 'Begin Chapter',
+                  onPressed: () {
+                    setState(() {
+                      _showStoryline = false;
+                    });
+                  },
                 ),
               ),
             ],
@@ -265,105 +228,85 @@ class _CampaignPuzzleScreenState extends ConsumerState<CampaignPuzzleScreen> {
     final theme = Theme.of(context);
     final isLocked = !stage.isUnlocked;
 
-    return Container(
+    return PremiumCard(
+      onTap: isLocked ? null : () => _navigateToPuzzle(stage, index),
       margin: const EdgeInsets.only(bottom: 16),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
-        borderRadius: BorderRadius.circular(AppDesignTokens.radiusLarge),
-        border: Border.all(
-          color: theme.colorScheme.outline.withValues(alpha: 0.1),
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
+      child: Row(
+        children: [
+          Container(
+            width: 64,
+            height: 64,
+            decoration: BoxDecoration(
+              color: isLocked
+                  ? theme.colorScheme.onSurface.withValues(alpha: 0.05)
+                  : theme.colorScheme.primaryContainer.withValues(alpha: 0.4),
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Center(
+              child: isLocked
+                  ? Icon(Icons.lock_outline, color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.5))
+                  : Icon(
+                      _getTypeIcon(stage.type),
+                      color: theme.colorScheme.primary,
+                      size: 32,
+                    ),
+            ),
           ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  stage.title,
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: isLocked ? theme.colorScheme.onSurface.withValues(alpha: 0.4) : theme.colorScheme.onSurface,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  _getTypeLabel(stage.type).toUpperCase(),
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                    letterSpacing: 1.1,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  children: List.generate(3, (starIndex) {
+                    final isEarned = stage.stars > starIndex;
+                    return Icon(
+                      isEarned ? Icons.star_rounded : Icons.star_outline_rounded,
+                      size: 18,
+                      color: isEarned ? Colors.amber : theme.colorScheme.outline.withValues(alpha: 0.3),
+                    );
+                  }),
+                ),
+              ],
+            ),
+          ),
+          if (isLocked)
+            Container(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 10,
+                vertical: 4,
+              ),
+              decoration: BoxDecoration(
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.05),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Text(
+                'LVL ${stage.difficulty}',
+                style: theme.textTheme.labelSmall?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            )
+          else
+            Icon(Icons.chevron_right_rounded, color: theme.colorScheme.primary.withValues(alpha: 0.5)),
         ],
-      ),
-      child: InkWell(
-        onTap: isLocked ? null : () => _navigateToPuzzle(stage, index),
-        borderRadius: BorderRadius.circular(AppDesignTokens.radiusLarge),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Row(
-            children: [
-              Container(
-                width: 64,
-                height: 64,
-                decoration: BoxDecoration(
-                  color: isLocked
-                      ? theme.colorScheme.onSurface.withValues(alpha: 0.05)
-                      : theme.colorScheme.primaryContainer.withValues(alpha: 0.4),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Center(
-                  child: isLocked
-                      ? Icon(Icons.lock_outline, color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.5))
-                      : Icon(
-                          _getTypeIcon(stage.type),
-                          color: theme.colorScheme.primary,
-                          size: 32,
-                        ),
-                ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      stage.title,
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: isLocked ? theme.colorScheme.onSurface.withValues(alpha: 0.4) : theme.colorScheme.onSurface,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      _getTypeLabel(stage.type).toUpperCase(),
-                      style: theme.textTheme.labelSmall?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
-                        letterSpacing: 1.1,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Row(
-                      children: List.generate(3, (starIndex) {
-                        final isEarned = stage.stars > starIndex;
-                        return Icon(
-                          isEarned ? Icons.star_rounded : Icons.star_outline_rounded,
-                          size: 18,
-                          color: isEarned ? Colors.amber : theme.colorScheme.outline.withValues(alpha: 0.3),
-                        );
-                      }),
-                    ),
-                  ],
-                ),
-              ),
-              if (isLocked)
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: theme.colorScheme.onSurface.withValues(alpha: 0.05),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Text(
-                    'LVL ${stage.difficulty}',
-                    style: theme.textTheme.labelSmall?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                )
-              else
-                Icon(Icons.chevron_right_rounded, color: theme.colorScheme.primary.withValues(alpha: 0.5)),
-            ],
-          ),
-        ),
       ),
     );
   }

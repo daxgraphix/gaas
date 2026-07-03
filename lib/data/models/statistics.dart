@@ -14,6 +14,7 @@ class Statistics {
   final List<Map<String, dynamic>> timePerQuestion;
   final Map<String, double> accuracyByOperation;
   final Map<String, int> modeUsage; // Tracks sessions per mode
+  final Map<String, int> highScoresByMode; // Tracks high scores per mode
   final Map<String, int> levelCompletion; // Tracks completion count per level key
 
   Statistics({
@@ -32,11 +33,13 @@ class Statistics {
     List<Map<String, dynamic>>? timePerQuestion,
     Map<String, double>? accuracyByOperation,
     Map<String, int>? modeUsage,
+    Map<String, int>? highScoresByMode,
     Map<String, int>? levelCompletion,
   })  : lastUpdated = lastUpdated ?? DateTime.now(),
         timePerQuestion = timePerQuestion ?? [],
         accuracyByOperation = accuracyByOperation ?? {},
         modeUsage = modeUsage ?? {},
+        highScoresByMode = highScoresByMode ?? {},
         levelCompletion = levelCompletion ?? {};
 
   Map<String, dynamic> toJson() {
@@ -56,6 +59,7 @@ class Statistics {
       'timePerQuestion': timePerQuestion,
       'accuracyByOperation': accuracyByOperation,
       'modeUsage': modeUsage,
+      'highScoresByMode': highScoresByMode,
       'levelCompletion': levelCompletion,
     };
   }
@@ -79,6 +83,7 @@ class Statistics {
       timePerQuestion: (json['timePerQuestion'] as List?)?.cast<Map<String, dynamic>>() ?? [],
       accuracyByOperation: (json['accuracyByOperation'] as Map?)?.map((k, v) => MapEntry(k.toString(), (v as num).toDouble())) ?? {},
       modeUsage: (json['modeUsage'] as Map?)?.cast<String, int>() ?? {},
+      highScoresByMode: (json['highScoresByMode'] as Map?)?.cast<String, int>() ?? {},
       levelCompletion: (json['levelCompletion'] as Map?)?.cast<String, int>() ?? {},
     );
   }

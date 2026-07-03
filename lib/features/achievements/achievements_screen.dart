@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../../data/content_library/achievement_system.dart';
 import '../../core/themes/app_themes.dart';
+import '../../l10n/generated/app_localizations.dart';
 
 class AchievementsScreen extends ConsumerWidget {
   const AchievementsScreen({super.key});
@@ -53,6 +54,7 @@ class AchievementsScreen extends ConsumerWidget {
     final unlockedAchievements = ref.read(achievementStateProvider).unlockedAchievements;
     final totalAchievements = ref.read(achievementDatabaseProvider).length;
     final progressPercent = unlockedAchievements.length / totalAchievements;
+    final l10n = AppLocalizations.of(context)!;
 
     return SliverAppBar(
       expandedHeight: 320,
@@ -129,7 +131,7 @@ class AchievementsScreen extends ConsumerWidget {
                           ),
                           const SizedBox(width: 12),
                           Text(
-                            'ACHIEVER • LEVEL ${reward.level}',
+                            '${l10n.achiever} • ${l10n.levelUppercase(reward.level)}',
                             style: TextStyle(
                               color: theme.colorScheme.onPrimary,
                               fontWeight: FontWeight.bold,
@@ -155,7 +157,7 @@ class AchievementsScreen extends ConsumerWidget {
                       child: Column(
                         children: [
                           Text(
-                            'TOTAL SCORE',
+                            l10n.totalScore,
                             style: TextStyle(
                               fontSize: 12,
                               letterSpacing: 2,
@@ -215,7 +217,7 @@ class AchievementsScreen extends ConsumerWidget {
                             ),
                             const SizedBox(height: 8),
                             Text(
-                              '${reward.pointsToNextLevel} XP to NEXT LEVEL',
+                              l10n.xpToLevelFull(reward.pointsToNextLevel),
                               style: TextStyle(
                                 fontSize: 11,
                                 color: AppDesignTokens.textSecondary(context).withValues(alpha: 0.6),
@@ -243,7 +245,8 @@ class AchievementsScreen extends ConsumerWidget {
     ThemeData theme,
     BuildContext context,
   ) {
-    final color = _getRarityColor(achievement.rarity, theme);
+    final color = RarityUIConfig.getColor(achievement.rarity, theme);
+    final l10n = AppLocalizations.of(context)!;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
@@ -332,7 +335,7 @@ class AchievementsScreen extends ConsumerWidget {
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Text(
-                              achievement.rarity.name.toUpperCase(),
+                              RarityUIConfig.getName(achievement.rarity, context).toUpperCase(),
                               style: TextStyle(
                                 fontSize: 10,
                                 fontWeight: FontWeight.bold,
@@ -362,7 +365,7 @@ class AchievementsScreen extends ConsumerWidget {
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        achievement.title,
+                        achievement.getLocalizedTitle(context),
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
@@ -373,7 +376,7 @@ class AchievementsScreen extends ConsumerWidget {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        achievement.description,
+                        achievement.getLocalizedDescription(context),
                         style: TextStyle(
                           fontSize: 14,
                           color: isUnlocked
@@ -391,7 +394,7 @@ class AchievementsScreen extends ConsumerWidget {
                             borderRadius: BorderRadius.circular(6),
                           ),
                           child: Text(
-                            'LOCKED',
+                            l10n.locked.toUpperCase(),
                             style: TextStyle(
                               fontSize: 10,
                               fontWeight: FontWeight.bold,
@@ -456,21 +459,6 @@ class AchievementsScreen extends ConsumerWidget {
         return Icons.sports_esports;
       default:
         return Icons.code;
-    }
-  }
-
-  Color _getRarityColor(AchievementRarity rarity, ThemeData theme) {
-    switch (rarity) {
-      case AchievementRarity.common:
-        return theme.colorScheme.onSurface.withValues(alpha: 0.6);
-      case AchievementRarity.uncommon:
-        return theme.colorScheme.secondary;
-      case AchievementRarity.rare:
-        return theme.colorScheme.primary;
-      case AchievementRarity.epic:
-        return theme.colorScheme.primary.withValues(alpha: 0.8);
-      case AchievementRarity.legendary:
-        return theme.colorScheme.tertiary;
     }
   }
 }

@@ -81,12 +81,12 @@ class AppDesignTokens {
   static const Duration animationSlow = Duration(milliseconds: 600);
 
   // Midnight Theme (Deep Obsidian) - Dark Mode
-  static const Color midnightPrimary = Color(0xFF818CF8); // Indigo 400 (Brighter for dark)
+  static const Color midnightPrimary = Color(0xFF818CF8); // Indigo 400
   static const Color midnightSecondary = Color(0xFF38BDF8); // Sky 400
   static const Color midnightBackground = Color(0xFF020617); // Slate 950
   static const Color midnightSurface = Color(0xFF0F172A); // Slate 900
-  static const Color midnightOnSurface = Color(0xFFF1F5F9); // Slate 100
-  static const Color midnightOnSurfaceVariant = Color(0xFFCBD5E1); // Slate 300 (Much more visible)
+  static const Color midnightOnSurface = Color(0xFFF8FAFC); // Slate 50 (Brighter)
+  static const Color midnightOnSurfaceVariant = Color(0xFF94A3B8); // Slate 400 (Better contrast)
 
   // Solar Theme (Warm Sunlight) - Light Mode
   static const Color solarPrimary = Color(0xFFEA580C); // Orange 600
@@ -94,15 +94,15 @@ class AppDesignTokens {
   static const Color solarBackground = Color(0xFFFFFBEB); // Amber 50
   static const Color solarSurface = Color(0xFFFFFFFF);
   static const Color solarOnSurface = Color(0xFF0F172A); // Slate 900
-  static const Color solarOnSurfaceVariant = Color(0xFF334155); // Slate 700
+  static const Color solarOnSurfaceVariant = Color(0xFF475569); // Slate 600 (Darker for visibility)
 
   // Cyber Theme (High Contrast Neon) - Dark Mode
   static const Color cyberPrimary = Color(0xFF4ADE80); // Green 400 (Neon)
   static const Color cyberSecondary = Color(0xFF22D3EE); // Cyan 400
   static const Color cyberBackground = Color(0xFF000000);
   static const Color cyberSurface = Color(0xFF09090B); // Zinc 950
-  static const Color cyberOnSurface = Color(0xFFFAFAFA);
-  static const Color cyberOnSurfaceVariant = Color(0xFFA1A1AA);
+  static const Color cyberOnSurface = Color(0xFFFFFFFF); // Pure white
+  static const Color cyberOnSurfaceVariant = Color(0xFFD4D4D8); // Zinc 300 (Much brighter)
 
   static const Color success = Color(0xFF10B981);
   static const Color warning = Color(0xFFF59E0B);
@@ -136,6 +136,10 @@ class GameThemeExtension extends ThemeExtension<GameThemeExtension> {
   final Color numpadBackground;
   final Color numpadButtonBackground;
   final Color numpadText;
+  final Color heatColor;
+  final Color streakColor;
+  final Color timerColor;
+  final Color glassEffectColor;
 
   const GameThemeExtension({
     required this.operatorColor,
@@ -146,6 +150,10 @@ class GameThemeExtension extends ThemeExtension<GameThemeExtension> {
     required this.numpadBackground,
     required this.numpadButtonBackground,
     required this.numpadText,
+    required this.heatColor,
+    required this.streakColor,
+    required this.timerColor,
+    required this.glassEffectColor,
   });
 
   @override
@@ -158,6 +166,10 @@ class GameThemeExtension extends ThemeExtension<GameThemeExtension> {
     Color? numpadBackground,
     Color? numpadButtonBackground,
     Color? numpadText,
+    Color? heatColor,
+    Color? streakColor,
+    Color? timerColor,
+    Color? glassEffectColor,
   }) {
     return GameThemeExtension(
       operatorColor: operatorColor ?? this.operatorColor,
@@ -168,6 +180,10 @@ class GameThemeExtension extends ThemeExtension<GameThemeExtension> {
       numpadBackground: numpadBackground ?? this.numpadBackground,
       numpadButtonBackground: numpadButtonBackground ?? this.numpadButtonBackground,
       numpadText: numpadText ?? this.numpadText,
+      heatColor: heatColor ?? this.heatColor,
+      streakColor: streakColor ?? this.streakColor,
+      timerColor: timerColor ?? this.timerColor,
+      glassEffectColor: glassEffectColor ?? this.glassEffectColor,
     );
   }
 
@@ -183,6 +199,10 @@ class GameThemeExtension extends ThemeExtension<GameThemeExtension> {
       numpadBackground: Color.lerp(numpadBackground, other.numpadBackground, t)!,
       numpadButtonBackground: Color.lerp(numpadButtonBackground, other.numpadButtonBackground, t)!,
       numpadText: Color.lerp(numpadText, other.numpadText, t)!,
+      heatColor: Color.lerp(heatColor, other.heatColor, t)!,
+      streakColor: Color.lerp(streakColor, other.streakColor, t)!,
+      timerColor: Color.lerp(timerColor, other.timerColor, t)!,
+      glassEffectColor: Color.lerp(glassEffectColor, other.glassEffectColor, t)!,
     );
   }
 }
@@ -232,6 +252,10 @@ class AppThemes {
         numpadBackground: const Color(0xFFFFFBEB),
         numpadButtonBackground: Colors.white,
         numpadText: AppDesignTokens.solarOnSurface,
+        heatColor: Colors.orange,
+        streakColor: AppDesignTokens.solarPrimary,
+        timerColor: AppDesignTokens.solarSecondary,
+        glassEffectColor: Colors.white.withValues(alpha: 0.8),
       ),
     ],
     scaffoldBackgroundColor: AppDesignTokens.solarBackground,
@@ -353,6 +377,10 @@ class AppThemes {
         numpadBackground: Colors.black,
         numpadButtonBackground: const Color(0xFF09090B),
         numpadText: AppDesignTokens.cyberOnSurface,
+        heatColor: const Color(0xFFFF003C), // Cyberpunk red
+        streakColor: AppDesignTokens.cyberPrimary,
+        timerColor: AppDesignTokens.cyberSecondary,
+        glassEffectColor: Colors.black.withValues(alpha: 0.5),
       ),
     ],
     scaffoldBackgroundColor: AppDesignTokens.cyberBackground,
@@ -425,6 +453,10 @@ class AppThemes {
         numpadBackground: const Color(0xFF020617),
         numpadButtonBackground: const Color(0xFF0F172A),
         numpadText: Colors.white,
+        heatColor: const Color(0xFFF43F5E), // Rose 500
+        streakColor: AppDesignTokens.midnightPrimary,
+        timerColor: AppDesignTokens.midnightSecondary,
+        glassEffectColor: Colors.white.withValues(alpha: 0.1),
       ),
     ],
     scaffoldBackgroundColor: AppDesignTokens.midnightBackground,
@@ -532,85 +564,85 @@ class AppThemes {
     return TextTheme(
       displayLarge: TextStyle(
         fontSize: 57,
-        fontWeight: FontWeight.w400,
+        fontWeight: FontWeight.w800,
         letterSpacing: -0.25,
         color: primaryColor,
       ),
       displayMedium: TextStyle(
         fontSize: 45,
-        fontWeight: FontWeight.w400,
+        fontWeight: FontWeight.w800,
         color: primaryColor,
       ),
       displaySmall: TextStyle(
         fontSize: 36,
-        fontWeight: FontWeight.w400,
+        fontWeight: FontWeight.w700,
         color: primaryColor,
       ),
       headlineLarge: TextStyle(
         fontSize: 32,
-        fontWeight: FontWeight.bold,
+        fontWeight: FontWeight.w900,
         color: primaryColor,
       ),
       headlineMedium: TextStyle(
         fontSize: 28,
-        fontWeight: FontWeight.bold,
+        fontWeight: FontWeight.w800,
         color: primaryColor,
       ),
       headlineSmall: TextStyle(
         fontSize: 24,
-        fontWeight: FontWeight.w600,
+        fontWeight: FontWeight.w700,
         color: primaryColor,
       ),
       titleLarge: TextStyle(
         fontSize: 22,
-        fontWeight: FontWeight.w600,
+        fontWeight: FontWeight.w800,
         color: primaryColor,
       ),
       titleMedium: TextStyle(
         fontSize: 16,
-        fontWeight: FontWeight.w500,
+        fontWeight: FontWeight.w700,
         letterSpacing: 0.15,
         color: primaryColor,
       ),
       titleSmall: TextStyle(
         fontSize: 14,
-        fontWeight: FontWeight.w500,
+        fontWeight: FontWeight.w700,
         letterSpacing: 0.1,
         color: primaryColor,
       ),
       bodyLarge: TextStyle(
         fontSize: 16,
-        fontWeight: FontWeight.w400,
+        fontWeight: FontWeight.w500,
         letterSpacing: 0.5,
         color: secondaryColor,
       ),
       bodyMedium: TextStyle(
         fontSize: 14,
-        fontWeight: FontWeight.w400,
+        fontWeight: FontWeight.w500,
         letterSpacing: 0.25,
         color: secondaryColor,
       ),
       bodySmall: TextStyle(
         fontSize: 12,
-        fontWeight: FontWeight.w400,
+        fontWeight: FontWeight.w500,
         letterSpacing: 0.4,
         color: secondaryColor,
       ),
       labelLarge: TextStyle(
         fontSize: 14,
-        fontWeight: FontWeight.w500,
+        fontWeight: FontWeight.w600,
         letterSpacing: 0.1,
         color: primaryColor,
       ),
       labelMedium: TextStyle(
         fontSize: 12,
-        fontWeight: FontWeight.w500,
+        fontWeight: FontWeight.w600,
         letterSpacing: 0.5,
         color: secondaryColor,
       ),
       labelSmall: TextStyle(
         fontSize: 11,
-        fontWeight: FontWeight.w500,
+        fontWeight: FontWeight.w700,
         letterSpacing: 0.5,
         color: secondaryColor,
       ),
@@ -696,6 +728,8 @@ class GlassmorphicContainer extends ConsumerWidget {
       accessibilitySettingsProvider.select((s) => s.reduceTransparency),
     );
 
+    final gameTheme = theme.extension<GameThemeExtension>();
+
     final containerChild = Container(
       width: width,
       height: height,
@@ -704,16 +738,18 @@ class GlassmorphicContainer extends ConsumerWidget {
         borderRadius: BorderRadius.circular(borderRadius),
         color:
             backgroundColor ??
-            (isDark
-                ? Colors.white.withValues(alpha: reduceTransparency ? 0.2 : opacity)
-                : theme.colorScheme.surface.withValues(
-                  alpha: reduceTransparency ? 1.0 : (opacity > 0.5 ? opacity : 0.8),
-                )),
+            (gameTheme != null && !reduceTransparency
+                ? gameTheme.glassEffectColor.withValues(alpha: opacity)
+                : (isDark
+                    ? Colors.white.withValues(alpha: reduceTransparency ? 0.2 : opacity)
+                    : theme.colorScheme.surface.withValues(
+                      alpha: reduceTransparency ? 1.0 : (opacity > 0.5 ? opacity : 0.8),
+                    ))),
         border: Border.all(
           color: isDark
               ? Colors.white.withValues(alpha: 0.2)
-              : AppDesignTokens.textPrimary(context).withValues(alpha: 0.3),
-          width: 1,
+              : AppDesignTokens.textPrimary(context).withValues(alpha: 0.1),
+          width: 0.5,
         ),
         boxShadow: [
           BoxShadow(
@@ -774,28 +810,42 @@ class PremiumGlassOverlay extends ConsumerWidget {
       accessibilitySettingsProvider.select((s) => s.reduceTransparency),
     );
 
+    final gameTheme = theme.extension<GameThemeExtension>();
+
     final decoration = BoxDecoration(
       borderRadius: BorderRadius.circular(borderRadius),
+      boxShadow: !reduceTransparency ? [
+        BoxShadow(
+          color: (gameTheme?.glassEffectColor ?? Colors.black).withValues(alpha: 0.2),
+          blurRadius: 20,
+          spreadRadius: -5,
+        ),
+      ] : null,
       gradient: LinearGradient(
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
-        colors: isDark
+        colors: gameTheme != null && !reduceTransparency
             ? [
-                Colors.white.withValues(alpha: reduceTransparency ? 0.25 : 0.15),
-                Colors.white.withValues(alpha: reduceTransparency ? 0.15 : 0.05),
+                gameTheme.glassEffectColor.withValues(alpha: 0.5),
+                gameTheme.glassEffectColor.withValues(alpha: 0.2),
               ]
-            : [
-                Colors.white.withValues(alpha: reduceTransparency ? 1.0 : 0.95),
-                Color(0xFFF0FDFA).withValues(
-                  alpha: reduceTransparency ? 1.0 : 0.8,
-                ), // Light mint
-              ],
+            : (isDark
+                ? [
+                    Colors.white.withValues(alpha: reduceTransparency ? 0.25 : 0.15),
+                    Colors.white.withValues(alpha: reduceTransparency ? 0.15 : 0.05),
+                  ]
+                : [
+                    Colors.white.withValues(alpha: reduceTransparency ? 1.0 : 0.95),
+                    const Color(0xFFF0FDFA).withValues(
+                      alpha: reduceTransparency ? 1.0 : 0.8,
+                    ),
+                  ]),
       ),
       border: Border.all(
         color: isDark
-            ? Colors.white.withValues(alpha: 0.2)
-            : AppDesignTokens.textPrimary(context).withValues(alpha: 0.1), // Light blue
-        width: 1.5,
+            ? Colors.white.withValues(alpha: 0.15)
+            : AppDesignTokens.textPrimary(context).withValues(alpha: 0.1),
+        width: 1.0,
       ),
     );
 

@@ -1,9 +1,111 @@
 import 'dart:math';
 import 'package:flutter/foundation.dart';
 import '../../data/models/math_riddle.dart';
+import 'math_visual_engine.dart';
 
 class MathRiddleEngine {
   static final Random _random = Random();
+  static int _idCounter = 0;
+
+  static String _generateId(String prefix) {
+    return '${prefix}_${DateTime.now().microsecondsSinceEpoch}_${_idCounter++}';
+  }
+
+  static Future<List<dynamic>> generateMixedChallenges(int count, int difficulty) async {
+    final List<dynamic> results = [];
+    
+    // Distribute question types: Arithmetic, Logic (Text), and Visual Logic
+    int arithmeticCount;
+    int logicCount;
+    int visualCount;
+
+    if (difficulty <= 5) {
+      arithmeticCount = 4;
+      logicCount = 2;
+      visualCount = 1;
+    } else if (difficulty <= 20) {
+      arithmeticCount = 3;
+      logicCount = 2;
+      visualCount = 2;
+    } else {
+      arithmeticCount = 2;
+      logicCount = 2;
+      visualCount = 3;
+    }
+
+    // Adjust counts to match the requested total count
+    int currentTotal = arithmeticCount + logicCount + visualCount;
+    while (currentTotal < count) {
+      if (_random.nextBool()) {
+        arithmeticCount++;
+      } else {
+        logicCount++;
+      }
+      currentTotal++;
+    }
+    while (currentTotal > count) {
+      if (arithmeticCount > 1) {
+        arithmeticCount--;
+      } else if (logicCount > 1) {
+        logicCount--;
+      } else {
+        visualCount--;
+      }
+      currentTotal--;
+    }
+
+    results.addAll(generateArithmeticProblems(arithmeticCount, difficulty));
+    results.addAll(generateLogicChallengesSync(logicCount, difficulty));
+    
+    // Fetch visual challenges from MathVisualEngine in parallel
+    final List<Future<LogicMathChallenge>> visualFutures = [];
+    for (int i = 0; i < visualCount; i++) {
+      visualFutures.add(MathVisualEngine.generateVisualLogicChallenge(difficulty));
+    }
+
+    try {
+      final visualChallenges = await Future.wait(visualFutures);
+      results.addAll(visualChallenges);
+    } catch (e) {
+      // Fallback for failed visual challenges
+      results.addAll(generateLogicChallengesSync(visualCount, difficulty));
+    }
+
+    return results..shuffle(_random);
+  }
+
+  static List<MathRiddle> generateArithmeticProblems(int count, int difficulty) {
+    final List<MathRiddle> results = [];
+    final Set<String> seenQuestions = {};
+    int attempts = 0;
+    while (results.length < count && attempts < count * 10) {
+      final problem = generateArithmeticProblem(difficulty);
+      if (!seenQuestions.contains(problem.question)) {
+        seenQuestions.add(problem.question);
+        results.add(problem);
+      }
+      attempts++;
+    }
+    while (results.length < count) {
+      results.add(generateArithmeticProblem(difficulty));
+    }
+    return results..shuffle(_random);
+  }
+
+  static List<LogicMathChallenge> generateLogicChallengesSync(int count, int difficulty) {
+    final challenges = _getLogicChallenges(difficulty);
+    final unique = <String, LogicMathChallenge>{};
+    for (final challenge in challenges) {
+      unique[challenge.id] = challenge;
+    }
+    final uniqueList = unique.values.toList();
+    final scoped = uniqueList
+        .where((c) => (c.difficulty - difficulty).abs() <= 3)
+        .toList();
+    final source = scoped.isNotEmpty ? scoped : uniqueList;
+    source.shuffle(_random);
+    return source.take(count).toList();
+  }
 
   static MathRiddle generateArithmeticProblem(int difficulty) {
     ArithmeticOperation operation;
@@ -61,13 +163,23 @@ class MathRiddleEngine {
         answer = num1 - num2;
         break;
       case ArithmeticOperation.multiplication:
-        num1 = _random.nextInt(12) + 2;
-        num2 = _random.nextInt(12) + 2;
+        if (difficulty >= 3) {
+          num1 = _random.nextInt(difficulty * 2 + 5) + 2;
+          num2 = _random.nextInt(difficulty + 5) + 2;
+        } else {
+          num1 = _random.nextInt(10) + 2;
+          num2 = _random.nextInt(10) + 2;
+        }
         answer = num1 * num2;
         break;
       case ArithmeticOperation.division:
-        num2 = _random.nextInt(10) + 2;
-        answer = _random.nextInt(10) + 2;
+        if (difficulty >= 3) {
+          num2 = _random.nextInt(difficulty + 5) + 2;
+          answer = _random.nextInt(difficulty + 10) + 2;
+        } else {
+          num2 = _random.nextInt(10) + 2;
+          answer = _random.nextInt(10) + 2;
+        }
         num1 = num2 * answer;
         break;
     }
@@ -77,19 +189,62 @@ class MathRiddleEngine {
 
     // Add variety based on difficulty
     if (difficulty <= 2) {
-      question = 'What is $num1 $operatorStr $num2?';
+      final simpleContexts = [
+        'What is $num1 $operatorStr $num2?',
+        'Calculate $num1 $operatorStr $num2',
+        'Find the sum of $num1 and $num2',
+        'What is the total of $num1 and $num2?',
+        'Add $num1 and $num2',
+        'Result of $num1 $operatorStr $num2',
+      ];
+      if (operation == ArithmeticOperation.addition) {
+        question = simpleContexts[_random.nextInt(6)];
+      } else {
+        question = simpleContexts[_random.nextInt(4)];
+      }
     } else if (difficulty <= 5) {
-      final contexts = ['Calculate: ', 'Solve: ', 'Find: ', 'Compute: '];
-      question = '${contexts[_random.nextInt(contexts.length)]}$num1 $operatorStr $num2 = ?';
+      final contexts = [
+        'Calculate: $num1 $operatorStr $num2 = ?',
+        'Solve: $num1 $operatorStr $num2',
+        'Find the value of $num1 $operatorStr $num2',
+        'What is the result of $num1 $operatorStr $num2?',
+        'Compute the following: $num1 $operatorStr $num2',
+        'What is $num1 $operatorStr $num2 equal to?',
+        'Evaluate: $num1 $operatorStr $num2',
+        'Work out $num1 $operatorStr $num2',
+      ];
+      question = contexts[_random.nextInt(contexts.length)];
+    } else if (difficulty <= 10) {
+      final complexContexts = [
+        'Evaluate the expression: $num1 $operatorStr $num2',
+        'Determine the missing value: $num1 $operatorStr $num2 = x',
+        'If you have $num1 and apply $operatorStr $num2, what is the result?',
+        'Calculate the result of $num1 $operatorStr $num2 to proceed.',
+        'Find the solution to the arithmetic puzzle: $num1 $operatorStr $num2',
+        'Determine the value of $num1 $operatorStr $num2.',
+        'What is the evaluation of $num1 $operatorStr $num2?',
+        'Solve for the question mark: $num1 $operatorStr $num2 = ?',
+      ];
+      question = complexContexts[_random.nextInt(complexContexts.length)];
     } else {
-      // More complex for higher levels
-      question = 'Determine the result: $num1 $operatorStr $num2';
+      // More complex and varied for higher levels
+      final masterContexts = [
+        'Perform the operation: $num1 $operatorStr $num2',
+        'What numerical value satisfies $num1 $operatorStr $num2?',
+        'Solve the following high-level challenge: $num1 $operatorStr $num2',
+        'Identify the correct answer for $num1 $operatorStr $num2',
+        'Analyze and solve: $num1 $operatorStr $num2',
+        'What is the mathematical result of $num1 $operatorStr $num2?',
+        'Calculate the following advanced problem: $num1 $operatorStr $num2',
+        'Determine the output: $num1 $operatorStr $num2',
+      ];
+      question = masterContexts[_random.nextInt(masterContexts.length)];
     }
 
     final options = _generateOptions(answer, difficulty);
 
     return MathRiddle(
-      id: 'arith_${DateTime.now().millisecondsSinceEpoch}',
+      id: _generateId('arith'),
       type: MathRiddleType.arithmetic,
       difficulty: difficulty,
       question: question,
@@ -350,21 +505,6 @@ class MathRiddleEngine {
           basePoints: 150,
         ),
         LogicMathChallenge(
-          id: 'logic_025_new',
-          problem: 'square - star = 3\nsquare + star = 11\nWhat is square?',
-          options: ['7', '6', '8', '5'],
-          correctAnswer: '7',
-          explanation: 's - r = 3, s + r = 11. Add: 2s = 14, s = 7.',
-          progressiveHints: [
-            's - r = 3',
-            's + r = 11',
-            'Add equations: 2s = 14',
-            's = 7',
-          ],
-          difficulty: difficulty,
-          basePoints: 135,
-        ),
-        LogicMathChallenge(
           id: 'logic_026',
           problem: 'triangle * box = 20\ntriangle = 4\nWhat is box?',
           options: ['5', '4', '6', '3'],
@@ -401,15 +541,15 @@ class MathRiddleEngine {
         ),
         LogicMathChallenge(
           id: 'logic_017',
-          problem: 'star * box = 18\nstar - box = 2\nWhat is star?',
+          problem: 'star * box = 24\nstar - box = 2\nWhat is star?',
           options: ['6', '5', '7', '4'],
           correctAnswer: '6',
-          explanation: 's * b = 18, s - b = 2. From second, b = s - 2. Substitute: s(s - 2) = 18 => s² - 2s - 18 = 0 => (s-6)(s+3)=0 => s=6.',
+          explanation: 's * b = 24, s - b = 2. From second, b = s - 2. Substitute: s(s - 2) = 24 => s² - 2s - 24 = 0 => (s-6)(s+4)=0 => s=6.',
           progressiveHints: [
             'b = s - 2',
-            's(s - 2) = 18',
-            's² - 2s - 18 = 0',
-            'Factors: (s-6)(s+3)=0, s=6',
+            's(s - 2) = 24',
+            's² - 2s - 24 = 0',
+            'Factors: (s-6)(s+4)=0, s=6',
           ],
           difficulty: difficulty,
           basePoints: 140,
@@ -444,7 +584,7 @@ class MathRiddleEngine {
         ),
         // Level 4
         LogicMathChallenge(
-          id: 'logic_020',
+          id: 'logic_020_v2',
           problem: 'square / triangle = box\nsquare = 8\ntriangle = 2\nWhat is box?',
           options: ['4', '3', '5', '6'],
           correctAnswer: '4',
@@ -459,7 +599,7 @@ class MathRiddleEngine {
         ),
         // Level 5
         LogicMathChallenge(
-          id: 'logic_021',
+          id: 'logic_021_v2',
           problem: 'star + box - triangle = 5\nstar = 3\nbox = 4\nWhat is triangle?',
           options: ['2', '1', '3', '4'],
           correctAnswer: '2',
@@ -629,13 +769,13 @@ difficulty: 10,
         ),
         LogicMathChallenge(
           id: 'logic_adv_007',
-          problem: 'If star = triangle × box and triangle + box = 9, what is star when triangle = box?',
-          options: ['20', '21', '22', '24'],
+          problem: 'If star = triangle × box and triangle + box = 9, what is star when triangle and box are consecutive integers?',
+          options: ['20', '18', '22', '24'],
           correctAnswer: '20',
-          explanation: 'If triangle = box and triangle + box = 9, then triangle = box = 4.5. But with integers: triangle = 4, box = 5 gives star = 20.',
+          explanation: 'Consecutive integers that sum to 9 are 4 and 5. So star = 4 × 5 = 20.',
           progressiveHints: [
-            'If triangle = box, then 2 × triangle = 9',
-            'Triangle = box = 4.5 (or use integers 4 and 5)',
+            'Find two consecutive numbers that add up to 9',
+            '4 + 5 = 9',
             'Star = 4 × 5 = 20',
           ],
           difficulty: 9,
@@ -658,28 +798,28 @@ difficulty: 10,
         ),
         LogicMathChallenge(
           id: 'logic_adv_009',
-          problem: 'If star = box + triangle and box × triangle = 24, what is star when box = triangle?',
+          problem: 'If star = box + triangle and box × triangle = 25, what is star when box = triangle?',
           options: ['8', '10', '12', '14'],
           correctAnswer: '10',
-          explanation: 'If box = triangle and box × triangle = 24, then box² = 24. But 24 isn\'t a perfect square. Closest integers: box = 5, triangle = 5 gives 25. Or box = 4, triangle = 6 gives 24. Star = 10.',
+          explanation: 'If box = triangle and box × triangle = 25, then box² = 25, so box = 5. Star = 5 + 5 = 10.',
           progressiveHints: [
-            'Box × triangle = 24',
-            'Find two numbers close to each other that multiply to 24',
-            'Box = 4, triangle = 6 (or vice versa) gives star = 10',
+            'Box × triangle = 25 and box = triangle means box² = 25',
+            'Box = 5, triangle = 5',
+            'Star = 5 + 5 = 10',
           ],
           difficulty: 10,
           basePoints: 200,
         ),
         LogicMathChallenge(
           id: 'logic_adv_010',
-          problem: 'square × triangle - box = 15\nstar = square + triangle\nIf square = 4 and box = triangle + 1, what is star?',
+          problem: 'square × triangle - box = 14\nstar = square + triangle\nIf square = 4 and box = triangle + 1, what is star?',
           options: ['6', '7', '8', '9'],
           correctAnswer: '9',
-          explanation: 'Square = 4. Box = triangle + 1. So: 4 × triangle - (triangle + 1) = 15. 4t - t - 1 = 15, 3t = 16, t ≈ 5.33. With triangle = 5: star = 4 + 5 = 9.',
+          explanation: 'Square = 4. Box = triangle + 1. So: 4 × triangle - (triangle + 1) = 14 => 3 × triangle - 1 = 14 => 3 × triangle = 15 => triangle = 5. Star = 4 + 5 = 9.',
           progressiveHints: [
             'Square = 4, box = triangle + 1',
-            'Substitute: 4 × triangle - (triangle + 1) = 15',
-            'Solve: 3 × triangle = 16, triangle ≈ 5',
+            'Substitute: 4 × triangle - (triangle + 1) = 14',
+            'Solve: 3 × triangle = 15, triangle = 5',
             'Star = 4 + 5 = 9',
           ],
           difficulty: 10,
@@ -702,14 +842,14 @@ difficulty: 10,
         ),
         LogicMathChallenge(
           id: 'logic_adv_012',
-          problem: 'square + triangle = 12\nstar - box = 4\nIf triangle = 5, what is star + box?',
-          options: ['13', '14', '15', '16'],
-          correctAnswer: '14',
-          explanation: 'Triangle = 5, square = 12 - 5 = 7. Star - box = 4. Possible: star = 9, box = 5; star = 10, box = 6. Star + box = 14 or 16. Best answer: 14.',
+          problem: 'square + triangle = 12\nstar = square + 2\nIf triangle = 5, what is star?',
+          options: ['9', '7', '8', '10'],
+          correctAnswer: '9',
+          explanation: 'Triangle = 5, so square = 12 - 5 = 7. star = 7 + 2 = 9.',
           progressiveHints: [
-            'Triangle = 5, square = 12 - 5 = 7',
-            'Star - box = 4',
-            'Star = 9, box = 5 gives star + box = 14',
+            'Find square first: 12 - 5 = 7',
+            'star = square + 2',
+            '7 + 2 = 9',
           ],
           difficulty: 12,
           basePoints: 220,
@@ -906,14 +1046,14 @@ LogicMathChallenge(
         ),
         LogicMathChallenge(
           id: 'logic_adv_031',
-          problem: 'If a × b × c = 36 and a = b = c, what is a?',
+          problem: 'If a × b × c = 27 and a = b = c, what is a?',
           options: ['3', '4', '5', '6'],
           correctAnswer: '3',
-          explanation: 'a = b = c, so a³ = 36. But 3³ = 27 and 4³ = 64. Neither equals 36. Let me check: if a = 3, then a³ = 27. If a = 4, then a³ = 64. The question might expect a ≈ 3.3. But closest integer is 3.',
+          explanation: 'a = b = c, so a³ = 27. The cube root of 27 is 3.',
           progressiveHints: [
-            'a³ = 36',
-            '∛36 ≈ 3.3',
-            'Closest integer: 3',
+            'a × a × a = 27',
+            'a³ = 27',
+            'a = 3',
           ],
           difficulty: 30,
           basePoints: 400,
@@ -1118,12 +1258,112 @@ LogicMathChallenge(
           difficulty: 7,
           basePoints: 100,
         ),
+        LogicMathChallenge(
+          id: 'logic_new_121',
+          problem: 'If box + box = 10\nbox + star = 12\nWhat is star?',
+          options: ['7', '5', '10', '2'],
+          correctAnswer: '7',
+          explanation: '2 * box = 10, so box = 5. 5 + star = 12, so star = 7.',
+          progressiveHints: ['Find the value of one box', 'Subtract box from 12'],
+          difficulty: 4,
+          basePoints: 70,
+        ),
+        LogicMathChallenge(
+          id: 'logic_new_122',
+          problem: 'triangle = 3\nsquare = triangle + triangle\nstar = square + triangle\nstar = ?',
+          options: ['9', '6', '12', '15'],
+          correctAnswer: '9',
+          explanation: 'triangle = 3, square = 6, star = 6 + 3 = 9.',
+          progressiveHints: ['Find square first', 'Square = 3 + 3 = 6'],
+          difficulty: 5,
+          basePoints: 80,
+        ),
+        LogicMathChallenge(
+          id: 'logic_new_123',
+          problem: '10, 20, 30, 40, ?',
+          options: ['50', '60', '45', '100'],
+          correctAnswer: '50',
+          explanation: 'Sequence increases by 10.',
+          progressiveHints: ['What is the difference between numbers?'],
+          difficulty: 1,
+          basePoints: 30,
+        ),
+        LogicMathChallenge(
+          id: 'logic_new_124',
+          problem: 'If A=5, B=10, C=15\n(C - B) + A = ?',
+          options: ['10', '5', '15', '20'],
+          correctAnswer: '10',
+          explanation: '(15 - 10) + 5 = 5 + 5 = 10.',
+          progressiveHints: ['Substitute values', 'Do parentheses first'],
+          difficulty: 6,
+          basePoints: 90,
+        ),
+        LogicMathChallenge(
+          id: 'logic_new_125',
+          problem: 'circle * circle = 16\ncircle + box = 10\nbox = ?',
+          options: ['6', '4', '8', '2'],
+          correctAnswer: '6',
+          explanation: 'circle = 4, 4 + box = 10, box = 6.',
+          progressiveHints: ['What number times itself is 16?', 'circle = 4'],
+          difficulty: 7,
+          basePoints: 100,
+        ),
+        LogicMathChallenge(
+          id: 'logic_new_126',
+          problem: '2, 5, 8, 11, ?',
+          options: ['14', '13', '15', '12'],
+          correctAnswer: '14',
+          explanation: 'Sequence increases by 3.',
+          progressiveHints: ['Add 3 to the last number'],
+          difficulty: 3,
+          basePoints: 50,
+        ),
+        LogicMathChallenge(
+          id: 'logic_new_127',
+          problem: 'If star = 10, triangle = star / 2\nstar + triangle = ?',
+          options: ['15', '10', '20', '5'],
+          correctAnswer: '15',
+          explanation: 'triangle = 5, 10 + 5 = 15.',
+          progressiveHints: ['Find triangle value', '10 / 2 = 5'],
+          difficulty: 4,
+          basePoints: 60,
+        ),
+        LogicMathChallenge(
+          id: 'logic_new_128',
+          problem: 'box - 5 = 15\nbox / 2 = ?',
+          options: ['10', '20', '5', '15'],
+          correctAnswer: '10',
+          explanation: 'box = 20, 20 / 2 = 10.',
+          progressiveHints: ['Find box value', 'box = 15 + 5'],
+          difficulty: 6,
+          basePoints: 85,
+        ),
+        LogicMathChallenge(
+          id: 'logic_new_129',
+          problem: '1, 2, 4, 7, 11, ?',
+          options: ['16', '15', '17', '18'],
+          correctAnswer: '16',
+          explanation: 'Increases by 1, 2, 3, 4, then 5.',
+          progressiveHints: ['Look at the differences: +1, +2, +3, +4...'],
+          difficulty: 8,
+          basePoints: 115,
+        ),
+        LogicMathChallenge(
+          id: 'logic_new_130',
+          problem: 'If circle + circle + circle = 15\ncircle * star = 20\nstar = ?',
+          options: ['4', '5', '3', '6'],
+          correctAnswer: '4',
+          explanation: 'circle = 5, 5 * star = 20, star = 4.',
+          progressiveHints: ['One circle is 5', '5 times what is 20?'],
+          difficulty: 6,
+          basePoints: 95,
+        ),
       ]);
     }
 
-    // High-level challenges (levels 11-100) with algebraic and complex patterns
+    // High-level challenges (levels 11-50) with algebraic and complex patterns
     if (difficulty >= 11) {
-      for (int lvl = 11; lvl <= 100; lvl++) {
+      for (int lvl = 11; lvl <= 50; lvl++) {
         challenges.addAll([
           LogicMathChallenge(
             id: 'logic_hl_${lvl}_a',

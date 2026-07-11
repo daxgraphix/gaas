@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../core/game_adaptability/dynamic_difficulty_system.dart';
 import '../../../core/themes/app_themes.dart';
 import '../../../core/sound_manager.dart';
 import '../../../core/providers.dart';
 import '../../../core/responsive_design.dart';
 import '../../../l10n/generated/app_localizations.dart';
 import '../../game/logic/game_session_provider.dart';
+import '../../game/logic/session_stats_provider.dart';
 import '../../game/ui/game_screen.dart';
 import '../../../core/utils/game_flow_optimizer.dart';
 
@@ -448,8 +448,8 @@ class _PracticeScreenState extends ConsumerState<PracticeScreen> {
 
     if (_adaptiveDifficulty) {
       // Adjust based on user performance
-      final accuracy = ref.read(overallAccuracyProvider).value ?? 0.5;
-      final recentStreak = ref.read(playerPerformanceProvider).currentStreak;
+      final accuracy = ref.read(overallAccuracyProvider);
+      final recentStreak = ref.read(sessionStatsProvider).currentStreak;
 
       if (accuracy > 0.85 && recentStreak > 5) {
         // Advanced user - increase difficulty
@@ -494,7 +494,7 @@ class _PracticeScreenState extends ConsumerState<PracticeScreen> {
     if (mounted) {
       Navigator.push(
         context,
-        MaterialPageRoute(builder: (_) => const GameScreen()),
+        MaterialPageRoute(builder: (_) => GameScreen()),
       );
     }
   }

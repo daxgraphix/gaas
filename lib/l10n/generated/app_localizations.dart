@@ -218,6 +218,60 @@ abstract class AppLocalizations {
   /// **'Accuracy'**
   String get accuracy;
 
+  /// No description provided for @completed.
+  ///
+  /// In en, this message translates to:
+  /// **'Completed'**
+  String get completed;
+
+  /// No description provided for @victory.
+  ///
+  /// In en, this message translates to:
+  /// **'VICTORY'**
+  String get victory;
+
+  /// No description provided for @defeat.
+  ///
+  /// In en, this message translates to:
+  /// **'DEFEAT'**
+  String get defeat;
+
+  /// No description provided for @levelStabilized.
+  ///
+  /// In en, this message translates to:
+  /// **'LEVEL STABILIZED'**
+  String get levelStabilized;
+
+  /// No description provided for @integrityFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'INTEGRITY FAILED'**
+  String get integrityFailed;
+
+  /// No description provided for @coreScore.
+  ///
+  /// In en, this message translates to:
+  /// **'CORE SCORE'**
+  String get coreScore;
+
+  /// No description provided for @playAgain.
+  ///
+  /// In en, this message translates to:
+  /// **'PLAY AGAIN'**
+  String get playAgain;
+
+  /// No description provided for @levelUp.
+  ///
+  /// In en, this message translates to:
+  /// **'LEVEL UP!'**
+  String get levelUp;
+
+  /// No description provided for @rewardPoints.
+  ///
+  /// In en, this message translates to:
+  /// **'REWARD POINTS'**
+  String get rewardPoints;
+
   /// No description provided for @timePlayed.
   ///
   /// In en, this message translates to:
@@ -301,6 +355,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Game Over'**
   String get gameOver;
+
+  /// No description provided for @levelComplete.
+  ///
+  /// In en, this message translates to:
+  /// **'Level Complete!'**
+  String get levelComplete;
+
+  /// No description provided for @continueText.
+  ///
+  /// In en, this message translates to:
+  /// **'CONTINUE'**
+  String get continueText;
+
+  /// No description provided for @resume.
+  ///
+  /// In en, this message translates to:
+  /// **'RESUME'**
+  String get resume;
+
+  /// No description provided for @gamePaused.
+  ///
+  /// In en, this message translates to:
+  /// **'Game Paused'**
+  String get gamePaused;
+
+  /// No description provided for @exitGame.
+  ///
+  /// In en, this message translates to:
+  /// **'Exit Game?'**
+  String get exitGame;
+
+  /// No description provided for @exitGameDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to exit? Current progress will be lost.'**
+  String get exitGameDesc;
 
   /// No description provided for @correct.
   ///
@@ -1885,6 +1975,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'System Settings'**
   String get systemSettings;
+
+  /// No description provided for @interface.
+  ///
+  /// In en, this message translates to:
+  /// **'Interface'**
+  String get interface;
+
+  /// No description provided for @audioAndHaptics.
+  ///
+  /// In en, this message translates to:
+  /// **'Audio & Haptics'**
+  String get audioAndHaptics;
 
   /// No description provided for @builtInArithmeticTool.
   ///

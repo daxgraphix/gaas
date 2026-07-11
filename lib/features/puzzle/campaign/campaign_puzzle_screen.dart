@@ -5,6 +5,7 @@ import '../../../core/themes/app_themes.dart';
 import '../../../core/utils/game_flow_optimizer.dart';
 import '../math_riddle/math_riddle_screen.dart';
 import '../../../data/models/math_riddle.dart';
+import '../../../data/models/campaign_state.dart';
 
 class CampaignPuzzleScreen extends ConsumerStatefulWidget {
   final int chapterNumber;

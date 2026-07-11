@@ -330,9 +330,13 @@ class _CrossNumbersScreenState extends ConsumerState<CrossNumbersScreen> {
       bgColor = theme.colorScheme.primary.withValues(alpha: 0.1);
     }
     
-    if (isInSatisfiedEq && !isSelected && !isOperator) {
-      borderColor = Colors.green.withValues(alpha: 0.5);
-      // bgColor = Colors.green.withValues(alpha: 0.05); // Too subtle?
+    if (isInSatisfiedEq && !isOperator) {
+      if (isEditable) {
+         bgColor = Colors.green.withValues(alpha: 0.1);
+         borderColor = Colors.green.withValues(alpha: 0.6);
+      } else {
+         borderColor = Colors.green.withValues(alpha: 0.5);
+      }
     }
 
     return GestureDetector(

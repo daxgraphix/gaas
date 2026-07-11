@@ -120,9 +120,9 @@ class _SyncMapState extends State<SyncMap> with TickerProviderStateMixin {
                     Text(
                       '${l10n.chapter} $chapterNum',
                       style: TextStyle(
-                        color: isUnlocked ? theme.colorScheme.onSurface.withValues(alpha: 0.7) : theme.colorScheme.error.withValues(alpha: 0.7),
+                        color: isUnlocked ? theme.colorScheme.primary : theme.colorScheme.error,
                         fontWeight: FontWeight.w900,
-                        letterSpacing: 4,
+                        letterSpacing: 2,
                         fontSize: 14,
                       ),
                     ),
@@ -132,9 +132,9 @@ class _SyncMapState extends State<SyncMap> with TickerProviderStateMixin {
                           ? l10n.chapterStarsProgress(chapterStars, 30) 
                           : l10n.lockedNeedStars(starsNeeded),
                       style: TextStyle(
-                        color: isUnlocked ? theme.colorScheme.onSurface.withValues(alpha: 0.38) : theme.colorScheme.error.withValues(alpha: 0.5),
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold,
+                        color: isUnlocked ? theme.colorScheme.onSurface : theme.colorScheme.error.withValues(alpha: 0.8),
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
                         letterSpacing: 1,
                       ),
                     ),

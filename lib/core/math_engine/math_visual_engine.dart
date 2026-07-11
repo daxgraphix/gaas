@@ -35,19 +35,20 @@ class MathVisualEngine {
     // Pick a generator type based on difficulty and randomness
     final type = _random.nextInt(100);
 
-    if (difficulty <= 20) {
+    if (difficulty <= 15) {
       if (type < 40) return _generateSubstitution(difficulty);
       if (type < 80) return _generateSimpleSystem(difficulty);
       return _generateBalanceScale(difficulty);
-    } else if (difficulty <= 60) {
-      if (type < 30) return _generateSimpleSystem(difficulty);
-      if (type < 60) return _generateBalanceScale(difficulty);
-      if (type < 90) return _generateMultiOpSystem(difficulty);
+    } else if (difficulty <= 35) {
+      if (type < 25) return _generateSimpleSystem(difficulty);
+      if (type < 50) return _generateBalanceScale(difficulty);
+      if (type < 80) return _generateMultiOpSystem(difficulty);
       return _generateGridLogic(difficulty);
     } else {
-      if (type < 25) return _generateMultiOpSystem(difficulty);
-      if (type < 50) return _generateGridLogic(difficulty);
-      if (type < 75) return _generateComplexSystem(difficulty);
+      // Levels 36-50
+      if (type < 20) return _generateMultiOpSystem(difficulty);
+      if (type < 40) return _generateGridLogic(difficulty);
+      if (type < 70) return _generateComplexSystem(difficulty);
       return _generateGeometricLogic(difficulty);
     }
   }

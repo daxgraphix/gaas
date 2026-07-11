@@ -16,6 +16,8 @@ import '../../calculator/calculator_screen.dart';
 import '../../custom_mix/presentation/custom_mix_screen.dart';
 import '../../puzzle/math_riddle/math_riddle_level_selection_screen.dart';
 import '../../puzzle/cross_numbers/cross_numbers_level_selection_screen.dart';
+import '../../game/ui/game_screen.dart';
+import '../../game/logic/session_stats_provider.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -62,100 +64,26 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     final accuracy = ref.watch(overallAccuracyProvider);
     final sessionStats = ref.watch(sessionStatsProvider);
 
-    final hour = DateTime.now().hour;
-    final String greeting = hour < 12
-        ? l10n.goodMorning
-        : hour < 17
-            ? l10n.goodAfternoon
-            : hour < 21
-                ? l10n.goodEvening
-                : l10n.goodNight;
-
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
       extendBody: true,
-      appBar: _buildAdvancedAppBar(theme, greeting, l10n),
       body: _buildAdvancedBody(
-        theme, user, totalStars, completedLevels, totalTime, accuracy, sessionStats, l10n,
+        theme, 
+        user, 
+        totalStars, 
+        completedLevels, 
+        totalTime, 
+        accuracy, 
+        sessionStats, 
+        l10n,
       ),
-    );
-  }
-
-  PreferredSizeWidget _buildAdvancedAppBar(ThemeData theme, String greeting, AppLocalizations l10n) {
-    return AppBar(
-      backgroundColor: Colors.transparent,
-      elevation: 0,
-      flexibleSpace: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              theme.colorScheme.primary.withValues(alpha: 0.1),
-              theme.colorScheme.secondary.withValues(alpha: 0.05),
-            ],
-          ),
-        ),
-      ),
-      title: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: theme.colorScheme.primary.withValues(alpha: 0.2),
-              borderRadius: BorderRadius.circular(12),
-              boxShadow: [
-                BoxShadow(
-                  color: theme.colorScheme.primary.withValues(alpha: 0.3),
-                  blurRadius: 8,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-            child: Icon(
-              Icons.bolt_rounded,
-              color: theme.colorScheme.primary,
-              size: 20,
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  l10n.commandCenter,
-                  style: theme.textTheme.labelSmall?.copyWith(
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: 2,
-                    color: theme.colorScheme.primary,
-                  ),
-                ),
-                Text(
-                  '$greeting, ${l10n.player}!',
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-      actions: [
-        _buildStreakIndicator(theme),
-        const SizedBox(width: 8),
-        _buildLanguageToggle(theme, l10n),
-        const SizedBox(width: 16),
-      ],
     );
   }
 
   Widget _buildStreakIndicator(ThemeData theme) {
     return Consumer(
       builder: (context, ref, child) {
-        final streak = ref.watch(bestStreakProvider).value ?? 0;
+        final streak = ref.watch(bestStreakProvider);
         if (streak == 0) return const SizedBox.shrink();
         return Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
@@ -225,15 +153,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     );
   }
 
-
-
   Widget _buildAdvancedBody(
     ThemeData theme,
     dynamic user,
-    AsyncValue<int> totalStars,
-    AsyncValue<int> completedLevels,
-    AsyncValue<int> totalTime,
-    AsyncValue<double> accuracy,
+    int totalStars,
+    int completedLevels,
+    int totalTime,
+    double accuracy,
     SessionStats sessionStats,
     AppLocalizations l10n,
   ) {
@@ -241,6 +167,74 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     return CustomScrollView(
       physics: const BouncingScrollPhysics(),
       slivers: [
+        SliverAppBar(
+          expandedHeight: 120,
+          floating: true,
+          pinned: true,
+          elevation: 0,
+          backgroundColor: theme.scaffoldBackgroundColor,
+          flexibleSpace: FlexibleSpaceBar(
+            background: Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    theme.colorScheme.primary.withValues(alpha: 0.1),
+                    theme.colorScheme.secondary.withValues(alpha: 0.05),
+                  ],
+                ),
+              ),
+            ),
+            title: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(6),
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.primary.withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Icon(
+                    Icons.bolt_rounded,
+                    color: theme.colorScheme.primary,
+                    size: 16,
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      l10n.commandCenter,
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 2,
+                        color: theme.colorScheme.primary,
+                        fontSize: 10,
+                      ),
+                    ),
+                    Text(
+                      l10n.welcomeBack,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+            titlePadding: const EdgeInsetsDirectional.only(start: 16, bottom: 16),
+          ),
+          actions: [
+            _buildStreakIndicator(theme),
+            const SizedBox(width: 8),
+            _buildLanguageToggle(theme, l10n),
+            const SizedBox(width: 16),
+          ],
+        ),
         SliverToBoxAdapter(
           child: Padding(
             padding: EdgeInsets.fromLTRB(
@@ -253,16 +247,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 _buildWelcomeSection(theme, l10n),
+                const SizedBox(height: 24),
+                _buildQuickResumeModule(theme, l10n),
                 const SizedBox(height: 32),
-                _buildQuickPlayModule(theme, l10n), // New Quick Play Module
-                const SizedBox(height: 32),
+                _buildDailyChallenge(theme, l10n),
+                const SizedBox(height: 40),
+                _buildGameModesGrid(theme, l10n),
+                const SizedBox(height: 40),
                 _buildSessionStats(theme, sessionStats, l10n),
                 const SizedBox(height: 32),
                 _buildQuickActions(theme, l10n),
-                const SizedBox(height: 32),
-                _buildDailyChallenge(theme, l10n),
-                const SizedBox(height: 32),
-                _buildGameModesGrid(theme, l10n),
               ],
             ),
           ),
@@ -271,7 +265,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     );
   }
 
-  Widget _buildQuickPlayModule(ThemeData theme, AppLocalizations l10n) {
+  Widget _buildQuickResumeModule(ThemeData theme, AppLocalizations l10n) {
     return Consumer(
       builder: (context, ref, child) {
         final user = ref.watch(userSessionProvider);
@@ -289,50 +283,26 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
         Widget? heatTag;
         if (lastHeat != null && lastHeat > 1.2) {
            heatTag = Container(
-             margin: const EdgeInsets.only(top: 4),
-             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+             margin: const EdgeInsets.only(top: 8),
+             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
              decoration: BoxDecoration(
-               color: Colors.orange.withValues(alpha: 0.2),
-               borderRadius: BorderRadius.circular(4),
-               border: Border.all(color: Colors.orange.withValues(alpha: 0.4)),
+               color: Colors.orange.withValues(alpha: 0.1),
+               borderRadius: BorderRadius.circular(6),
+               border: Border.all(color: Colors.orange.withValues(alpha: 0.3)),
              ),
              child: Row(
                mainAxisSize: MainAxisSize.min,
                children: [
-                 const Icon(Icons.local_fire_department, color: Colors.orange, size: 10),
-                 const SizedBox(width: 2),
+                 const Icon(Icons.local_fire_department, color: Colors.orange, size: 12),
+                 const SizedBox(width: 4),
                  Text(
                    '${l10n.engineIntensity.toUpperCase()}: ${(lastHeat * 100).toInt()}%',
-                   style: const TextStyle(color: Colors.orange, fontSize: 8, fontWeight: FontWeight.bold),
+                   style: const TextStyle(color: Colors.orange, fontSize: 10, fontWeight: FontWeight.w900),
                  ),
                ],
              ),
            );
         }
-
-        void handleOnTap() {
-          if (lastMode == 'campaign' && lastOp != null && lastLevel != null) {
-            ref.read(gameSessionProvider.notifier).startGame(
-              mode: GameMode.campaign,
-              operation: lastOp,
-              level: lastLevel,
-            );
-            _navigateToScreen(const CampaignScreen());
-          } else if (lastMode == 'arcade') {
-            _navigateToScreen(const ArcadeScreen());
-          } else if (lastMode == 'practice') {
-            _navigateToScreen(const PracticeScreen());
-          } else if (lastMode == 'mathriddles') {
-            _navigateToScreen(const MathRiddleLevelSelectionScreen());
-          } else if (lastMode == 'crossnumbers') {
-            _navigateToScreen(const CrossNumbersLevelSelectionScreen());
-          } else {
-            // Default fallback
-            _navigateToScreen(const CampaignScreen());
-          }
-        }
-        
-        VoidCallback onTap = handleOnTap;
 
         if (lastMode != null && lastOp != null) {
           if (lastMode == 'campaign') {
@@ -367,55 +337,87 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
 
         return PremiumCard(
           padding: const EdgeInsets.all(20),
-          borderColor: theme.colorScheme.primary.withValues(alpha: 0.4),
-          onTap: onTap,
+          borderColor: theme.colorScheme.primary.withValues(alpha: 0.5),
+          onTap: () {
+            if (lastMode == 'campaign' && lastOp != null && lastLevel != null) {
+              ref.read(soundManagerProvider).playGameStart();
+              ref.read(gameSessionProvider.notifier).startGame(
+                    mode: GameMode.campaign,
+                    operation: lastOp,
+                    level: lastLevel,
+                    totalQuestions: lastLevel > 50 ? 60 : 50,
+                  );
+              _navigateToScreen(GameScreen());
+            } else if (lastMode == 'arcade') {
+              _navigateToScreen(const ArcadeScreen());
+            } else if (lastMode == 'practice') {
+              _navigateToScreen(const PracticeScreen());
+            } else if (lastMode == 'mathriddles') {
+              _navigateToScreen(const MathRiddleLevelSelectionScreen());
+            } else if (lastMode == 'crossnumbers') {
+              _navigateToScreen(const CrossNumbersLevelSelectionScreen());
+            } else if (lastMode == 'custommix') {
+              _navigateToScreen(const CustomMixScreen());
+            } else {
+              _navigateToScreen(const CampaignScreen());
+            }
+          },
           child: Row(
             children: [
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.primary.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Icon(
-                  Icons.play_circle_filled_rounded,
-                  color: theme.colorScheme.primary,
-                  size: 32,
-                ),
-              ),
-              const SizedBox(width: 16),
+              Stack(
+                alignment: Alignment.center,
+                children: [
+                  Container(
+                    width: 64,
+                    height: 64,
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.primary.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(18),
+                    ),
+                  ),
+                  const Icon(Icons.play_arrow_rounded, color: Colors.white, size: 36),
+                  SizedBox(
+                    width: 64,
+                    height: 64,
+                    child: CircularProgressIndicator(
+                      value: 0.75,
+                      strokeWidth: 3,
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                        theme.colorScheme.primary,
+                      ),
+                    ),
+                  ),
+                ],
+              ).animate(onPlay: (controller) => controller.repeat())
+               .shimmer(duration: 2000.ms, color: theme.colorScheme.primary.withValues(alpha: 0.2)),
+              const SizedBox(width: 20),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       title,
-                      style: theme.textTheme.labelSmall?.copyWith(
+                      style: theme.textTheme.titleLarge?.copyWith(
                         fontWeight: FontWeight.w900,
-                        letterSpacing: 2,
-                        color: theme.colorScheme.primary,
+                        letterSpacing: 0.5,
                       ),
                     ),
                     const SizedBox(height: 4),
                     Text(
                       subtitle,
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
-                    ?heatTag,
+                    heatTag ?? const SizedBox.shrink(),
                   ],
                 ),
               ),
-              Icon(
-                Icons.chevron_right_rounded,
-                color: theme.colorScheme.onSurface.withValues(alpha: 0.3),
-              ),
+              const Icon(Icons.chevron_right, size: 28),
             ],
           ),
-        ).animate()
-         .fadeIn(duration: 600.ms, delay: 100.ms)
-         .slideX(begin: -0.1, end: 0);
+        );
       },
     );
   }
@@ -426,15 +428,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     return Consumer(
       builder: (context, ref, child) {
         final user = ref.watch(userSessionProvider);
-        final hour = DateTime.now().hour;
-        final String greeting = hour < 12
-            ? l10n.goodMorning
-            : hour < 17
-                ? l10n.goodAfternoon
-                : hour < 21
-                    ? l10n.goodEvening
-                    : l10n.goodNight;
-
         return PremiumGlassOverlay(
           padding: const EdgeInsets.all(24),
           child: Column(
@@ -447,7 +440,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          '$greeting, ${user?.name ?? l10n.player}!',
+                          '${l10n.welcomeBack}, ${user?.name ?? l10n.player}!',
                           style: theme.textTheme.headlineSmall?.copyWith(
                             fontWeight: FontWeight.bold,
                             color: theme.colorScheme.onSurface,

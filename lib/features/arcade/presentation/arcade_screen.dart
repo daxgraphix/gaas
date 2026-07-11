@@ -110,10 +110,10 @@ class ArcadeScreen extends ConsumerWidget {
     return Text(
       title,
       style: theme.textTheme.labelSmall?.copyWith(
-        fontSize: 10,
+        fontSize: 12,
         fontWeight: FontWeight.w900,
-        letterSpacing: 4,
-        color: theme.colorScheme.primary.withValues(alpha: 0.3),
+        letterSpacing: 2,
+        color: theme.colorScheme.primary,
       ),
     );
   }
@@ -182,14 +182,14 @@ class ArcadeScreen extends ConsumerWidget {
 
   IconData _getIconForTitle(String title) {
     // Simple heuristic for icons based on title or passing it in
-    if (title.contains('Attack')) return Icons.bolt;
-    if (title.contains('Endless')) return Icons.all_inclusive;
-    if (title.contains('Duel')) return Icons.sports_kabaddi;
-    if (title.contains('Flash')) return Icons.visibility;
-    if (title.contains('Demon')) return Icons.speed;
-    if (title.contains('Master')) return Icons.psychology;
-    if (title.contains('Marathon')) return Icons.directions_run;
-    return Icons.games;
+    if (title.contains('Attack')) return Icons.bolt_outlined;
+    if (title.contains('Endless')) return Icons.all_inclusive_outlined;
+    if (title.contains('Duel')) return Icons.sports_kabaddi_outlined;
+    if (title.contains('Flash')) return Icons.visibility_outlined;
+    if (title.contains('Demon')) return Icons.speed_outlined;
+    if (title.contains('Master')) return Icons.psychology_outlined;
+    if (title.contains('Marathon')) return Icons.directions_run_outlined;
+    return Icons.games_outlined;
   }
 
   void _showOperationDialog(
@@ -216,8 +216,9 @@ class ArcadeScreen extends ConsumerWidget {
                 l10n.selectOperation,
                 style: theme.textTheme.labelSmall?.copyWith(
                   fontWeight: FontWeight.w900,
-                  letterSpacing: 4,
-                  color: theme.colorScheme.primary.withValues(alpha: 0.5),
+                  letterSpacing: 2,
+                  fontSize: 12,
+                  color: theme.colorScheme.primary,
                 ),
               ),
             ),
@@ -349,8 +350,9 @@ class ArcadeScreen extends ConsumerWidget {
                   'SELECT DIFFICULTY LEVEL',
                   style: theme.textTheme.labelSmall?.copyWith(
                     fontWeight: FontWeight.w900,
-                    letterSpacing: 4,
-                    color: theme.colorScheme.primary.withValues(alpha: 0.5),
+                    letterSpacing: 2,
+                    fontSize: 12,
+                    color: theme.colorScheme.primary,
                   ),
                 ),
                 const SizedBox(height: 16),
@@ -464,7 +466,7 @@ class ArcadeScreen extends ConsumerWidget {
         context,
         PageRouteBuilder(
           pageBuilder: (context, animation, secondaryAnimation) =>
-              const GameScreen(),
+              GameScreen(),
           transitionsBuilder: (context, animation, secondaryAnimation, child) {
             return FadeTransition(opacity: animation, child: child);
           },

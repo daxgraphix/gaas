@@ -5,6 +5,7 @@ import '../../../core/providers.dart';
 import '../../../core/sound_manager.dart';
 import '../../../core/themes/app_themes.dart';
 import '../../../core/utils/responsive_utils.dart';
+import '../../../data/models/game_settings.dart';
 import '../../../l10n/generated/app_localizations.dart';
 import '../../calculator/calculator_screen.dart';
 import '../../profile_setup/profile_setup_screen.dart';
@@ -67,15 +68,15 @@ class ProfileScreen extends ConsumerWidget {
                   l10n,
                 ),
             ),
-            SliverToBoxAdapter(
-              child: _buildAchievementsSection(
-                theme,
-                totalStars.value ?? 0,
-                accuracy.value ?? 0.0,
-                totalTime.value ?? 0,
-                l10n,
-              ),
+          SliverToBoxAdapter(
+            child: _buildAchievementsSection(
+              theme,
+              totalStars,
+              accuracy,
+              totalTime,
+              l10n,
             ),
+          ),
             const SliverToBoxAdapter(child: SizedBox(height: 100)),
           ],
         ),
@@ -247,10 +248,10 @@ class ProfileScreen extends ConsumerWidget {
   }
 
   Widget _buildStats(
-    AsyncValue<int> totalStars,
-    AsyncValue<int> completedLevels,
-    AsyncValue<int> totalTime,
-    AsyncValue<double> accuracy,
+    int totalStars,
+    int completedLevels,
+    int totalTime,
+    double accuracy,
     ThemeData theme,
     AppLocalizations l10n,
   ) {
@@ -264,44 +265,28 @@ class ProfileScreen extends ConsumerWidget {
           children: [
             _buildStatItem(
                 l10n.stars,
-              totalStars.when(
-                data: (v) => '$v',
-                loading: () => '...',
-                error: (_, _) => '0',
-              ),
+              '$totalStars',
               Icons.star,
               theme.colorScheme.tertiary,
               theme,
             ),
             _buildStatItem(
                 l10n.level,
-              completedLevels.when(
-                data: (v) => '$v',
-                loading: () => '...',
-                error: (_, _) => '0',
-              ),
+              '$completedLevels',
               Icons.check_circle,
               theme.colorScheme.primary,
               theme,
             ),
             _buildStatItem(
                 l10n.time,
-              totalTime.when(
-                data: (v) => '${v}m',
-                loading: () => '...',
-                error: (_, _) => '0m',
-              ),
+              '${totalTime}m',
               Icons.timer,
               theme.colorScheme.primary,
               theme,
             ),
             _buildStatItem(
                 l10n.accuracy,
-              accuracy.when(
-                data: (v) => '${v.toStringAsFixed(0)}%',
-                loading: () => '...',
-                error: (_, _) => '0%',
-              ),
+              '${accuracy.toStringAsFixed(0)}%',
               Icons.analytics,
               theme.colorScheme.secondary,
               theme,
@@ -354,7 +339,7 @@ class ProfileScreen extends ConsumerWidget {
     dynamic user,
     AppLocale currentLocale,
     AppThemeType currentTheme,
-    SettingsState settings,
+    GameSettings settings,
     AppLocalizations l10n,
   ) {
     final isMobile = ResponsiveUtils.isMobile(context);
@@ -366,7 +351,7 @@ class ProfileScreen extends ConsumerWidget {
           _buildSectionHeader(l10n.storeAndCustomization, theme),
           const SizedBox(height: 12),
           _buildMenuCard(
-            icon: Icons.storefront,
+            icon: Icons.storefront_outlined,
             title: l10n.avatarShop,
             subtitle: l10n.unlockNewAvatarsWithPoints,
             color: theme.colorScheme.tertiary,
@@ -379,54 +364,33 @@ class ProfileScreen extends ConsumerWidget {
             },
           ),
           const SizedBox(height: 32),
-          _buildSectionHeader(l10n.systemSettings, theme),
+          _buildSectionHeader(l10n.interface, theme),
           const SizedBox(height: 12),
           _buildMenuCard(
-            icon: Icons.calculate,
-            title: l10n.calculator,
-            subtitle: l10n.builtInArithmeticTool,
-            color: theme.colorScheme.primary,
-            theme: theme,
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const CalculatorScreen()),
-              );
-            },
-          ),
-          _buildMenuCard(
-            icon: Icons.bar_chart,
-            title: l10n.reports,
-            subtitle: l10n.performanceAnalytics,
-            color: theme.colorScheme.secondary,
-            theme: theme,
-            onTap: () {
-              ref.read(navigationIndexProvider.notifier).state = 2;
-            },
-          ),
-          _buildMenuCard(
-            icon: Icons.color_lens,
-              title: l10n.visualTheme,
+            icon: Icons.palette_outlined,
+            title: l10n.visualTheme,
             subtitle: AppThemes.getThemeName(currentTheme).toUpperCase(),
-            color: theme.colorScheme.secondary,
+            color: theme.colorScheme.primary,
             theme: theme,
             onTap: () => _showThemeDialog(context, ref, currentTheme, theme),
           ),
           _buildMenuCard(
-            icon: Icons.language,
-              title: l10n.language,
-            subtitle: '${currentLocale.flag} ${currentLocale.nativeName}'.toUpperCase(),
+            icon: Icons.language_outlined,
+            title: l10n.language,
+            subtitle:
+                '${currentLocale.flag} ${currentLocale.nativeName}'.toUpperCase(),
             color: theme.colorScheme.primary,
             theme: theme,
             onTap: () => _showLanguageDialog(context, ref, currentLocale),
             trailing: IconButton(
-              icon: const Icon(Icons.swap_horiz, size: 20),
+              icon: const Icon(Icons.swap_horiz_outlined, size: 20),
               onPressed: () {
                 ref.read(localeProvider.notifier).toggleLanguage();
                 final newLocale = ref.read(localeProvider);
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                    content: Text('${AppLocalizations.of(context)?.switchedTo ?? 'Switched to'} ${newLocale.name}'),
+                    content: Text(
+                        '${AppLocalizations.of(context)?.switchedTo ?? 'Switched to'} ${newLocale.name}'),
                     duration: const Duration(seconds: 1),
                     backgroundColor: Theme.of(context).colorScheme.primary,
                   ),
@@ -436,52 +400,7 @@ class ProfileScreen extends ConsumerWidget {
             ),
           ),
           _buildMenuCard(
-            icon: Icons.notifications,
-              title: l10n.notifications,
-            subtitle: l10n.pushUpdates,
-            color: theme.colorScheme.secondary,
-            theme: theme,
-            trailing: Switch(
-              value: settings.notificationsEnabled,
-              onChanged: (value) {
-                HapticManager.instance.selectionClick();
-                ref.read(settingsProvider.notifier).toggleNotifications(value);
-              },
-              activeThumbColor: theme.colorScheme.secondary,
-            ),
-          ),
-          _buildMenuCard(
-            icon: Icons.volume_up,
-              title: l10n.audioOutput,
-            subtitle: l10n.sfxAndMusic,
-            color: theme.colorScheme.tertiary,
-            theme: theme,
-            trailing: Switch(
-              value: settings.soundEnabled,
-              onChanged: (value) {
-                HapticManager.instance.selectionClick();
-                ref.read(settingsProvider.notifier).toggleSound(value);
-              },
-              activeThumbColor: theme.colorScheme.tertiary,
-            ),
-          ),
-          _buildMenuCard(
-            icon: Icons.vibration,
-              title: l10n.hapticFeedback,
-            subtitle: l10n.tactileResponse,
-            color: theme.colorScheme.error,
-            theme: theme,
-            trailing: Switch(
-              value: settings.hapticsEnabled,
-              onChanged: (value) {
-                HapticManager.instance.selectionClick();
-                ref.read(settingsProvider.notifier).toggleHaptics(value);
-              },
-              activeThumbColor: theme.colorScheme.error,
-            ),
-          ),
-          _buildMenuCard(
-            icon: Icons.visibility_off,
+            icon: Icons.visibility_outlined,
             title: l10n.focusMode,
             subtitle: l10n.focusModeDesc,
             color: theme.colorScheme.primary,
@@ -496,7 +415,7 @@ class ProfileScreen extends ConsumerWidget {
             ),
           ),
           _buildMenuCard(
-            icon: Icons.blur_on,
+            icon: Icons.auto_awesome_outlined,
             title: l10n.performanceMode,
             subtitle: l10n.performanceModeDesc,
             color: theme.colorScheme.primary,
@@ -518,6 +437,80 @@ class ProfileScreen extends ConsumerWidget {
                 );
               },
             ),
+          ),
+          const SizedBox(height: 32),
+          _buildSectionHeader(l10n.audioAndHaptics, theme),
+          const SizedBox(height: 12),
+          _buildMenuCard(
+            icon: Icons.notifications_none_outlined,
+            title: l10n.notifications,
+            subtitle: l10n.pushUpdates,
+            color: theme.colorScheme.secondary,
+            theme: theme,
+            trailing: Switch(
+              value: settings.notificationsEnabled,
+              onChanged: (value) {
+                HapticManager.instance.selectionClick();
+                ref.read(settingsProvider.notifier).toggleNotifications(value);
+              },
+              activeThumbColor: theme.colorScheme.secondary,
+            ),
+          ),
+          _buildMenuCard(
+            icon: Icons.volume_up_outlined,
+            title: l10n.audioOutput,
+            subtitle: l10n.sfxAndMusic,
+            color: theme.colorScheme.secondary,
+            theme: theme,
+            trailing: Switch(
+              value: settings.soundEnabled,
+              onChanged: (value) {
+                HapticManager.instance.selectionClick();
+                ref.read(settingsProvider.notifier).toggleSound(value);
+              },
+              activeThumbColor: theme.colorScheme.secondary,
+            ),
+          ),
+          _buildMenuCard(
+            icon: Icons.vibration_outlined,
+            title: l10n.hapticFeedback,
+            subtitle: l10n.tactileResponse,
+            color: theme.colorScheme.secondary,
+            theme: theme,
+            trailing: Switch(
+              value: settings.vibrationEnabled,
+              onChanged: (value) {
+                HapticManager.instance.selectionClick();
+                ref.read(settingsProvider.notifier).toggleHaptics(value);
+              },
+              activeThumbColor: theme.colorScheme.secondary,
+            ),
+          ),
+          const SizedBox(height: 32),
+          _buildSectionHeader(l10n.systemSettings, theme),
+          const SizedBox(height: 12),
+          _buildMenuCard(
+            icon: Icons.calculate_outlined,
+            title: l10n.calculator,
+            subtitle: l10n.builtInArithmeticTool,
+            color: theme.colorScheme.tertiary,
+            theme: theme,
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const CalculatorScreen()),
+              );
+            },
+          ),
+          _buildMenuCard(
+            icon: Icons.analytics_outlined,
+            title: l10n.reports,
+            subtitle: l10n.performanceAnalytics,
+            color: theme.colorScheme.tertiary,
+            theme: theme,
+            onTap: () {
+              ref.read(navigationIndexProvider.notifier).state = 2;
+            },
           ),
         ],
       ),

@@ -18,7 +18,7 @@ class AvatarShopScreen extends ConsumerWidget {
     if (user == null) return const Scaffold();
 
     final theme = Theme.of(context);
-    final totalStars = ref.watch(totalStarsProvider).value ?? 0;
+    final totalStars = ref.watch(totalStarsProvider);
 
     final availableAvatars = [
       {'id': 'circle', 'name': 'Circle', 'cost': 0, 'requiredStars': 0, 'requiredLevel': 1, 'icon': Icons.circle, 'rarity': AppRarity.common, 'effect': 'None'},

@@ -98,7 +98,8 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
                       child: Text(
                         entry,
                         style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.colorScheme.primary.withValues(alpha: 0.6),
+                          color: theme.colorScheme.primary,
+                          fontWeight: FontWeight.w700,
                           fontFamily: 'monospace',
                           fontSize: 12,
                         ),
@@ -120,7 +121,8 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
               child: Text(
                 _expression,
                 style: theme.textTheme.bodyLarge?.copyWith(
-                  color: theme.colorScheme.primary.withValues(alpha: 0.8),
+                  color: theme.colorScheme.primary,
+                  fontWeight: FontWeight.w700,
                   fontFamily: 'monospace',
                 ),
                 maxLines: 1,
@@ -241,7 +243,7 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
             ? theme.colorScheme.primary
             : isOperator
                 ? theme.colorScheme.secondary
-                : theme.colorScheme.outline.withValues(alpha: 0.3);
+            : theme.colorScheme.outline;
 
     final textColor = isClear
         ? theme.colorScheme.error
@@ -249,7 +251,7 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
             ? theme.colorScheme.onPrimary
             : isOperator
                 ? theme.colorScheme.secondary
-                : AppDesignTokens.textPrimary(context);
+                : theme.colorScheme.onSurface;
 
     return Expanded(
       flex: isWide ? 2 : 1,
@@ -378,7 +380,7 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
     final lhs = double.tryParse(left.replaceAll('−', '-'));
     final rhs = double.tryParse(right.replaceAll('−', '-'));
     if (lhs == null || rhs == null) {
-      _display = 'Error';
+      _display = l10n.tryAgain;
       _shouldResetInput = true;
       return;
     }
@@ -403,7 +405,7 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
         result = lhs / rhs;
         break;
       default:
-        _display = 'Error';
+        _display = l10n.tryAgain;
         _shouldResetInput = true;
         return;
     }
@@ -422,7 +424,7 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
 
   String _formatNumber(double number) {
     if (number.isInfinite || number.isNaN) {
-      return 'Error';
+      return l10n.tryAgain;
     }
     if (number == number.toInt()) {
       return number.toInt().toString();

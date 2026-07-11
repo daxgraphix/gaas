@@ -9,9 +9,7 @@ class CrossNumbersEngine {
   /// [difficulty] scales grid size (5x5, 7x7, 9x9) and hiding strategy.
   static CrossNumbersPuzzle generatePuzzle({required int difficulty, String style = 'Classic'}) {
     int size = 5;
-    if (difficulty >= 45) {
-      size = 9;
-    } else if (difficulty >= 20 || style == 'Dense' || style == 'Chaos') {
+    if (difficulty >= 25 || style == 'Dense' || style == 'Chaos') {
       size = 7;
     }
     
@@ -29,35 +27,31 @@ class CrossNumbersEngine {
     );
 
     bool success = false;
-    // Reduced attempts to prevent ANR on main thread while ensuring quality.
     int attemptsBase = 2000 + (difficulty * 50);
 
     if (size == 5) {
       success = _generate5x5(grid, difficulty, min(attemptsBase, 4000));
-    } else if (size == 7) {
-      success = _generate7x7(grid, difficulty, min(attemptsBase, 8000));
     } else {
-      success = _generate9x9(grid, difficulty, min(attemptsBase, 12000));
+      success = _generate7x7(grid, difficulty, min(attemptsBase, 8000));
     }
 
     if (!success) {
       _generateFallback(grid, size);
     }
 
-    // Logic for hiding cells based on difficulty and style.
+    // Hide more cells to make it challenging
     int hiddenCount = _calculateHiddenCount(size, difficulty, style);
     _hideCells(grid, hiddenCount, style: style, difficulty: difficulty);
     
-    // Human Check: Ensure solvability
+    // Ensure solvability but don't over-reveal
     int safetyReveals = 0;
-    while (!isSolvable(grid) && safetyReveals < 8) {
+    while (!isSolvable(grid) && safetyReveals < 3) {
       _revealOneCell(grid);
       safetyReveals++;
     }
 
     _assignClueNumbers(grid);
 
-    // Extract equations for the puzzle model.
     final equations = <CrossNumbersEquation>[];
     for (int r = 0; r < size; r += 2) {
       final cells = <Point<int>>[];
@@ -92,21 +86,21 @@ class CrossNumbersEngine {
   }
 
   static int _calculateHiddenCount(int size, int difficulty, String style) {
-    int totalNumbers = (size == 5) ? 9 : (size == 7 ? 16 : 25);
-    int maxHidden = (totalNumbers * 0.55).floor();
-    maxHidden = min(maxHidden, totalNumbers - 3);
+    int totalNumbers = (size == 5) ? 9 : 16;
+    // We want more empty spaces. 70-85% hidden is good for a challenge.
+    int maxHidden = (totalNumbers * 0.85).floor();
+    maxHidden = min(maxHidden, totalNumbers - 1);
 
     int base;
     if (size == 5) {
-      base = 2 + (difficulty ~/ 12);
-    } else if (size == 7) {
-      base = 5 + (difficulty - 20) ~/ 6;
+      base = 5 + (difficulty ~/ 8);
     } else {
-      base = 10 + (difficulty - 45) ~/ 5;
+      base = 10 + (difficulty - 20) ~/ 5;
     }
 
-    double multiplier = (style == 'Chaos') ? 1.35 : ((style == 'Dense') ? 1.15 : 1.0);
-    return min((base * multiplier).toInt(), maxHidden);
+    double multiplier = (style == 'Chaos') ? 1.4 : ((style == 'Dense') ? 1.2 : 1.0);
+    int count = (base * multiplier).toInt();
+    return count.clamp(size == 5 ? 4 : 8, maxHidden);
   }
 
   static List<String> _getAllowedOperators(int difficulty) {
@@ -332,76 +326,6 @@ class CrossNumbersEngine {
     }
   }
 
-  static bool _generate9x9(List<List<CrossNumbersCell>> grid, int difficulty, int attempts) {
-    final ops = _getAllowedOperators(difficulty);
-    final maxNum = 60 + (difficulty - 45) * 5;
-    final minNum = 10 + (difficulty ~/ 6);
-    for (int attempt = 0; attempt < attempts; attempt++) {
-      List<List<int>> n = List.generate(4, (_) => List.generate(4, (_) => _getInterestingNumber(minNum, maxNum, difficulty)));
-      List<List<String>> rOps = List.generate(4, (_) => List.generate(3, (_) => _pickOperator(difficulty, ops)));
-      List<List<String>> cOps = List.generate(4, (_) => List.generate(3, (_) => _pickOperator(difficulty, ops)));
-      List<int?> rRes = List.generate(4, (r) => _evalChain3(n[r][0], rOps[r][0], n[r][1], rOps[r][1], n[r][2], rOps[r][2], n[r][3], difficulty: difficulty));
-      List<int?> cRes = List.generate(4, (c) => _evalChain3(n[0][c], cOps[c][0], n[1][c], cOps[c][1], n[2][c], cOps[c][2], n[3][c], difficulty: difficulty));
-      if (rRes.any((v) => v == null || v <= 0 || v > 10000) || cRes.any((v) => v == null || v <= 0 || v > 10000)) {
-        continue;
-      }
-
-      final List<int> rResV = rRes.cast<int>().toList();
-      final List<int> cResV = cRes.cast<int>().toList();
-
-      Map<int, List<String>> colFinals = {};
-      for (var o1 in ops) {
-        for (var o2 in ops) {
-          for (var o3 in ops) {
-            int? res = _evalChain3(cResV[0], o1, cResV[1], o2, cResV[2], o3, cResV[3], difficulty: difficulty);
-            if (res != null && res > 0) {
-              colFinals[res] = [o1, o2, o3];
-            }
-          }
-        }
-      }
-      for (var o1 in ops) {
-        for (var o2 in ops) {
-          for (var o3 in ops) {
-            int? res = _evalChain3(rResV[0], o1, rResV[1], o2, rResV[2], o3, rResV[3], difficulty: difficulty);
-            if (res != null && colFinals.containsKey(res)) {
-              _fill9x9Grid(grid, n, rOps, cOps, rResV, cResV, colFinals[res]!, [o1, o2, o3], res);
-              return true;
-            }
-          }
-        }
-      }
-    }
-    return false;
-  }
-
-  static void _fill9x9Grid(List<List<CrossNumbersCell>> grid, List<List<int>> n, List<List<String>> rOps, List<List<String>> cOps, List<int> rRes, List<int> cRes, List<String> lrOps, List<String> lcOps, int finalRes) {
-    for (int r = 0; r < 4; r++) {
-      for (int c = 0; c < 4; c++) {
-        _setCell(grid, r * 2, c * 2, n[r][c].toString());
-        if (c < 3) {
-          _setCell(grid, r * 2, c * 2 + 1, rOps[r][c]);
-        }
-      }
-      _setCell(grid, r * 2, 7, "=");
-      _setCell(grid, r * 2, 8, rRes[r].toString());
-    }
-    for (int c = 0; c < 4; c++) {
-      for (int r = 0; r < 3; r++) {
-        _setCell(grid, r * 2 + 1, c * 2, cOps[c][r]);
-      }
-      _setCell(grid, 7, c * 2, "=");
-      _setCell(grid, 8, c * 2, cRes[c].toString());
-    }
-    for (int i = 0; i < 3; i++) {
-      _setCell(grid, 8, i * 2 + 1, lrOps[i]);
-      _setCell(grid, i * 2 + 1, 8, lcOps[i]);
-    }
-    _setCell(grid, 8, 7, "=");
-    _setCell(grid, 7, 8, "=");
-    _setCell(grid, 8, 8, finalRes.toString());
-  }
-
   static int? _evalChain(int n1, String op1, int n2, String op2, int n3, {int difficulty = 0}) {
     int? r1 = _eval(n1, op1, n2, difficulty: difficulty);
     if (r1 == null) {
@@ -491,6 +415,7 @@ class CrossNumbersEngine {
     final eqMap = <Point<int>, List<int>>{};
     final eqs = <List<Point<int>>>[];
     final nums = <Point<int>>[];
+    
     void addEq(List<Point<int>> eq) {
       if (eq.isEmpty) return;
       int idx = eqs.length;
@@ -500,6 +425,7 @@ class CrossNumbersEngine {
         if (!nums.contains(p)) nums.add(p);
       }
     }
+    
     for (int r = 0; r < size; r += 2) {
       final eq = <Point<int>>[];
       for (int c = 0; c < size; c += 2) {
@@ -516,74 +442,46 @@ class CrossNumbersEngine {
     }
 
     nums.shuffle(_random);
+    
+    // Priority: hide results first, then operands
     nums.sort((a, b) {
       bool aRes = grid[a.x][a.y].type == CrossNumbersCellType.result;
       bool bRes = grid[b.x][b.y].type == CrossNumbersCellType.result;
-      if (aRes != bRes) {
-        if (difficulty >= 50) return aRes ? -1 : 1;
-        if (difficulty < 25) return aRes ? 1 : -1;
-      }
+      if (aRes != bRes) return aRes ? -1 : 1;
       return 0;
     });
+
     final hidden = <Point<int>>{};
     final eqVis = List.generate(eqs.length, (i) => eqs[i].length);
+    
     bool canH(Point<int> p, List<int> vis) {
       for (int idx in eqMap[p]!) {
-        if (vis[idx] <= 2) {
+        // High difficulty: allow hiding almost everything (only 1 must stay)
+        // Lower difficulty: keep at least 2 visible to provide more clues
+        int minVisible = difficulty > 30 ? 1 : 2;
+        if (vis[idx] <= minVisible) {
           return false;
         }
       }
       return true;
     }
-    String mirrorMode = _random.nextBool() ? 'H' : 'V';
+
     for (var p in nums) {
-      if (hidden.length >= count) {
-        break;
-      }
-      if (hidden.contains(p)) {
-        continue;
-      }
-      List<Point<int>> targets = [p];
-      if (style == 'Symmetry' || style == 'Mirror' || style == 'Diagonal') {
-        Point<int> sym;
-        if (style == 'Symmetry') {
-          sym = Point(size - 1 - p.x, size - 1 - p.y);
-        } else if (style == 'Mirror') {
-          sym = mirrorMode == 'H' ? Point(p.x, size - 1 - p.y) : Point(size - 1 - p.x, p.y);
-        } else {
-          sym = Point(p.y, p.x);
-        }
-        if (eqMap.containsKey(sym) && sym != p && !hidden.contains(sym)) {
-          targets.add(sym);
-        }
-      }
-      bool canAll = true;
-      List<int> tempVis = List.from(eqVis);
-      for (var t in targets) {
-        if (!canH(t, tempVis)) {
-          canAll = false;
-          break;
-        }
-        for (int idx in eqMap[t]!) {
-          tempVis[idx]--;
-        }
-      }
-      if (canAll && (hidden.length + targets.length <= count)) {
-        for (var t in targets) {
-          hidden.add(t);
-          for (int idx in eqMap[t]!) {
-            eqVis[idx]--;
-          }
-        }
-      } else if (canH(p, eqVis)) {
+      if (hidden.length >= count) break;
+      if (canH(p, eqVis)) {
         hidden.add(p);
         for (int idx in eqMap[p]!) {
           eqVis[idx]--;
         }
       }
     }
+
     for (var p in hidden) {
-      grid[p.x][p.y] = grid[p.x][p.y].copyWith(isUserEditable: true, userValue: '', isStatic: false);
+      grid[p.x][p.y] = grid[p.x][p.y].copyWith(
+        isUserEditable: true, 
+        userValue: '', 
+        isStatic: false
+      );
     }
   }
 

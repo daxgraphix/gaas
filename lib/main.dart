@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'dart:io' show Platform;
 import 'core/providers.dart';
+import 'features/game/logic/session_stats_provider.dart';
 import 'core/themes/app_themes.dart';
 import 'core/utils/game_flow_optimizer.dart';
 import 'core/utils/responsive_utils.dart';

@@ -64,14 +64,7 @@ class _MathRiddleScreenState extends ConsumerState<MathRiddleScreen> with Single
 
   void _loadPuzzle() {
     _answerController.clear();
-    switch (widget.riddleType) {
-      case MathRiddleType.arithmetic:
-        ref.read(mathRiddleProvider.notifier).loadArithmeticProblem(widget.difficulty);
-        break;
-      case MathRiddleType.logicChallenge:
-        ref.read(mathRiddleProvider.notifier).loadLogicChallenge(widget.difficulty);
-        break;
-    }
+    ref.read(mathRiddleProvider.notifier).loadLevel(widget.difficulty);
   }
 
   @override
@@ -279,35 +272,56 @@ class _MathRiddleScreenState extends ConsumerState<MathRiddleScreen> with Single
   Widget _getShapeWidget(String shape, ThemeData theme) {
     double size = 32;
     Widget icon;
-    if (shape.contains('square') || shape.contains('box')) {
+    final color = theme.colorScheme.onSurface.withValues(alpha: 0.8);
+    
+    if (shape.contains('square') || shape.contains('box') || shape.contains('diamond')) {
       icon = Container(
         width: size,
         height: size,
         decoration: BoxDecoration(
-          border: Border.all(color: theme.colorScheme.onSurface.withValues(alpha: 0.6), width: 1),
+          border: Border.all(color: color, width: 1.5),
+          borderRadius: shape.contains('diamond') ? null : BorderRadius.circular(4),
         ),
+        child: shape.contains('diamond') ? Transform.rotate(angle: pi / 4, child: Container(decoration: BoxDecoration(border: Border.all(color: color, width: 1)))) : null,
       );
-    } else if (shape.contains('circle')) {
+    } else if (shape.contains('circle') || shape.contains('moon')) {
       icon = Container(
         width: size,
         height: size,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
-          border: Border.all(color: theme.colorScheme.onSurface.withValues(alpha: 0.6), width: 1),
+          border: Border.all(color: color, width: 1.5),
         ),
       );
     } else if (shape.contains('triangle')) {
       icon = CustomPaint(
         size: Size(size, size),
-        painter: TrianglePainter(color: theme.colorScheme.onSurface.withValues(alpha: 0.6)),
+        painter: TrianglePainter(color: color, sides: 3),
+      );
+    } else if (shape.contains('pentagon')) {
+      icon = CustomPaint(
+        size: Size(size, size),
+        painter: TrianglePainter(color: color, sides: 5),
+      );
+    } else if (shape.contains('hexagon')) {
+      icon = CustomPaint(
+        size: Size(size, size),
+        painter: TrianglePainter(color: color, sides: 6),
+      );
+    } else if (shape.contains('octagon')) {
+      icon = CustomPaint(
+        size: Size(size, size),
+        painter: TrianglePainter(color: color, sides: 8),
       );
     } else if (shape.contains('star')) {
       icon = CustomPaint(
         size: Size(size, size),
-        painter: StarPainter(color: theme.colorScheme.onSurface.withValues(alpha: 0.6)),
+        painter: StarPainter(color: color),
       );
+    } else if (shape.contains('heart')) {
+      icon = Icon(Icons.favorite_border, color: color, size: size);
     } else {
-      icon = Text(shape, style: TextStyle(color: theme.colorScheme.onSurface.withValues(alpha: 0.3)));
+      icon = Text(shape, style: TextStyle(color: color.withValues(alpha: 0.5), fontSize: 12));
     }
 
     return Padding(
@@ -440,10 +454,11 @@ class _MathRiddleScreenState extends ConsumerState<MathRiddleScreen> with Single
                 
                 if (newState.isCorrect || newState.correctAnswers > previousCorrect) {
                    // Add dynamic score
-                   final difficultyLevel = DifficultyLevel.values[((widget.difficulty - 1) ~/ 10).clamp(0, 2)];
+                   final difficultyLevel = DifficultyLevel.values[((widget.difficulty - 1) ~/ 2).clamp(0, 2)];
+                   final basePoints = state.currentRiddle?.basePoints ?? state.currentLogic?.basePoints ?? 50;
                    final points = GameDynamicsController.calculateDynamicScore(
                      isCorrect: true,
-                     basePoints: state.currentRiddle?.basePoints ?? 10,
+                     basePoints: basePoints,
                      currentStreak: newState.currentStreak,
                      responseTime: state.timeSpentSeconds * 1000.0,
                      difficulty: difficultyLevel,
@@ -571,8 +586,8 @@ class _MathRiddleScreenState extends ConsumerState<MathRiddleScreen> with Single
         title: passed ? 'LEVEL COMPLETE' : 'NOT PASSED',
         message: passed 
             ? '$correctAnswers/$totalQuestions correct\nNext level unlocked!'
-            : '$correctAnswers/$totalQuestions correct\nNeed 35+ correct to pass',
-        stars: passed ? (correctAnswers >= totalQuestions ? 3 : (correctAnswers >= totalQuestions * 0.8 ? 2 : 1)) : 0,
+            : '$correctAnswers/$totalQuestions correct\nNeed 5 correct to pass',
+        stars: state.stars,
         isSuccess: passed,
         primaryButtonText: passed ? 'NEXT LEVEL' : 'TRY AGAIN',
         secondaryButtonText: 'BACK',
@@ -612,24 +627,38 @@ class _MathRiddleScreenState extends ConsumerState<MathRiddleScreen> with Single
     ref.read(soundManagerProvider).playWrongAnswer();
     HapticManager.instance.wrongAnswerPattern();
     _answerController.clear();
+    
+    _shakeController.forward(from: 0.0);
   }
 }
 
 class TrianglePainter extends CustomPainter {
   final Color color;
-  TrianglePainter({required this.color});
+  final int sides;
+  TrianglePainter({required this.color, this.sides = 3});
 
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
       ..color = color
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 1;
+      ..strokeWidth = 1.5;
 
     final path = Path();
-    path.moveTo(size.width / 2, 0);
-    path.lineTo(size.width, size.height);
-    path.lineTo(0, size.height);
+    final centerX = size.width / 2;
+    final centerY = size.height / 2;
+    final radius = size.width / 2;
+
+    for (int i = 0; i < sides; i++) {
+      double angle = (i * 360 / sides - 90) * pi / 180;
+      double x = centerX + radius * cos(angle);
+      double y = centerY + radius * sin(angle);
+      if (i == 0) {
+        path.moveTo(x, y);
+      } else {
+        path.lineTo(x, y);
+      }
+    }
     path.close();
 
     canvas.drawPath(path, paint);

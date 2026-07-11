@@ -171,7 +171,7 @@ class _CampaignScreenState extends ConsumerState<CampaignScreen>
       Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (_) => const GameScreen(),
+          builder: (_) => GameScreen(),
         ),
       );
     }

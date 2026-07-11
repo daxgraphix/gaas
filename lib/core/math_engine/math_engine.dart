@@ -4,6 +4,7 @@ import '../constants/app_constants.dart';
 import '../../data/models/math_riddle.dart';
 
 class MathQuestion {
+  final String id;
   final int operand1;
   final int operand2;
   final int? operand3;
@@ -11,10 +12,13 @@ class MathQuestion {
   final dynamic correctAnswer;
   final String difficulty;
   final String? hint;
+  final List<String> progressiveHints;
   final String? customQuestion;
   final List<String>? options;
+  final String? explanation;
 
   MathQuestion({
+    String? id,
     required this.operand1,
     required this.operand2,
     this.operand3,
@@ -22,9 +26,11 @@ class MathQuestion {
     required this.correctAnswer,
     this.difficulty = 'medium',
     this.hint,
+    this.progressiveHints = const [],
     this.customQuestion,
     this.options,
-  });
+    this.explanation,
+  }) : id = id ?? DateTime.now().millisecondsSinceEpoch.toString();
 
   String get displayString {
     if (customQuestion != null) return customQuestion!;
@@ -94,9 +100,13 @@ class MathEngine {
     int skillRating = 1000,
     double heatIndex = 1.0,
   }) {
+    // Handle comma-separated operations for mixed mode
+    final ops = operation.split(',');
+    final currentOp = ops.length > 1 ? ops[_random.nextInt(ops.length)] : operation;
+
     // Handle advanced topics
-    if (['logic'].contains(operation)) {
-      return _generateAdvancedQuestion(operation, level);
+    if (['logic'].contains(currentOp)) {
+      return _generateAdvancedQuestion(currentOp, level);
     }
 
     final isBoss = level % 10 == 0 && !isArcade;
@@ -110,11 +120,11 @@ class MathEngine {
 
     do {
       if (isArcade) {
-        question = _generateArcadeQuestion(operation, effectiveLevel);
+        question = _generateArcadeQuestion(currentOp, effectiveLevel);
       } else if (isBoss) {
-        question = _generateBossQuestion(operation, effectiveLevel);
+        question = _generateBossQuestion(currentOp, effectiveLevel);
       } else {
-        final (min, max) = getNumberRange(effectiveLevel, operation);
+        final (min, max) = getNumberRange(effectiveLevel, currentOp);
         
         // Dynamic complexity: if skill is high OR heat is high, potentially add a third operand
         // High heat makes the chance for 3 operands increase up to 70%
@@ -122,7 +132,7 @@ class MathEngine {
         final useThreeOperands = (skillRating > 1400 || heatIndex > 1.5) && 
                                  _random.nextDouble() < threeOperandChance;
 
-        switch (operation) {
+        switch (currentOp) {
           case 'addition':
             question = useThreeOperands 
                 ? _generateThreeOperandAddition(min, max, effectiveLevel)
@@ -160,6 +170,8 @@ class MathEngine {
       correctAnswer: a + b + c,
       difficulty: 'hard',
       hint: 'Sum of three numbers',
+      progressiveHints: ['Sum of three numbers', 'Try adding the first two first: ${a + b} + $c'],
+      explanation: 'To solve $a + $b + $c, you can add $a and $b to get ${a+b}, then add $c to get ${a+b+c}.',
     );
   }
 
@@ -205,14 +217,20 @@ class MathEngine {
     final int skillRating = params['skillRating'] ?? 1000;
     final double heatIndex = params['heatIndex'] ?? 1.0;
 
-    final questions = <MathQuestion>{};
+    final questions = <MathQuestion>[];
     final excludeSet = <String>{};
+    
+    // Support comma-separated operations for mixed mode in batch generation
+    final ops = operation.split(',');
+    
     int attempts = 0;
     const maxAttempts = 1000;
 
     while (questions.length < count && attempts < maxAttempts) {
+      final currentOp = ops.length > 1 ? ops[_random.nextInt(ops.length)] : operation;
+      
       final question = generateQuestion(
-        operation,
+        currentOp,
         level,
         isArcade: isArcade,
         excludeQuestions: excludeSet,
@@ -224,10 +242,9 @@ class MathEngine {
         questions.add(question);
         excludeSet.add(question.displayString);
       }
-
       attempts++;
     }
-    return questions.toList();
+    return questions;
   }
 
   static MathQuestion _generateArcadeQuestion(String operation, int level) {
@@ -294,7 +311,12 @@ class MathEngine {
         correctAnswer: result,
         difficulty: isHighLevelBoss ? 'master' : 'expert',
         hint: isHighLevelBoss ? 'Ultimate Chapter Boss Challenge!' : 'Three-part calculation!',
+        progressiveHints: [
+          isHighLevelBoss ? 'Ultimate Chapter Boss Challenge!' : 'Three-part calculation!',
+          'Focus on $op1 $opSymbol1 $op2 first.',
+        ],
         customQuestion: '$op1 $opSymbol1 $op2 $opSymbol2 $op3 = ?',
+        explanation: 'Boss challenge: perform the operations in order. $op1 $opSymbol1 $op2 = ${opSymbol1 == '+' ? op1+op2 : op1-op2}, then ${opSymbol1 == '+' ? op1+op2 : op1-op2} $opSymbol2 $op3 = $result.',
       );
     }
 
@@ -351,6 +373,8 @@ class MathEngine {
       correctAnswer: result,
       difficulty: difficulty,
       hint: 'Ends with ${result % 10}',
+      progressiveHints: ['Ends with ${result % 10}', 'Sum is between ${result - 5} and ${result + 5}'],
+      explanation: '$a plus $b equals $result.',
     );
   }
 
@@ -390,6 +414,8 @@ class MathEngine {
       correctAnswer: result,
       difficulty: difficulty,
       hint: 'Ends with ${result % 10}',
+      progressiveHints: ['Ends with ${result % 10}', 'The result is $result'],
+      explanation: '$a minus $b equals $result.',
     );
   }
 
@@ -420,6 +446,8 @@ class MathEngine {
       correctAnswer: result,
       difficulty: difficulty,
       hint: 'Starts with ${result.toString()[0]}',
+      progressiveHints: ['Starts with ${result.toString()[0]}', 'Ends with ${result % 10}'],
+      explanation: '$a times $b equals $result.',
     );
   }
 
@@ -451,6 +479,8 @@ class MathEngine {
       correctAnswer: quotient,
       difficulty: difficulty,
       hint: 'Result is $quotient',
+      progressiveHints: ['Result is $quotient'],
+      explanation: '$dividend divided by $divisor equals $quotient.',
     );
   }
 
@@ -467,6 +497,8 @@ class MathEngine {
       operation: 'addition',
       correctAnswer: result,
       hint: 'Ends with ${result % 10}',
+      progressiveHints: ['Ends with ${result % 10}'],
+      explanation: '$a + $b = $result',
     );
   }
 
@@ -487,6 +519,8 @@ class MathEngine {
       operation: 'subtraction',
       correctAnswer: result,
       hint: 'Ends with ${result % 10}',
+      progressiveHints: ['Ends with ${result % 10}'],
+      explanation: '$a - $b = $result',
     );
   }
 
@@ -512,6 +546,8 @@ class MathEngine {
       operation: 'multiplication',
       correctAnswer: result,
       hint: 'Ends with ${result % 10}',
+      progressiveHints: ['Ends with ${result % 10}'],
+      explanation: '$a * $b = $result',
     );
   }
 
@@ -599,8 +635,10 @@ class MathEngine {
       correctAnswer: riddle.correctAnswer,
       difficulty: level <= 3 ? 'easy' : level <= 6 ? 'medium' : 'hard',
       hint: hints.isNotEmpty ? hints.first : null,
+      progressiveHints: hints,
       customQuestion: questionText,
       options: riddle.options,
+      explanation: riddle is MathRiddle ? riddle.explanation : (riddle is LogicMathChallenge ? riddle.explanation : null),
     );
   }
 

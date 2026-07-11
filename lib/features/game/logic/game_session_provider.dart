@@ -5,8 +5,11 @@ import '../../../core/utils/game_flow_optimizer.dart';
 import '../../../core/math_engine/math_engine.dart';
 import '../../../core/providers.dart';
 import '../../../core/notification_service.dart';
-import '../../../core/game_adaptability/dynamic_difficulty_system.dart';
+import '../../../core/game_adaptability/dynamic_difficulty_system.dart' as difficulty;
 import '../../../data/content_library/achievement_system.dart';
+import '../../analytics/analytics_provider.dart';
+import 'session_stats_provider.dart';
+import 'player_performance_provider.dart';
 
 enum GameMode {
   campaign,
@@ -18,6 +21,7 @@ enum GameMode {
   speedDemon,
   mathMaster,
   marathon,
+  customMix,
 }
 
 enum GameState { ready, playing, paused, finished }
@@ -30,9 +34,12 @@ class GameSession {
   final int minNumber;
   final int maxNumber;
   final List<MathQuestion> questions;
+  final MathQuestion? currentQuestion;
   final int currentQuestionIndex;
   final int score;
   final int correctAnswers;
+  final int currentStreak;
+  final int bestStreak;
   final int lives;
   final int timeRemaining;
   final int totalQuestions;
@@ -42,6 +49,7 @@ class GameSession {
   final bool? playerWon;
   final Map<int, dynamic> userAnswers;
   final Map<int, bool> hintsUsed;
+  final List<String> revealedHints;
   final int comboMultiplier;
   final DateTime? lastAnswerTime;
   final bool isBossLevel;
@@ -58,9 +66,12 @@ class GameSession {
     this.minNumber = 1,
     this.maxNumber = 10,
     required this.questions,
+    this.currentQuestion,
     this.currentQuestionIndex = 0,
     this.score = 0,
     this.correctAnswers = 0,
+    this.currentStreak = 0,
+    this.bestStreak = 0,
     this.lives = 3,
     this.timeRemaining = 60,
     this.totalQuestions = 45,
@@ -70,6 +81,7 @@ class GameSession {
     this.playerWon,
     this.userAnswers = const {},
     this.hintsUsed = const {},
+    this.revealedHints = const [],
     this.comboMultiplier = 1,
     this.lastAnswerTime,
     this.isBossLevel = false,
@@ -79,14 +91,45 @@ class GameSession {
     this.heatIndex = 1.0,
   });
 
-  MathQuestion? get currentQuestion {
-    if (currentQuestionIndex < questions.length) {
-      return questions[currentQuestionIndex];
+  int get questionsRemaining => totalQuestions - currentQuestionIndex;
+
+  double get accuracy => totalQuestions > 0 ? (correctAnswers / totalQuestions) * 100 : 0.0;
+  
+  int get stars {
+    if (mode == GameMode.campaign) {
+      double pct = accuracy;
+      int s = 0;
+      if (pct >= 95) {
+        s = 3;
+      } else if (pct >= 85) {
+        s = 2;
+      } else if (pct >= 75) {
+        s = 1;
+      }
+
+      // Time Bonus: If the player is exceptionally fast (more than 20s remaining)
+      // and they were close to the next star tier, give them a boost.
+      if (timeRemaining > 20 && s > 0 && s < 3) {
+        if (pct >= 90 && s == 2) s = 3;
+        if (pct >= 80 && s == 1) s = 2;
+      }
+      return s;
+    } else {
+      // General star calculation for other modes if applicable
+      double pct = accuracy;
+      if (pct >= 95) return 3;
+      if (pct >= 85) return 2;
+      if (pct >= 75) return 1;
+      return 0;
     }
-    return null;
   }
 
-  int get questionsRemaining => totalQuestions - currentQuestionIndex;
+  bool get passed {
+    if (mode == GameMode.campaign) {
+      return correctAnswers >= (totalQuestions * 0.7).ceil(); // 70% threshold
+    }
+    return true; // Other modes usually "pass" if completed
+  }
 
   GameSession copyWith({
     GameMode? mode,
@@ -94,9 +137,12 @@ class GameSession {
     String? operation,
     int? level,
     List<MathQuestion>? questions,
+    MathQuestion? currentQuestion,
     int? currentQuestionIndex,
     int? score,
     int? correctAnswers,
+    int? currentStreak,
+    int? bestStreak,
     int? lives,
     int? timeRemaining,
     int? totalQuestions,
@@ -106,6 +152,7 @@ class GameSession {
     bool? playerWon,
     Map<int, dynamic>? userAnswers,
     Map<int, bool>? hintsUsed,
+    List<String>? revealedHints,
     int? comboMultiplier,
     DateTime? lastAnswerTime,
     bool? isBossLevel,
@@ -120,9 +167,12 @@ class GameSession {
       operation: operation ?? this.operation,
       level: level ?? this.level,
       questions: questions ?? this.questions,
+      currentQuestion: currentQuestion ?? this.currentQuestion,
       currentQuestionIndex: currentQuestionIndex ?? this.currentQuestionIndex,
       score: score ?? this.score,
       correctAnswers: correctAnswers ?? this.correctAnswers,
+      currentStreak: currentStreak ?? this.currentStreak,
+      bestStreak: bestStreak ?? this.bestStreak,
       lives: lives ?? this.lives,
       timeRemaining: timeRemaining ?? this.timeRemaining,
       totalQuestions: totalQuestions ?? this.totalQuestions,
@@ -132,6 +182,7 @@ class GameSession {
       playerWon: playerWon ?? this.playerWon,
       userAnswers: userAnswers ?? this.userAnswers,
       hintsUsed: hintsUsed ?? this.hintsUsed,
+      revealedHints: revealedHints ?? this.revealedHints,
       comboMultiplier: comboMultiplier ?? this.comboMultiplier,
       lastAnswerTime: lastAnswerTime ?? this.lastAnswerTime,
       isBossLevel: isBossLevel ?? this.isBossLevel,
@@ -216,8 +267,16 @@ class GameSessionNotifier extends StateNotifier<GameSession?> {
       timeRemaining = 0;
     } else if (mode == GameMode.mathMaster) {
       timeRemaining = 0;
-    } else if (mode == GameMode.marathon) {
-      timeRemaining = 0;
+    } else if (mode == GameMode.customMix) {
+      timeRemaining = timeLimit ?? 60;
+      if (timeLimit == null) {
+         // Default if not specified
+      }
+    }
+
+    // Override with explicit timeLimit if provided and not handled above
+    if (timeLimit != null) {
+      timeRemaining = timeLimit;
     }
 
     // Set lives for modes that don't use lives
@@ -251,37 +310,18 @@ class GameSessionNotifier extends StateNotifier<GameSession?> {
           mode == GameMode.flash ||
           mode == GameMode.speedDemon ||
           mode == GameMode.mathMaster ||
-          mode == GameMode.marathon;
+          mode == GameMode.marathon ||
+          mode == GameMode.customMix;
 
-      if (mode == GameMode.mathMaster) {
-        // We still generate sequentially if mathMaster needs specific mixed logic
-        // but it's better to use batching for better performance if possible
-        final generatedQuestions = <String>{};
-        for (int i = 0; i < totalQuestions; i++) {
-          final ops = ['addition', 'subtraction', 'multiplication', 'division'];
-          final randomOp = ops[_random.nextInt(ops.length)];
-          final q = MathEngine.generateQuestion(
-            randomOp,
-            level,
-            isArcade: isArcade,
-            excludeQuestions: generatedQuestions,
-            skillRating: skillRating,
-            heatIndex: 1.0, // Initial heat is 1.0
-          );
-          generatedQuestions.add(q.displayString);
-          questions.add(q);
-        }
-      } else {
-        final batch = await MathEngine.generateQuestionsBatch(
-          operation,
-          level,
-          totalQuestions,
-          isArcade: isArcade,
-          skillRating: skillRating,
-          heatIndex: 1.0, // Initial heat is 1.0
-        );
-        questions.addAll(batch);
-      }
+      final batch = await MathEngine.generateQuestionsBatch(
+        operation,
+        level,
+        totalQuestions,
+        isArcade: isArcade,
+        skillRating: skillRating,
+        heatIndex: 1.0, // Initial heat is 1.0
+      );
+      questions.addAll(batch);
       
       // Shuffle questions for random order
       questions.shuffle();
@@ -294,6 +334,7 @@ class GameSessionNotifier extends StateNotifier<GameSession?> {
       minNumber: minNumber,
       maxNumber: maxNumber,
       questions: questions,
+      currentQuestion: questions.isNotEmpty ? questions[0] : null,
       totalQuestions: totalQuestions,
       timeRemaining: timeRemaining,
       lives: lives,
@@ -307,7 +348,8 @@ class GameSessionNotifier extends StateNotifier<GameSession?> {
     );
 
     if (mode == GameMode.scoreAttack ||
-        mode == GameMode.speedDemon) {
+        mode == GameMode.speedDemon ||
+        (mode == GameMode.customMix && timeRemaining > 0)) {
       _startTimer();
     } else if (mode == GameMode.duel) {
       _startDuelMode();
@@ -387,6 +429,8 @@ class GameSessionNotifier extends StateNotifier<GameSession?> {
     int newScore = state!.score;
     int newCorrect = state!.correctAnswers;
     int newLives = state!.lives;
+    int newStreak = isCorrect ? state!.currentStreak + 1 : 0;
+    int newBestStreak = max(state!.bestStreak, newStreak);
 
     final hintUsed = state!.hintsUsed[state!.currentQuestionIndex] ?? false;
 
@@ -500,6 +544,8 @@ class GameSessionNotifier extends StateNotifier<GameSession?> {
     state = state!.copyWith(
       score: newScore,
       correctAnswers: newCorrect,
+      currentStreak: newStreak,
+      bestStreak: newBestStreak,
       lives: newLives,
       userAnswers: newUserAnswers,
       comboMultiplier: newCombo,
@@ -525,7 +571,7 @@ class GameSessionNotifier extends StateNotifier<GameSession?> {
       responseTimeMs: timeSpent * 1000,
       hintsUsed: hintUsed ? 1 : 0,
     );
-    ref.read(dynamicDifficultyProvider.notifier).recordAssessment(isCorrect: isCorrect);
+    ref.read(difficulty.dynamicDifficultyProvider.notifier).recordAssessment(isCorrect: isCorrect);
 
     if (state!.mode == GameMode.duel) {
       _duelAnswered = true;
@@ -563,13 +609,25 @@ class GameSessionNotifier extends StateNotifier<GameSession?> {
     final user = ref.read(userSessionProvider);
     if (user == null || user.totalPoints < hintCostPoints) return;
 
+    final question = state!.currentQuestion!;
+    final currentRevealed = state!.revealedHints.length;
+    
+    if (currentRevealed >= question.progressiveHints.length) return;
+
     // Deduct points
     ref.read(userSessionProvider.notifier).addPoints(-hintCostPoints);
     ref.read(soundManagerProvider).playEffect('hint');
 
     final newHintsUsed = Map<int, bool>.from(state!.hintsUsed);
     newHintsUsed[state!.currentQuestionIndex] = true;
-    state = state!.copyWith(hintsUsed: newHintsUsed);
+    
+    final newRevealed = List<String>.from(state!.revealedHints);
+    newRevealed.add(question.progressiveHints[currentRevealed]);
+
+    state = state!.copyWith(
+      hintsUsed: newHintsUsed,
+      revealedHints: newRevealed,
+    );
   }
 
   void _goToNextOrEnd() {
@@ -598,7 +656,9 @@ class GameSessionNotifier extends StateNotifier<GameSession?> {
     } else {
       state = state!.copyWith(
         currentQuestionIndex: newIndex,
+        currentQuestion: state!.questions[newIndex],
         currentVisualData: nextVisualData,
+        revealedHints: [], // Reset revealed hints for next question
       );
 
       if (state!.mode == GameMode.duel) {
@@ -682,7 +742,7 @@ class GameSessionNotifier extends StateNotifier<GameSession?> {
       responseTimeMs: 0,
       hintsUsed: 0,
     );
-    ref.read(dynamicDifficultyProvider.notifier).recordAssessment(isCorrect: isCorrect);
+    ref.read(difficulty.dynamicDifficultyProvider.notifier).recordAssessment(isCorrect: isCorrect);
 
     _goToNextOrEnd();
   }
@@ -805,10 +865,10 @@ class GameSessionNotifier extends StateNotifier<GameSession?> {
       // Update Performance Trends
       final avgTime = state!.totalQuestions > 0 ? sessionTotalTime / state!.totalQuestions : 0.0;
       ref.read(performanceTrendsProvider.notifier).addDataPoint(
-        (sessionCorrect / state!.totalQuestions) * 100,
-        avgTime.toInt(),
-        state!.comboMultiplier,
-        heat: state!.heatIndex,
+        accuracy: (sessionCorrect / state!.totalQuestions) * 100,
+        averageTimeMs: avgTime.toInt(),
+        streak: state!.comboMultiplier,
+        avgHeatIndex: state!.heatIndex,
       );
       
       // Refresh real-time providers
@@ -818,14 +878,10 @@ class GameSessionNotifier extends StateNotifier<GameSession?> {
     }
 
     final isCampaign = state!.mode == GameMode.campaign;
-    final passed = state!.correctAnswers >= getCampaignPassThreshold(state!.totalQuestions);
+    final passed = state!.passed;
 
     if (isCampaign) {
-      final stars = _calculateStarsForCampaign(
-        state!.correctAnswers,
-        state!.totalQuestions,
-        state!.timeRemaining,
-      );
+      final stars = state!.stars;
 
       final levelProgressRepo = ref.read(levelProgressRepositoryProvider);
       levelProgressRepo.updateStars(
@@ -911,15 +967,28 @@ class GameSessionNotifier extends StateNotifier<GameSession?> {
     // Record performance trends for completed sessions
     if (state!.totalQuestions > 0) {
       final accuracy = (state!.correctAnswers / state!.totalQuestions) * 100;
-      final durationSeconds = 600 - state!.timeRemaining;
-      final avgTime = state!.totalQuestions > 0 ? durationSeconds / state!.totalQuestions : 0.0;
       
+      // Calculate total session time from pending stats for more accuracy
+      int sessionTotalTime = 0;
+      for (final stat in state!.pendingStats) {
+        sessionTotalTime += stat['timeSpent'] as int;
+      }
+      
+      // Fallback for modes where timer might be used but no pending stats (unlikely)
+      final durationSeconds = sessionTotalTime > 0 
+          ? sessionTotalTime 
+          : (state!.mode == GameMode.scoreAttack || state!.mode == GameMode.speedDemon 
+              ? (state!.timeRemaining == 0 ? 60 : 60 - state!.timeRemaining) 
+              : 0);
+              
+      final avgTime = state!.totalQuestions > 0 ? durationSeconds / state!.totalQuestions : 0.0;
       final hintsUsed = state!.hintsUsed.values.where((used) => used).length;
 
       ref.read(performanceTrendsProvider.notifier).addDataPoint(
-        accuracy,
-        avgTime.toInt(),
-        state!.correctAnswers.toInt(), 
+        accuracy: accuracy,
+        averageTimeMs: avgTime.toInt(),
+        streak: state!.correctAnswers.toInt(), 
+        avgHeatIndex: state!.heatIndex,
       );
 
       // Check Achievements
@@ -945,32 +1014,6 @@ class GameSessionNotifier extends StateNotifier<GameSession?> {
       state: GameState.finished,
       playerWon: isCampaign ? passed : null,
     );
-  }
-
-  int _calculateStarsForCampaign(int correct, int total, int timeRemaining) {
-    double percentage = (correct / total) * 100;
-    int stars = 0;
-
-    if (percentage >= 95) {
-      stars = 3;
-    } else if (percentage >= 85) {
-      stars = 2;
-    } else if (percentage >= 75) {
-      stars = 1;
-    }
-
-    // Time Bonus: If the player is exceptionally fast (more than 20s remaining)
-    // and they were close to the next star tier, give them a boost.
-    if (timeRemaining > 20 && stars > 0 && stars < 3) {
-      if (percentage >= 90 && stars == 2) {
-        stars = 3;
-      }
-      if (percentage >= 80 && stars == 1) {
-        stars = 2;
-      }
-    }
-
-    return stars;
   }
 
   void _unlockNextLevel(String operation, int currentLevel) {

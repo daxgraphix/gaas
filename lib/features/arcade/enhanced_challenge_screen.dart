@@ -383,7 +383,7 @@ class _EnhancedChallengeScreenState
 
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (_) => const GameScreen()),
+      MaterialPageRoute(builder: (_) => GameScreen()),
     );
   }
 

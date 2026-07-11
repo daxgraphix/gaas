@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/themes/app_themes.dart';
+import '../../../../l10n/generated/app_localizations.dart';
 
 class LevelUpOverlay extends ConsumerStatefulWidget {
   final int level;
@@ -33,6 +34,8 @@ class _LevelUpOverlayState extends ConsumerState<LevelUpOverlay> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final gameTheme = theme.extension<GameThemeExtension>()!;
+    final l10n = AppLocalizations.of(context)!;
     
     return Material(
       color: Colors.black.withValues(alpha: 0.85),
@@ -41,7 +44,7 @@ class _LevelUpOverlayState extends ConsumerState<LevelUpOverlay> {
           // Background particles/glow
           Positioned.fill(
             child: CustomPaint(
-              painter: _LevelUpGlowPainter(theme.colorScheme.primary),
+              painter: _LevelUpGlowPainter(gameTheme.streakColor),
             ).animate(onPlay: (c) => c.repeat())
              .rotate(duration: 10.seconds, begin: 0, end: 1),
           ),
@@ -60,15 +63,15 @@ class _LevelUpOverlayState extends ConsumerState<LevelUpOverlay> {
                       shape: BoxShape.circle,
                       gradient: LinearGradient(
                         colors: [
-                          theme.colorScheme.primary,
-                          theme.colorScheme.secondary,
+                          gameTheme.streakColor,
+                          gameTheme.timerColor,
                         ],
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                       ),
                       boxShadow: [
                         BoxShadow(
-                          color: theme.colorScheme.primary.withValues(alpha: 0.5),
+                          color: gameTheme.streakColor.withValues(alpha: 0.5),
                           blurRadius: 30,
                           spreadRadius: 5,
                         ),
@@ -86,21 +89,21 @@ class _LevelUpOverlayState extends ConsumerState<LevelUpOverlay> {
                   const SizedBox(height: 32),
 
                   Text(
-                    'LEVEL UP!',
+                    l10n.levelUp,
                     style: theme.textTheme.displaySmall?.copyWith(
                       fontWeight: FontWeight.w900,
                       letterSpacing: 4,
-                      color: theme.colorScheme.primary,
+                      color: gameTheme.streakColor,
                     ),
                   ).animate().fadeIn(delay: 200.ms).slideY(begin: 0.2, end: 0),
 
                   const SizedBox(height: 8),
 
                   Text(
-                    'Level ${widget.level}',
+                    l10n.levelUppercase(widget.level),
                     style: theme.textTheme.headlineLarge?.copyWith(
                       color: theme.colorScheme.onSurface,
-                      fontWeight: FontWeight.bold,
+                      fontWeight: FontWeight.w900,
                     ),
                   ).animate().fadeIn(delay: 400.ms).scale(begin: const Offset(0.8, 0.8)),
 
@@ -113,7 +116,7 @@ class _LevelUpOverlayState extends ConsumerState<LevelUpOverlay> {
                       color: theme.colorScheme.surface.withValues(alpha: 0.5),
                       borderRadius: BorderRadius.circular(20),
                       border: Border.all(
-                        color: theme.colorScheme.outline.withValues(alpha: 0.2),
+                        color: theme.colorScheme.outline.withValues(alpha: 0.4),
                       ),
                     ),
                     child: Row(
@@ -122,10 +125,11 @@ class _LevelUpOverlayState extends ConsumerState<LevelUpOverlay> {
                         const Icon(Icons.stars_rounded, color: Colors.amber, size: 28),
                         const SizedBox(width: 12),
                         Text(
-                          '+${widget.rewardPoints} REWARD POINTS',
+                          '+${widget.rewardPoints} ${l10n.rewardPoints.toUpperCase()}',
                           style: theme.textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
+                            fontWeight: FontWeight.w900,
                             letterSpacing: 1.1,
+                            color: theme.colorScheme.onSurface,
                           ),
                         ),
                       ],
@@ -135,7 +139,7 @@ class _LevelUpOverlayState extends ConsumerState<LevelUpOverlay> {
                   const SizedBox(height: 48),
 
                   PremiumPrimaryButton(
-                    text: 'CONTINUE',
+                    text: l10n.continueText,
                     onPressed: widget.onDismiss,
                     width: 200,
                   ).animate().fadeIn(delay: 800.ms).slideY(begin: 0.2, end: 0),

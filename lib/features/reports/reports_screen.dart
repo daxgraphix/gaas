@@ -13,6 +13,9 @@ import 'package:fl_chart/fl_chart.dart';
 import '../../core/providers.dart';
 import '../../core/themes/app_themes.dart';
 import '../../features/game/logic/game_session_provider.dart';
+import '../../features/game/logic/session_stats_provider.dart';
+import '../../features/game/logic/player_performance_provider.dart';
+import '../../features/analytics/analytics_provider.dart';
 import '../../l10n/generated/app_localizations.dart';
 
 class ReportsScreen extends ConsumerWidget {
@@ -29,8 +32,8 @@ class ReportsScreen extends ConsumerWidget {
     final l10n = AppLocalizations.of(context)!;
     final accuracy = ref.watch(overallAccuracyProvider);
     final totalStars = ref.watch(totalStarsProvider);
-    final completedLevels = ref.watch(completedLevelsProvider);
     final totalTime = ref.watch(totalTimePlayedProvider);
+    final completedLevels = ref.watch(completedLevelsProvider);
 
     return Scaffold(
       backgroundColor: Colors.transparent,
@@ -49,22 +52,22 @@ class ReportsScreen extends ConsumerWidget {
                       child = _buildOverviewCards(theme, totalStars, completedLevels, totalTime, accuracy, l10n);
                       break;
                     case 1:
-                      child = const SizedBox(height: 32);
-                      break;
-                    case 2:
                       child = _buildPerformanceAnalytics(context, theme, l10n);
                       break;
-                    case 3:
+                    case 2:
                       child = const SizedBox(height: 32);
                       break;
-                    case 4:
+                    case 3:
                       child = _buildLevelMastery(context, theme, ref, l10n);
                       break;
-                    case 5:
+                    case 4:
                       child = const SizedBox(height: 32);
                       break;
-                    case 6:
+                    case 5:
                       child = _buildPerformanceInsights(context, theme, l10n);
+                      break;
+                    case 6:
+                      child = const SizedBox(height: 100); // Increased spacing for bottom navigation
                       break;
                   }
                   
@@ -74,7 +77,7 @@ class ReportsScreen extends ConsumerWidget {
                       .fadeIn(duration: 400.ms, delay: (index * 50).ms)
                       .slideY(begin: 0.05, end: 0, curve: Curves.easeOutCubic);
                 },
-                childCount: 7,
+                childCount: 7, // Updated count to include the spacer
               ),
             ),
           ),
@@ -118,10 +121,10 @@ class ReportsScreen extends ConsumerWidget {
 
   Widget _buildOverviewCards(
     ThemeData theme,
-    AsyncValue<int> totalStars,
-    AsyncValue<int> completedLevels,
-    AsyncValue<int> totalTime,
-    AsyncValue<double> accuracy,
+    int totalStars,
+    int completedLevels,
+    int totalTime,
+    double accuracy,
     AppLocalizations l10n,
   ) {
     return RepaintBoundary(
@@ -141,7 +144,7 @@ class ReportsScreen extends ConsumerWidget {
               Expanded(
                 child: _buildStatCard(
                   l10n.starsEarned,
-                  totalStars.value?.toString() ?? '0',
+                  totalStars.toString(),
                   Icons.star,
                   theme.colorScheme.primary,
                   theme,
@@ -151,7 +154,7 @@ class ReportsScreen extends ConsumerWidget {
               Expanded(
                 child: _buildStatCard(
                   l10n.levelsCompleted,
-                  completedLevels.value?.toString() ?? '0',
+                  completedLevels.toString(),
                   Icons.flag,
                   theme.colorScheme.secondary,
                   theme,
@@ -165,7 +168,7 @@ class ReportsScreen extends ConsumerWidget {
               Expanded(
                 child: _buildStatCard(
                   l10n.accuracy,
-                  '${accuracy.value?.toStringAsFixed(1) ?? '0'}%',
+                  '${accuracy.toStringAsFixed(1)}%',
                   Icons.trending_up,
                   theme.colorScheme.tertiary,
                   theme,
@@ -175,7 +178,7 @@ class ReportsScreen extends ConsumerWidget {
               Expanded(
                 child: _buildStatCard(
                   l10n.timePlayed,
-                  '${(totalTime.value ?? 0) ~/ 60}h ${(totalTime.value ?? 0) % 60}m',
+                  '${totalTime ~/ 60}h ${totalTime % 60}m',
                   Icons.timer,
                   theme.colorScheme.error,
                   theme,
@@ -226,8 +229,8 @@ class ReportsScreen extends ConsumerWidget {
         final stats = ref.watch(sessionStatsProvider);
         final bestStreak = ref.watch(bestStreakProvider);
         final analytics = ref.watch(analyticsProvider);
+        final totalStars = ref.watch(totalStarsProvider);
 
-        // Get unique modes from recent sessions
         final modes = analytics.recentSessions
             .map((s) => s['mode'] as String?)
             .where((m) => m != null)
@@ -305,34 +308,63 @@ class ReportsScreen extends ConsumerWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      l10n.currentSession,
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: theme.colorScheme.primary,
-                      ),
-                    ),
-                    const SizedBox(height: 20),
                     Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        _buildMetricItem(l10n.accuracy, '${stats.accuracy.toStringAsFixed(1)}%', theme),
-                        _buildMetricItem(l10n.time, '${stats.timeSpent ~/ 60}m', theme),
+                        Text(
+                          l10n.currentSession.toUpperCase(),
+                          style: theme.textTheme.labelLarge?.copyWith(
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: 1.2,
+                            color: theme.colorScheme.primary,
+                          ),
+                        ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: theme.colorScheme.primary.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Text(
+                            filter ?? l10n.allModes,
+                            style: theme.textTheme.labelSmall?.copyWith(
+                              color: theme.colorScheme.primary,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
                       ],
                     ),
-                    const SizedBox(height: 16),
-                    _buildAccuracyChart(displayTrends, theme, l10n),
-                    const SizedBox(height: 20),
-                    Divider(height: 1, color: theme.colorScheme.outline.withValues(alpha: 0.1)),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 24),
+                    Row(
+                      children: [
+                        _buildMainMetric(l10n.accuracy, '${stats.accuracy.toStringAsFixed(1)}%', Icons.track_changes, Colors.blue, theme),
+                        const SizedBox(width: 16),
+                        _buildMainMetric(l10n.time, '${stats.timeSpent ~/ 60}m', Icons.timer_outlined, Colors.orange, theme),
+                      ],
+                    ),
+                    const SizedBox(height: 24),
                     Text(
-                      l10n.engineIntensity,
-                      style: theme.textTheme.titleSmall?.copyWith(
-                        fontWeight: FontWeight.w600,
+                      'ACCURACY TREND',
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    _buildAccuracyChart(displayTrends, theme, l10n),
+                    const SizedBox(height: 24),
+                    Divider(height: 1, color: theme.colorScheme.outline.withValues(alpha: 0.1)),
+                    const SizedBox(height: 24),
+                    Text(
+                      l10n.engineIntensity.toUpperCase(),
+                      style: theme.textTheme.labelLarge?.copyWith(
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 1.2,
                         color: theme.colorScheme.error,
                       ),
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 20),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
@@ -343,24 +375,26 @@ class ReportsScreen extends ConsumerWidget {
                     ),
                     const SizedBox(height: 16),
                     _buildHeatTrendChart(displayTrends, theme, l10n),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 24),
                     Divider(height: 1, color: theme.colorScheme.outline.withValues(alpha: 0.1)),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 24),
                     Text(
-                      l10n.realTimeStats,
-                      style: theme.textTheme.titleSmall?.copyWith(
-                        fontWeight: FontWeight.w600,
+                      l10n.realTimeStats.toUpperCase(),
+                      style: theme.textTheme.labelLarge?.copyWith(
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 1.2,
                         color: theme.colorScheme.secondary,
                       ),
                     ),
-                    const SizedBox(height: 16),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    const SizedBox(height: 20),
+                    Wrap(
+                      spacing: 16,
+                      runSpacing: 16,
                       children: [
-                        _buildMiniStat(l10n.questions, '${stats.questionsAnswered}', theme),
-                        _buildMiniStat(l10n.correct, '${stats.correctAnswers}', theme),
-                        _buildMiniStat(l10n.bestStreak, '${bestStreak.value ?? 0}', theme),
-                        _buildMiniStat(l10n.sessions, '${displayTrends.accuracyHistory.length}', theme),
+                         _buildChipStat(l10n.questions, '${stats.questionsAnswered}', Icons.quiz_outlined, theme),
+                         _buildChipStat(l10n.correct, '${stats.correctAnswers}', Icons.check_circle_outline, theme),
+                         _buildChipStat(l10n.bestStreak, '$bestStreak', Icons.local_fire_department_outlined, theme),
+                         _buildChipStat(l10n.starsEarned, '$totalStars', Icons.star_outline, theme),
                       ],
                     ),
                   ],
@@ -370,6 +404,71 @@ class ReportsScreen extends ConsumerWidget {
           ),
         );
       },
+    );
+  }
+
+  Widget _buildMainMetric(String label, String value, IconData icon, Color color, ThemeData theme) {
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.05),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: color.withValues(alpha: 0.1)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(icon, color: color, size: 20),
+            const SizedBox(height: 12),
+            Text(
+              value,
+              style: theme.textTheme.headlineSmall?.copyWith(
+                fontWeight: FontWeight.w900,
+                color: theme.colorScheme.onSurface,
+              ),
+            ),
+            Text(
+              label,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildChipStat(String label, String value, IconData icon, ThemeData theme) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surface,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: theme.colorScheme.outline.withValues(alpha: 0.1)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 16, color: theme.colorScheme.primary.withValues(alpha: 0.7)),
+          const SizedBox(width: 8),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                value,
+                style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold),
+              ),
+              Text(
+                label,
+                style: theme.textTheme.bodySmall?.copyWith(fontSize: 9),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 
@@ -560,27 +659,6 @@ class ReportsScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildMetricItem(String label, String value, ThemeData theme) {
-    return Column(
-      children: [
-        Text(
-          value,
-          style: theme.textTheme.headlineSmall?.copyWith(
-            fontWeight: FontWeight.bold,
-            color: theme.colorScheme.primary,
-          ),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          label,
-          style: theme.textTheme.bodySmall?.copyWith(
-            color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
-          ),
-        ),
-      ],
-    );
-  }
-
   Widget _buildLevelMastery(
     BuildContext context,
     ThemeData theme,
@@ -607,14 +685,25 @@ class ReportsScreen extends ConsumerWidget {
               PremiumCard(
                 padding: const EdgeInsets.all(20),
                 child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    Text(
+                      'PROGRESS BY CATEGORY',
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        fontWeight: FontWeight.w900,
+                        color: theme.colorScheme.primary,
+                        letterSpacing: 1.1,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
                     if (progressMap.isNotEmpty) ...[
                       ...progressMap.entries.map((entry) {
                         final operation = entry.key;
                         final levels = entry.value;
                         final completed = levels.where((level) => level.stars > 0).length;
-                        final unlocked = levels.where((level) => level.isUnlocked).length;
                         final totalStarsEarned = levels.fold<int>(0, (sum, level) => sum + level.stars);
+                        final totalLevels = levels.length;
+                        final progress = totalLevels > 0 ? completed / totalLevels : 0.0;
                         
                         String localizedOp = operation;
                         if (operation.toLowerCase() == 'addition') {
@@ -628,43 +717,68 @@ class ReportsScreen extends ConsumerWidget {
                         }
                         
                         return Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 8),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          padding: const EdgeInsets.only(bottom: 20),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(
-                                localizedOp.toUpperCase(),
-                                style: theme.textTheme.titleSmall?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                  letterSpacing: 1.1,
-                                ),
-                              ),
                               Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                 children: [
-                                  Icon(Icons.star_rounded, size: 16, color: theme.colorScheme.primary),
-                                  const SizedBox(width: 4),
                                   Text(
-                                    '$totalStarsEarned',
+                                    localizedOp.toUpperCase(),
                                     style: theme.textTheme.labelLarge?.copyWith(
                                       fontWeight: FontWeight.bold,
-                                      color: theme.colorScheme.onSurface,
+                                      fontSize: 13,
                                     ),
                                   ),
-                                  const SizedBox(width: 12),
-                                  Text(
-                                    '$completed/${levels.length}',
-                                    style: theme.textTheme.bodySmall?.copyWith(
-                                      color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                                  Row(
+                                    children: [
+                                      Icon(Icons.star_rounded, size: 14, color: Colors.amber),
+                                      const SizedBox(width: 4),
+                                      Text(
+                                        '$totalStarsEarned',
+                                        style: theme.textTheme.labelLarge?.copyWith(
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 8),
+                              Stack(
+                                children: [
+                                  Container(
+                                    height: 8,
+                                    width: double.infinity,
+                                    decoration: BoxDecoration(
+                                      color: theme.colorScheme.outline.withValues(alpha: 0.1),
+                                      borderRadius: BorderRadius.circular(4),
                                     ),
                                   ),
-                                  const SizedBox(width: 8),
-                                  Text(
-                                    '($unlocked ${l10n.unlocked})',
-                                    style: theme.textTheme.labelSmall?.copyWith(
-                                      color: theme.colorScheme.primary.withValues(alpha: 0.7),
+                                  FractionallySizedBox(
+                                    widthFactor: progress.clamp(0.05, 1.0),
+                                    child: Container(
+                                      height: 8,
+                                      decoration: BoxDecoration(
+                                        gradient: LinearGradient(
+                                          colors: [
+                                            theme.colorScheme.primary,
+                                            theme.colorScheme.primary.withValues(alpha: 0.6),
+                                          ],
+                                        ),
+                                        borderRadius: BorderRadius.circular(4),
+                                      ),
                                     ),
                                   ),
                                 ],
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                '$completed / $totalLevels ${l10n.levelsCompleted.toLowerCase()}',
+                                style: theme.textTheme.labelSmall?.copyWith(
+                                  color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                                ),
                               ),
                             ],
                           ),
@@ -682,15 +796,16 @@ class ReportsScreen extends ConsumerWidget {
                     ],
                     const SizedBox(height: 16),
                     Divider(height: 1, color: theme.colorScheme.outline.withValues(alpha: 0.05)),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 24),
                     Text(
-                      l10n.gameModeDistribution,
-                      style: theme.textTheme.titleSmall?.copyWith(
-                        fontWeight: FontWeight.w600,
-                        color: theme.colorScheme.primary,
+                      l10n.gameModeDistribution.toUpperCase(),
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        fontWeight: FontWeight.w900,
+                        color: theme.colorScheme.secondary,
+                        letterSpacing: 1.1,
                       ),
                     ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 16),
                     ...analytics.operationUsage.entries.map((entry) {
                       final mode = entry.key;
                       final count = entry.value;
@@ -717,15 +832,23 @@ class ReportsScreen extends ConsumerWidget {
                       }
                       
                       return Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 4),
+                        padding: const EdgeInsets.symmetric(vertical: 6),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Text(localizedMode.toUpperCase(), style: theme.textTheme.bodyMedium),
-                            Text(
-                              '$count ${l10n.sessions}',
-                              style: theme.textTheme.bodyMedium?.copyWith(
-                                color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                            Text(localizedMode.toUpperCase(), style: theme.textTheme.bodyMedium?.copyWith(fontSize: 13)),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: theme.colorScheme.secondary.withValues(alpha: 0.05),
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: Text(
+                                '$count ${l10n.sessions}',
+                                style: theme.textTheme.labelSmall?.copyWith(
+                                  color: theme.colorScheme.secondary,
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
                             ),
                           ],
@@ -764,31 +887,34 @@ class ReportsScreen extends ConsumerWidget {
                 padding: const EdgeInsets.all(20),
                 child: Column(
                   children: [
-                    _buildInsightRow(
+                    _buildInsightCard(
                       l10n.bestAccuracy,
                       '${trends.peakAccuracy.toStringAsFixed(1)}%',
-                      Icons.arrow_upward,
-                      theme.colorScheme.primary,
+                      Icons.stars_rounded,
+                      Colors.amber,
+                      'Your personal record across all modes.',
                       theme,
                     ),
                     const SizedBox(height: 16),
-                    _buildInsightRow(
+                    _buildInsightCard(
                       l10n.averageResponseTime,
                       '${stats.timeSpent > 0 && stats.questionsAnswered > 0 
-                          ? (stats.timeSpent / stats.questionsAnswered).toStringAsFixed(0) 
+                          ? (stats.timeSpent / stats.questionsAnswered).toStringAsFixed(1) 
                           : '0'}s',
-                      Icons.timer,
-                      theme.colorScheme.secondary,
+                      Icons.bolt_rounded,
+                      Colors.deepPurple,
+                      'Average time taken to solve a question.',
                       theme,
                     ),
                     const SizedBox(height: 16),
-                    _buildInsightRow(
+                    _buildInsightCard(
                       l10n.completionRate,
                       stats.questionsAnswered > 0 
                           ? '${(stats.correctAnswers / stats.questionsAnswered * 100).toStringAsFixed(1)}%'
                           : '0%',
-                      Icons.check_circle,
-                      theme.colorScheme.tertiary,
+                      Icons.task_alt_rounded,
+                      Colors.teal,
+                      'Ratio of correctly solved equations.',
                       theme,
                     ),
                   ],
@@ -801,16 +927,52 @@ class ReportsScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildInsightRow(String label, String value, IconData icon, Color color, ThemeData theme) {
-    return Row(
-      children: [
-        Icon(icon, color: color, size: 20),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Text(label, style: theme.textTheme.bodyMedium),
-        ),
-        Text(value, style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold, color: color)),
-      ],
+  Widget _buildInsightCard(String label, String value, IconData icon, Color color, String description, ThemeData theme) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: theme.colorScheme.outline.withValues(alpha: 0.05)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.1),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(icon, color: color, size: 24),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: theme.textTheme.labelLarge?.copyWith(fontWeight: FontWeight.bold),
+                ),
+                Text(
+                  description,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                    fontSize: 10,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Text(
+            value,
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.w900,
+              color: color,
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -1087,9 +1249,9 @@ class ReportsScreen extends ConsumerWidget {
             ),
           ],
           const SizedBox(height: 24),
-          _buildStatCardForImage(l10n.starsEarned, '${totalStars.value ?? 0}', Icons.star, theme.colorScheme.primary, theme),
+          _buildStatCardForImage(l10n.starsEarned, totalStars.toString(), Icons.star, theme.colorScheme.primary, theme),
           const SizedBox(height: 12),
-          _buildStatCardForImage(l10n.accuracy, '${accuracy.value?.toStringAsFixed(1) ?? '0'}%', Icons.trending_up, theme.colorScheme.tertiary, theme),
+          _buildStatCardForImage(l10n.accuracy, '${accuracy.toStringAsFixed(1)}%', Icons.trending_up, theme.colorScheme.tertiary, theme),
           const SizedBox(height: 12),
           _buildStatCardForImage(l10n.averageHeat, trends.averageHeat.toStringAsFixed(2), Icons.speed, theme.colorScheme.error, theme),
           const SizedBox(height: 24),
@@ -1155,7 +1317,7 @@ class ReportsScreen extends ConsumerWidget {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(l10n.preparingDocument),
-          duration: Duration(seconds: 2),
+          duration: const Duration(seconds: 2),
         ),
       );
 
@@ -1184,19 +1346,19 @@ class ReportsScreen extends ConsumerWidget {
                 pw.SizedBox(height: 20),
                 pw.Text(
                   l10n.generatedOn(DateTime.now().toString().split('.')[0]),
-                  style: pw.TextStyle(fontSize: 12, color: PdfColors.grey),
+                  style: const pw.TextStyle(fontSize: 12, color: PdfColors.grey),
                 ),
                 pw.SizedBox(height: 20),
                 if (user != null) ...[
-                  pw.Text('${l10n.playerLabel}: ${user.name}', style: pw.TextStyle(fontSize: 14)),
+                  pw.Text('${l10n.playerLabel}: ${user.name}', style: const pw.TextStyle(fontSize: 14)),
                   pw.SizedBox(height: 10),
                 ],
                 pw.Divider(),
                 pw.SizedBox(height: 20),
-                _buildPdfStatRow(l10n.starsEarned, totalStars.value?.toString() ?? '0'),
-                _buildPdfStatRow(l10n.levelsCompleted, completedLevels.value?.toString() ?? '0'),
-                _buildPdfStatRow(l10n.accuracy, '${accuracy.value?.toStringAsFixed(1) ?? '0'}%'),
-                _buildPdfStatRow(l10n.timePlayed, '${(totalTime.value ?? 0) ~/ 60}h ${(totalTime.value ?? 0) % 60}m'),
+                _buildPdfStatRow(l10n.starsEarned, totalStars.toString()),
+                _buildPdfStatRow(l10n.levelsCompleted, completedLevels.toString()),
+                _buildPdfStatRow(l10n.accuracy, '${accuracy.toStringAsFixed(1)}%'),
+                _buildPdfStatRow(l10n.timePlayed, '${totalTime ~/ 60}h ${totalTime % 60}m'),
                 pw.SizedBox(height: 10),
                 pw.Divider(),
                 pw.SizedBox(height: 10),
@@ -1279,12 +1441,12 @@ class ReportsScreen extends ConsumerWidget {
                   style: pw.TextStyle(fontSize: 20, fontWeight: pw.FontWeight.bold),
                 ),
                 pw.SizedBox(height: 20),
-                if (user != null) pw.Text('${l10n.playerLabel}: ${user.name}', style: pw.TextStyle(fontSize: 14)),
+                if (user != null) pw.Text('${l10n.playerLabel}: ${user.name}', style: const pw.TextStyle(fontSize: 14)),
                 pw.SizedBox(height: 20),
-                _buildPdfStatRow(l10n.starsEarned, totalStars.value?.toString() ?? '0'),
-                _buildPdfStatRow(l10n.levelsCompleted, completedLevels.value?.toString() ?? '0'),
-                _buildPdfStatRow(l10n.accuracy, '${accuracy.value?.toStringAsFixed(1) ?? '0'}%'),
-                _buildPdfStatRow(l10n.timePlayed, '${(totalTime.value ?? 0) ~/ 60}h ${(totalTime.value ?? 0) % 60}m'),
+                _buildPdfStatRow(l10n.starsEarned, totalStars.toString()),
+                _buildPdfStatRow(l10n.levelsCompleted, completedLevels.toString()),
+                _buildPdfStatRow(l10n.accuracy, '${accuracy.toStringAsFixed(1)}%'),
+                _buildPdfStatRow(l10n.timePlayed, '${totalTime ~/ 60}h ${totalTime % 60}m'),
                 pw.SizedBox(height: 10),
                 pw.Divider(),
                 pw.SizedBox(height: 10),
@@ -1376,10 +1538,10 @@ class ReportsScreen extends ConsumerWidget {
                 pw.Row(
                   mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                   children: [
-                    _pdfStatColumn(l10n.stars, '${totalStars.value ?? 0}'),
-                    _pdfStatColumn(l10n.level, '${completedLevels.value ?? 0}'),
-                    _pdfStatColumn(l10n.streak, '${bestStreak.value ?? 0}'),
-                    _pdfStatColumn(l10n.accuracy, '${accuracy.value?.toStringAsFixed(0) ?? '0'}%'),
+                    _pdfStatColumn(l10n.stars, totalStars.toString()),
+                    _pdfStatColumn(l10n.level, completedLevels.toString()),
+                    _pdfStatColumn(l10n.streak, '$bestStreak'),
+                    _pdfStatColumn(l10n.accuracy, '${accuracy.toStringAsFixed(0)}%'),
                   ],
                 ),
                 pw.SizedBox(height: 24),

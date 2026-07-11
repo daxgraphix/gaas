@@ -75,6 +75,33 @@ class AppLocalizationsEn extends AppLocalizations {
   String get accuracy => 'Accuracy';
 
   @override
+  String get completed => 'Completed';
+
+  @override
+  String get victory => 'VICTORY';
+
+  @override
+  String get defeat => 'DEFEAT';
+
+  @override
+  String get levelStabilized => 'LEVEL STABILIZED';
+
+  @override
+  String get integrityFailed => 'INTEGRITY FAILED';
+
+  @override
+  String get coreScore => 'CORE SCORE';
+
+  @override
+  String get playAgain => 'PLAY AGAIN';
+
+  @override
+  String get levelUp => 'LEVEL UP!';
+
+  @override
+  String get rewardPoints => 'REWARD POINTS';
+
+  @override
   String get timePlayed => 'Time Played';
 
   @override
@@ -115,6 +142,25 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get gameOver => 'Game Over';
+
+  @override
+  String get levelComplete => 'Level Complete!';
+
+  @override
+  String get continueText => 'CONTINUE';
+
+  @override
+  String get resume => 'RESUME';
+
+  @override
+  String get gamePaused => 'Game Paused';
+
+  @override
+  String get exitGame => 'Exit Game?';
+
+  @override
+  String get exitGameDesc =>
+      'Are you sure you want to exit? Current progress will be lost.';
 
   @override
   String get correct => 'Correct!';
@@ -925,6 +971,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get systemSettings => 'System Settings';
+
+  @override
+  String get interface => 'Interface';
+
+  @override
+  String get audioAndHaptics => 'Audio & Haptics';
 
   @override
   String get builtInArithmeticTool => 'Built-in arithmetic tool';

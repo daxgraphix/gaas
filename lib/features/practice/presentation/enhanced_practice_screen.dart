@@ -506,7 +506,7 @@ class _EnhancedPracticeScreenState extends ConsumerState<EnhancedPracticeScreen>
 
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (_) => const GameScreen()),
+      MaterialPageRoute(builder: (_) => GameScreen()),
     );
   }
 

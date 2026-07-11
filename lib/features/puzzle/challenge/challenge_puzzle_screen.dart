@@ -7,6 +7,7 @@ import '../../../core/sound_manager.dart';
 import '../../../core/utils/game_flow_optimizer.dart';
 import '../math_riddle/math_riddle_screen.dart';
 import '../../../data/models/math_riddle.dart';
+import '../../../data/models/challenge_state.dart';
 import '../../../l10n/generated/app_localizations.dart';
 
 class ChallengePuzzleScreen extends ConsumerStatefulWidget {

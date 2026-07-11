@@ -28,11 +28,11 @@ class MathRiddle {
   int get hintCount => progressiveHints.length;
 
   int calculateStars(int timeSeconds, int hintsUsed, bool isCorrect, {int correctCount = 0}) {
-    if (!isCorrect || correctCount < 15) return 0;
+    if (!isCorrect || correctCount < 5) return 0;
     
-    if (correctCount >= 18) return 3;
-    if (correctCount >= 16) return 2;
-    if (correctCount >= 15) return 1;
+    if (correctCount >= 7) return 3;
+    if (correctCount >= 6) return 2;
+    if (correctCount >= 5) return 1;
     return 0;
   }
 }
@@ -65,7 +65,7 @@ class MathRiddleState {
     this.questionIndex = 0,
     this.correctAnswers = 0,
     this.currentStreak = 0,
-    this.totalQuestions = 20,
+    this.totalQuestions = 7,
     this.hintsUsed = 0,
     this.allChallenges = const [],
   });
@@ -105,12 +105,12 @@ class MathRiddleState {
   }
 
   double get levelProgress => totalQuestions > 0 ? questionIndex / totalQuestions : 0;
-  bool get levelPassed => correctAnswers >= 15;
+  bool get levelPassed => correctAnswers >= 5;
   int get stars {
-    if (correctAnswers < 15) return 0;
-    if (correctAnswers >= 18) return 3;
-    if (correctAnswers >= 16) return 2;
-    if (correctAnswers >= 15) return 1;
+    if (correctAnswers < 5) return 0;
+    if (correctAnswers >= 7) return 3;
+    if (correctAnswers >= 6) return 2;
+    if (correctAnswers >= 5) return 1;
     return 0;
   }
 }

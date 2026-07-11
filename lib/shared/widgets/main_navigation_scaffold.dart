@@ -38,9 +38,12 @@ class MainNavigationScaffold extends ConsumerWidget {
           // Screens with Tab Transition
           IndexedStack(
             index: currentIndex,
-            children: screens.map((screen) {
+            children: screens.asMap().entries.map((entry) {
+              final index = entry.key;
+              final screen = entry.value;
               return screen.animate(
-                key: ValueKey('tab_$currentIndex'),
+                key: ValueKey('tab_$index'),
+                target: currentIndex == index ? 1 : 0,
               )
               .fadeIn(duration: 300.ms, curve: Curves.easeOut)
               .slideX(begin: 0.05, end: 0, duration: 300.ms, curve: Curves.easeOutCubic);

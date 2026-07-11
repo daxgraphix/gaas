@@ -591,16 +591,16 @@ class CrossNumbersEngine {
       int target = int.parse(rhs[0]);
       int? solved = _solveLinear(lhs, target);
       if (solved != null && solved >= 0) {
-        int rLoc = isH ? idx : unkIdx * 2;
-        int cLoc = isH ? unkIdx * 2 : idx;
+        int rLoc = isH ? idx : unkIdx;
+        int cLoc = isH ? unkIdx : idx;
         working[rLoc][cLoc] = solved.toString();
         return true;
       }
     } else {
       int? res = _evalLinear(lhs);
       if (res != null) {
-        int rLoc = isH ? idx : unkIdx * 2;
-        int cLoc = isH ? unkIdx * 2 : idx;
+        int rLoc = isH ? idx : unkIdx;
+        int cLoc = isH ? unkIdx : idx;
         working[rLoc][cLoc] = res.toString();
         return true;
       }

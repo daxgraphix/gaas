@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:math';
+import 'dart:convert';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../data/models/user_session.dart';
@@ -13,10 +14,12 @@ import '../data/repositories/user_repository.dart';
 import '../data/repositories/settings_repository.dart';
 import '../data/repositories/level_progress_repository.dart';
 import '../data/repositories/math_riddles_repository.dart';
+import '../data/repositories/database_service.dart';
 import '../features/analytics/analytics_provider.dart';
 import '../data/repositories/statistics_repository.dart';
 import '../features/game/logic/session_stats_provider.dart';
 import '../features/game/logic/dynamic_difficulty_provider.dart';
+import '../data/content_library/achievement_system.dart';
 import '../features/game/logic/player_performance_provider.dart';
 import 'math_engine/cross_numbers_engine.dart';
 import 'math_engine/math_riddle_engine.dart';
@@ -56,17 +59,6 @@ final soundManagerProvider = Provider<SoundManager>((ref) {
 final reportsFilterProvider = StateProvider<String?>((ref) => null);
 final navigationIndexProvider = StateProvider<int>((ref) => 0);
 
-// Theme Provider
-class AppThemeNotifier extends StateNotifier<AppThemeType> {
-  AppThemeNotifier() : super(AppThemeType.midnight);
-
-  void setTheme(AppThemeType theme) => state = theme;
-}
-
-final themeProvider = StateNotifierProvider<AppThemeNotifier, AppThemeType>((ref) {
-  return AppThemeNotifier();
-});
-
 // Locale Provider
 class AppLocale {
   final String code;
@@ -87,17 +79,63 @@ class AppLocale {
   static const List<AppLocale> supportedLocales = [en, sw];
 }
 
-class LocaleNotifier extends StateNotifier<AppLocale> {
-  LocaleNotifier() : super(AppLocale.en);
+// Theme Provider
+class AppThemeNotifier extends StateNotifier<AppThemeType> {
+  final SharedPreferences _prefs;
+  static const String _themeKey = 'app_theme';
 
-  void setLocale(AppLocale locale) => state = locale;
-  void toggleLanguage() {
-    state = state.code == 'en' ? AppLocale.sw : AppLocale.en;
+  AppThemeNotifier(this._prefs) : super(_getInitialTheme(_prefs));
+
+  static AppThemeType _getInitialTheme(SharedPreferences prefs) {
+    final themeName = prefs.getString(_themeKey);
+    if (themeName == null) return AppThemeType.solar;
+    return AppThemeType.values.firstWhere(
+      (t) => t.name == themeName,
+      orElse: () => AppThemeType.solar,
+    );
+  }
+
+  Future<void> setTheme(AppThemeType theme) async {
+    state = theme;
+    await _prefs.setString(_themeKey, theme.name);
+  }
+}
+
+final themeProvider = StateNotifierProvider<AppThemeNotifier, AppThemeType>((ref) {
+  final prefs = ref.watch(sharedPreferencesProvider);
+  return AppThemeNotifier(prefs);
+});
+
+// Locale Provider
+class LocaleNotifier extends StateNotifier<AppLocale> {
+  final SharedPreferences _prefs;
+  static const String _localeKey = 'app_locale';
+
+  LocaleNotifier(this._prefs) : super(_getInitialLocale(_prefs));
+
+  static AppLocale _getInitialLocale(SharedPreferences prefs) {
+    final code = prefs.getString(_localeKey);
+    if (code == null) return AppLocale.en;
+    return AppLocale.supportedLocales.firstWhere(
+      (l) => l.code == code,
+      orElse: () => AppLocale.en,
+    );
+  }
+
+  Future<void> setLocale(AppLocale locale) async {
+    state = locale;
+    await _prefs.setString(_localeKey, locale.code);
+  }
+
+  Future<void> toggleLanguage() async {
+    final next = state.code == 'en' ? AppLocale.sw : AppLocale.en;
+    await setLocale(next);
   }
 }
 
 final localeProvider = StateNotifierProvider<LocaleNotifier, AppLocale>((ref) {
-  return LocaleNotifier();
+  final prefs = ref.watch(sharedPreferencesProvider);
+  return LocaleNotifier(prefs);
 });
 
 const int hintCostPoints = 50;
@@ -128,17 +166,49 @@ class StartupState {
 }
 
 class StartupNotifier extends StateNotifier<StartupState> {
-  StartupNotifier() : super(const StartupState()) {
+  final Ref ref;
+  StartupNotifier(this.ref) : super(const StartupState()) {
     _init();
   }
 
   Future<void> _init() async {
+    // Initialize Database first
+    await DatabaseService.instance;
+
+    // Initialize Sound and Haptic Managers
+    await Future.wait([
+      SoundManager.instance.initialize(),
+      HapticManager.instance.initialize(),
+    ]);
+
+    // Apply saved settings to hardware managers
+    final settings = await ref.read(settingsProvider.notifier).loadSettings();
+    await SoundManager.instance.setMuted(!settings.soundEnabled);
+    await HapticManager.instance.setHapticsEnabled(settings.vibrationEnabled);
+
+    // Play startup sound
+    if (settings.soundEnabled) {
+      await SoundManager.instance.playStartupSound();
+    }
+
+    // Check user and intro status
+    final prefs = ref.read(sharedPreferencesProvider);
+    final needsIntro = prefs.getBool('needs_intro') ?? true;
+    
+    final user = await ref.read(userSessionProvider.notifier).loadUser();
+
     // Simulate loading
-    await Future.delayed(const Duration(seconds: 2));
-    state = state.copyWith(isReady: true);
+    await Future.delayed(const Duration(seconds: 1));
+    state = state.copyWith(
+      isReady: true,
+      needsIntro: needsIntro,
+      needsProfileSetup: user == null,
+    );
   }
 
   Future<void> completeIntro() async {
+    final prefs = ref.read(sharedPreferencesProvider);
+    await prefs.setBool('needs_intro', false);
     state = state.copyWith(needsIntro: false);
   }
 
@@ -148,7 +218,7 @@ class StartupNotifier extends StateNotifier<StartupState> {
 }
 
 final startupProvider = StateNotifierProvider<StartupNotifier, StartupState>((ref) {
-  return StartupNotifier();
+  return StartupNotifier(ref);
 });
 
 // Daily Challenge Provider
@@ -179,6 +249,36 @@ class DailyChallenge {
 
   double get progress => (currentValue / targetValue).clamp(0.0, 1.0);
 
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id,
+      'title': title,
+      'description': description,
+      'type': type,
+      'targetValue': targetValue,
+      'currentValue': currentValue,
+      'rewardPoints': rewardPoints,
+      'expiresAt': expiresAt.toIso8601String(),
+      'isCompleted': isCompleted,
+      'isClaimed': isClaimed,
+    };
+  }
+
+  factory DailyChallenge.fromMap(Map<String, dynamic> map) {
+    return DailyChallenge(
+      id: map['id'],
+      title: map['title'],
+      description: map['description'],
+      type: map['type'],
+      targetValue: map['targetValue'],
+      currentValue: map['currentValue'] ?? 0,
+      rewardPoints: map['rewardPoints'],
+      expiresAt: DateTime.parse(map['expiresAt']),
+      isCompleted: map['isCompleted'] ?? false,
+      isClaimed: map['isClaimed'] ?? false,
+    );
+  }
+
   DailyChallenge copyWith({
     int? currentValue,
     bool? isCompleted,
@@ -200,26 +300,140 @@ class DailyChallenge {
 }
 
 class DailyChallengeNotifier extends StateNotifier<List<DailyChallenge>> {
-  DailyChallengeNotifier() : super([]) {
+  final SharedPreferences _prefs;
+  static const String _lastResetKey = 'daily_challenges_last_reset';
+  static const String _challengesKey = 'daily_challenges_data';
+
+  DailyChallengeNotifier(this._prefs) : super([]) {
     checkAndResetChallenges();
   }
 
   void checkAndResetChallenges() {
-    if (state.isEmpty) {
-      final now = DateTime.now();
-      final endOfDay = DateTime(now.year, now.month, now.day, 23, 59, 59);
-      state = [
-        DailyChallenge(
-          id: 'questions_daily',
-          title: 'Daily Practice',
-          description: 'Solve 20 questions',
-          type: 'questions',
-          targetValue: 20,
-          rewardPoints: 100,
-          expiresAt: endOfDay,
-        ),
-      ];
+    final now = DateTime.now();
+    final lastResetStr = _prefs.getString(_lastResetKey);
+    final lastReset = lastResetStr != null ? DateTime.parse(lastResetStr) : null;
+
+    if (lastReset == null || _isDifferentDay(lastReset, now)) {
+      _generateNewChallenges(now);
+    } else {
+      _loadSavedChallenges();
     }
+  }
+
+  void _loadSavedChallenges() {
+    final data = _prefs.getString(_challengesKey);
+    if (data != null) {
+      try {
+        final List<dynamic> decoded = json.decode(data);
+        state = decoded.map((m) => DailyChallenge.fromMap(Map<String, dynamic>.from(m))).toList();
+        
+        // If loading failed to produce challenges, generate new ones
+        if (state.isEmpty) {
+          _generateNewChallenges(DateTime.now());
+        }
+      } catch (e) {
+        _generateNewChallenges(DateTime.now());
+      }
+    } else {
+      _generateNewChallenges(DateTime.now());
+    }
+  }
+
+  void _saveChallenges() {
+    final data = json.encode(state.map((c) => c.toMap()).toList());
+    _prefs.setString(_challengesKey, data);
+  }
+
+  bool _isDifferentDay(DateTime d1, DateTime d2) {
+    return d1.year != d2.year || d1.month != d2.month || d1.day != d2.day;
+  }
+
+  void _generateNewChallenges(DateTime now) {
+    final endOfDay = DateTime(now.year, now.month, now.day, 23, 59, 59);
+    final random = Random();
+    
+    final pool = [
+      {
+        'id': 'questions_daily',
+        'title': 'Daily Practice',
+        'description': 'Solve 20 questions',
+        'type': 'questions',
+        'target': 20,
+        'reward': 100,
+      },
+      {
+        'id': 'correct_daily',
+        'title': 'Sharp Mind',
+        'description': 'Get 15 correct answers',
+        'type': 'correct',
+        'target': 15,
+        'reward': 150,
+      },
+      {
+        'id': 'arcade_daily',
+        'title': 'Arcade Runner',
+        'description': 'Play 3 Arcade sessions',
+        'type': 'arcade_sessions',
+        'target': 3,
+        'reward': 120,
+      },
+      {
+        'id': 'cross_daily',
+        'title': 'Grid Master',
+        'description': 'Solve 2 Cross Numbers puzzles',
+        'type': 'cross_numbers',
+        'target': 2,
+        'reward': 200,
+      },
+      {
+        'id': 'streak_daily',
+        'title': 'Consistency',
+        'description': 'Get a 10-question streak',
+        'type': 'streak',
+        'target': 10,
+        'reward': 180,
+      },
+      {
+        'id': 'stars_daily',
+        'title': 'Star Collector',
+        'description': 'Earn 10 stars in Campaign',
+        'type': 'stars',
+        'target': 10,
+        'reward': 200,
+      },
+      {
+        'id': 'wins_daily',
+        'title': 'Duel Champion',
+        'description': 'Win 2 Duels',
+        'type': 'wins',
+        'target': 2,
+        'reward': 150,
+      },
+      {
+        'id': 'division_daily',
+        'title': 'Division Master',
+        'description': 'Solve 10 division problems',
+        'type': 'division',
+        'target': 10,
+        'reward': 120,
+      },
+    ];
+
+    pool.shuffle(random);
+    final selected = pool.take(3).toList(); // Give 3 random challenges daily
+
+    state = selected.map((c) => DailyChallenge(
+      id: c['id'] as String,
+      title: c['title'] as String,
+      description: c['description'] as String,
+      type: c['type'] as String,
+      targetValue: c['target'] as int,
+      rewardPoints: c['reward'] as int,
+      expiresAt: endOfDay,
+    )).toList();
+
+    _prefs.setString(_lastResetKey, now.toIso8601String());
+    _saveChallenges();
   }
 
   void incrementProgress(String type, int amount) {
@@ -233,6 +447,7 @@ class DailyChallengeNotifier extends StateNotifier<List<DailyChallenge>> {
       }
       return c;
     }).toList();
+    _saveChallenges();
   }
 
   void updateProgressMax(String type, int value) {
@@ -246,21 +461,38 @@ class DailyChallengeNotifier extends StateNotifier<List<DailyChallenge>> {
       }
       return c;
     }).toList();
+    _saveChallenges();
   }
 
   void claimReward(String id, WidgetRef ref) {
     state = state.map((c) {
       if (c.id == id && c.isCompleted && !c.isClaimed) {
         ref.read(userSessionProvider.notifier).addPoints(c.rewardPoints);
+        ref.read(soundManagerProvider).playSuccess();
+        
+        // Track for achievement
+        final totalClaimed = _prefs.getInt('daily_challenges_claimed_total') ?? 0;
+        final newTotal = totalClaimed + 1;
+        _prefs.setInt('daily_challenges_claimed_total', newTotal);
+        
+        final achievements = ref.read(achievementDatabaseProvider);
+        ref.read(achievementStateProvider.notifier).checkAndUnlock(
+          'daily_challenges_claimed', 
+          newTotal, 
+          achievements
+        );
+
         return c.copyWith(isClaimed: true);
       }
       return c;
     }).toList();
+    _saveChallenges();
   }
 }
 
 final dailyChallengeProvider = StateNotifierProvider<DailyChallengeNotifier, List<DailyChallenge>>((ref) {
-  return DailyChallengeNotifier();
+  final prefs = ref.watch(sharedPreferencesProvider);
+  return DailyChallengeNotifier(prefs);
 });
 
 // Logic Providers
@@ -273,11 +505,13 @@ final userSessionProvider = StateNotifierProvider<UserSessionNotifier, UserSessi
 class UserSessionNotifier extends StateNotifier<UserSession?> {
   final UserRepository _repository;
   UserSessionNotifier(this._repository) : super(null) {
-    _loadUser();
+    loadUser();
   }
 
-  Future<void> _loadUser() async {
-    state = await _repository.getUserSession();
+  Future<UserSession?> loadUser() async {
+    final user = await _repository.getUserSession();
+    state = user;
+    return user;
   }
 
   Future<void> updateName(String name) async {
@@ -306,28 +540,32 @@ class UserSessionNotifier extends StateNotifier<UserSession?> {
     int? lastPlayedLevel,
     double? lastHeatIndex,
   }) async {
-    if (state != null) {
-      final updated = state!.copyWith(
-        id: id,
-        name: name,
-        avatarShape: avatarShape,
-        avatarColor: avatarColor,
-        theme: theme,
-        language: language,
-        totalPoints: totalPoints,
-        skillRating: skillRating,
-        isFocusMode: isFocusMode,
-        lastPlayedAt: lastPlayedAt,
-        loginStreak: loginStreak,
-        unlockedAvatars: unlockedAvatars,
-        lastPlayedMode: lastPlayedMode,
-        lastPlayedOperation: lastPlayedOperation,
-        lastPlayedLevel: lastPlayedLevel,
-        lastHeatIndex: lastHeatIndex,
-      );
-      await _repository.updateUserSession(updated);
-      state = updated;
-    }
+    final currentUser = state ?? UserSession(
+      name: name ?? 'Player',
+      avatarShape: avatarShape ?? 'circle',
+      avatarColor: avatarColor ?? '#00BCD4',
+    );
+
+    final updated = currentUser.copyWith(
+      id: id,
+      name: name,
+      avatarShape: avatarShape,
+      avatarColor: avatarColor,
+      theme: theme,
+      language: language,
+      totalPoints: totalPoints,
+      skillRating: skillRating,
+      isFocusMode: isFocusMode,
+      lastPlayedAt: lastPlayedAt,
+      loginStreak: loginStreak,
+      unlockedAvatars: unlockedAvatars,
+      lastPlayedMode: lastPlayedMode,
+      lastPlayedOperation: lastPlayedOperation,
+      lastPlayedLevel: lastPlayedLevel,
+      lastHeatIndex: lastHeatIndex,
+    );
+    await _repository.updateUserSession(updated);
+    state = updated;
   }
 
   Future<void> addPoints(int points) async {
@@ -386,11 +624,13 @@ final settingsProvider = StateNotifierProvider<SettingsNotifier, GameSettings>((
 class SettingsNotifier extends StateNotifier<GameSettings> {
   final SettingsRepository _repository;
   SettingsNotifier(this._repository) : super(const GameSettings()) {
-    _loadSettings();
+    loadSettings();
   }
 
-  Future<void> _loadSettings() async {
-    state = await _repository.getSettings();
+  Future<GameSettings> loadSettings() async {
+    final settings = await _repository.getSettings();
+    state = settings;
+    return settings;
   }
 
   Future<void> updateSettings(GameSettings settings) async {
@@ -405,11 +645,13 @@ class SettingsNotifier extends StateNotifier<GameSettings> {
 
   Future<void> toggleSound(bool enabled) async {
     final updated = state.copyWith(soundEnabled: enabled);
+    await SoundManager.instance.setMuted(!enabled);
     await updateSettings(updated);
   }
 
   Future<void> toggleHaptics(bool enabled) async {
     final updated = state.copyWith(vibrationEnabled: enabled);
+    await HapticManager.instance.setHapticsEnabled(enabled);
     await updateSettings(updated);
   }
 }
@@ -770,6 +1012,7 @@ class CrossNumbersNotifier extends StateNotifier<CrossNumbersState> {
       final newSatisfied = _getSatisfiedEquations(newPuzzle);
       if (newSatisfied.length > state.satisfiedEquations.length) {
         ref.read(soundManagerProvider).playEffect('correct');
+        ref.read(dailyChallengeProvider.notifier).incrementProgress('correct', 1);
       }
 
       state = state.copyWith(
@@ -812,7 +1055,11 @@ class CrossNumbersNotifier extends StateNotifier<CrossNumbersState> {
     );
     ref.read(dynamicDifficultyProvider.notifier).recordAssessment(isCorrect: isCorrect);
 
+    ref.read(dailyChallengeProvider.notifier).incrementProgress('correct', isCorrect ? 1 : 0);
+    ref.read(dailyChallengeProvider.notifier).incrementProgress('questions', 1);
+
     if (nextIndex > state.totalQuestions) {
+      ref.read(dailyChallengeProvider.notifier).incrementProgress('cross_numbers', 1);
       state = state.copyWith(
         correctQuestions: newCorrectCount,
         isLevelFinished: true,

@@ -104,14 +104,18 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: List.generate(5, (index) {
               final starIndex = index + 1;
-              return GestureDetector(
-                onTap: () => setState(() => _rating = starIndex.toDouble()),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 8),
-                  child: Icon(
-                    starIndex <= _rating ? Icons.star : Icons.star_border,
-                    color: Colors.amber,
-                    size: 40,
+              return Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: () => setState(() => _rating = starIndex.toDouble()),
+                  borderRadius: BorderRadius.circular(24),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    child: Icon(
+                      starIndex <= _rating ? Icons.star : Icons.star_border,
+                      color: Colors.amber,
+                      size: 40,
+                    ),
                   ),
                 ),
               );
@@ -168,47 +172,51 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
             runSpacing: 12,
             children: _categories.map((category) {
               final isSelected = _selectedCategory == category['id'];
-              return GestureDetector(
-                onTap: () => setState(() => _selectedCategory = category['id']),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 12,
-                  ),
-                  decoration: BoxDecoration(
-                    color: isSelected
-                        ? theme.colorScheme.primary.withValues(alpha: 0.15)
-                        : theme.colorScheme.primary.withValues(alpha: 0.05),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: isSelected
-                          ? theme.colorScheme.primary
-                          : theme.colorScheme.outline.withValues(alpha: 0.3),
+              return Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: () => setState(() => _selectedCategory = category['id']),
+                  borderRadius: BorderRadius.circular(12),
+                  child: Ink(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 12,
                     ),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        category['icon'],
-                        size: 20,
+                    decoration: BoxDecoration(
+                      color: isSelected
+                          ? theme.colorScheme.primary.withValues(alpha: 0.15)
+                          : theme.colorScheme.primary.withValues(alpha: 0.05),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
                         color: isSelected
                             ? theme.colorScheme.primary
-                            : theme.colorScheme.onSurfaceVariant,
+                            : theme.colorScheme.outline.withValues(alpha: 0.3),
                       ),
-                      const SizedBox(width: 8),
-                      Text(
-                        category['label'],
-                        style: TextStyle(
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          category['icon'],
+                          size: 20,
                           color: isSelected
                               ? theme.colorScheme.primary
                               : theme.colorScheme.onSurfaceVariant,
-                          fontWeight: isSelected
-                              ? FontWeight.bold
-                              : FontWeight.normal,
                         ),
-                      ),
-                    ],
+                        const SizedBox(width: 8),
+                        Text(
+                          category['label'],
+                          style: TextStyle(
+                            color: isSelected
+                                ? theme.colorScheme.primary
+                                : theme.colorScheme.onSurfaceVariant,
+                            fontWeight: isSelected
+                                ? FontWeight.bold
+                                : FontWeight.normal,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               );

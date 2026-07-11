@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:io' show Platform;
 import 'core/providers.dart';
 import 'features/game/logic/session_stats_provider.dart';
@@ -15,6 +16,8 @@ import 'l10n/generated/app_localizations.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  final prefs = await SharedPreferences.getInstance();
 
   GameFlowOptimizer.optimizeMemoryUsage();
 
@@ -38,7 +41,12 @@ void main() async {
     ]);
   }
 
-  runApp(const ProviderScope(child: GAASApp()));
+  runApp(ProviderScope(
+    overrides: [
+      sharedPreferencesProvider.overrideWithValue(prefs),
+    ],
+    child: const GAASApp(),
+  ));
 }
 
 class GAASApp extends ConsumerStatefulWidget {
@@ -116,7 +124,7 @@ class _GAASAppState extends ConsumerState<GAASApp> with WidgetsBindingObserver {
         return const OnboardingScreen();
       }
       if (startupState.needsProfileSetup) {
-        return const ProfileSetupScreen(isInitialSetup: false);
+        return const ProfileSetupScreen(isInitialSetup: true);
       }
       return const MainNavigationScaffold();
     }

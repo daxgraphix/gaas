@@ -564,18 +564,18 @@ class AppThemes {
     return TextTheme(
       displayLarge: TextStyle(
         fontSize: 57,
-        fontWeight: FontWeight.w800,
+        fontWeight: FontWeight.w900,
         letterSpacing: -0.25,
         color: primaryColor,
       ),
       displayMedium: TextStyle(
         fontSize: 45,
-        fontWeight: FontWeight.w800,
+        fontWeight: FontWeight.w900,
         color: primaryColor,
       ),
       displaySmall: TextStyle(
         fontSize: 36,
-        fontWeight: FontWeight.w700,
+        fontWeight: FontWeight.w800,
         color: primaryColor,
       ),
       headlineLarge: TextStyle(
@@ -590,59 +590,59 @@ class AppThemes {
       ),
       headlineSmall: TextStyle(
         fontSize: 24,
-        fontWeight: FontWeight.w700,
+        fontWeight: FontWeight.w800,
         color: primaryColor,
       ),
       titleLarge: TextStyle(
         fontSize: 22,
-        fontWeight: FontWeight.w800,
+        fontWeight: FontWeight.w900,
         color: primaryColor,
       ),
       titleMedium: TextStyle(
         fontSize: 16,
-        fontWeight: FontWeight.w700,
+        fontWeight: FontWeight.w800,
         letterSpacing: 0.15,
         color: primaryColor,
       ),
       titleSmall: TextStyle(
         fontSize: 14,
-        fontWeight: FontWeight.w700,
+        fontWeight: FontWeight.w800,
         letterSpacing: 0.1,
         color: primaryColor,
       ),
       bodyLarge: TextStyle(
         fontSize: 16,
-        fontWeight: FontWeight.w500,
+        fontWeight: FontWeight.w700,
         letterSpacing: 0.5,
         color: secondaryColor,
       ),
       bodyMedium: TextStyle(
         fontSize: 14,
-        fontWeight: FontWeight.w500,
+        fontWeight: FontWeight.w700,
         letterSpacing: 0.25,
         color: secondaryColor,
       ),
       bodySmall: TextStyle(
         fontSize: 12,
-        fontWeight: FontWeight.w500,
+        fontWeight: FontWeight.w700,
         letterSpacing: 0.4,
         color: secondaryColor,
       ),
       labelLarge: TextStyle(
         fontSize: 14,
-        fontWeight: FontWeight.w600,
+        fontWeight: FontWeight.w800,
         letterSpacing: 0.1,
         color: primaryColor,
       ),
       labelMedium: TextStyle(
         fontSize: 12,
-        fontWeight: FontWeight.w600,
+        fontWeight: FontWeight.w800,
         letterSpacing: 0.5,
         color: secondaryColor,
       ),
       labelSmall: TextStyle(
         fontSize: 11,
-        fontWeight: FontWeight.w700,
+        fontWeight: FontWeight.w900,
         letterSpacing: 0.5,
         color: secondaryColor,
       ),
@@ -1130,55 +1130,48 @@ class _PremiumCardState extends State<PremiumCard> {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
-    return GestureDetector(
-      onTapDown: widget.onTap != null
-          ? (_) => setState(() => _isPressed = true)
-          : null,
-      onTapUp: widget.onTap != null
-          ? (_) {
-              setState(() => _isPressed = false);
-              widget.onTap!();
-            }
-          : null,
-      onTapCancel: widget.onTap != null
-          ? () => setState(() => _isPressed = false)
-          : null,
-      child: ClipRRect(
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: widget.onTap,
         borderRadius: BorderRadius.circular(widget.borderRadius),
+        onHighlightChanged: (highlight) {
+          setState(() => _isPressed = highlight);
+        },
         child: Container(
-              margin: widget.margin,
-              padding: widget.padding ?? const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: isDark
-                    ? theme.colorScheme.surface.withValues(alpha: 0.8)
-                    : theme.colorScheme.surface,
-                borderRadius: BorderRadius.circular(widget.borderRadius),
-                border: Border.all(
-                  color:
-                      widget.borderColor ??
-                      (isDark
-                          ? Colors.white.withValues(alpha: 0.1)
-                          : AppDesignTokens.textPrimary(context).withValues(alpha: 0.2)),
-                  width: 1,
+          margin: widget.margin,
+          padding: widget.padding ?? const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: isDark
+                ? theme.colorScheme.surface.withValues(alpha: 0.8)
+                : theme.colorScheme.surface,
+            borderRadius: BorderRadius.circular(widget.borderRadius),
+            border: Border.all(
+              color: widget.borderColor ??
+                  (isDark
+                      ? Colors.white.withValues(alpha: 0.1)
+                      : AppDesignTokens.textPrimary(context)
+                          .withValues(alpha: 0.2)),
+              width: 1,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(
+                  alpha: isDark ? 0.3 : 0.08,
                 ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(
-                      alpha: isDark ? 0.3 : 0.08,
-                    ),
-                    blurRadius: _isPressed ? 5 : 16,
-                    offset: Offset(0, _isPressed ? 2 : 6),
-                  ),
-                ],
+                blurRadius: _isPressed ? 5 : 16,
+                offset: Offset(0, _isPressed ? 2 : 6),
               ),
-              child: widget.overflowProtected
-                  ? SingleChildScrollView(
-                      clipBehavior: Clip.hardEdge,
-                      physics: const BouncingScrollPhysics(),
-                      child: ConstrainedWidthBox(child: widget.child),
-                    )
-                  : widget.child,
-            )
+            ],
+          ),
+          child: widget.overflowProtected
+              ? SingleChildScrollView(
+                  clipBehavior: Clip.hardEdge,
+                  physics: const BouncingScrollPhysics(),
+                  child: ConstrainedWidthBox(child: widget.child),
+                )
+              : widget.child,
+        )
             .animate(target: _isPressed ? 1 : 0)
             .scale(
               begin: const Offset(1, 1),

@@ -209,88 +209,92 @@ class _SyncNode extends StatelessWidget {
     final theme = Theme.of(context);
     final accentColor = isUnlocked ? theme.colorScheme.primary : AppDesignTokens.textMuted(context).withValues(alpha: 0.3);
     
-    return GestureDetector(
-      onTap: isUnlocked ? onTap : null,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Stack(
-            alignment: Alignment.center,
-            children: [
-              if (isBoss && isUnlocked)
-                CustomPaint(
-                  size: const Size(120, 120),
-                  painter: _BossParticlePainter(
-                    color: theme.colorScheme.error,
-                    animation: particleAnimation,
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: isUnlocked ? onTap : null,
+        borderRadius: BorderRadius.circular(isBoss ? 42.5 : 35),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Stack(
+              alignment: Alignment.center,
+              children: [
+                if (isBoss && isUnlocked)
+                  CustomPaint(
+                    size: const Size(120, 120),
+                    painter: _BossParticlePainter(
+                      color: theme.colorScheme.error,
+                      animation: particleAnimation,
+                    ),
                   ),
-                ),
-              Container(
-                width: isBoss ? 85 : 70,
-                height: isBoss ? 85 : 70,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: isUnlocked
-                      ? (isBoss ? theme.colorScheme.errorContainer : theme.colorScheme.surface)
-                      : theme.colorScheme.surface.withValues(alpha: 0.5),
-                  border: Border.all(
-                    color: isBoss && isUnlocked ? theme.colorScheme.error : accentColor,
-                    width: isBoss ? 4 : 2,
+                Ink(
+                  width: isBoss ? 85 : 70,
+                  height: isBoss ? 85 : 70,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: isUnlocked
+                        ? (isBoss ? theme.colorScheme.errorContainer : theme.colorScheme.surface)
+                        : theme.colorScheme.surface.withValues(alpha: 0.5),
+                    border: Border.all(
+                      color: isBoss && isUnlocked ? theme.colorScheme.error : accentColor,
+                      width: isBoss ? 4 : 2,
+                    ),
+                    boxShadow: isUnlocked
+                        ? [
+                          BoxShadow(
+                            color: (isBoss ? theme.colorScheme.error : accentColor)
+                                .withValues(alpha: 0.3),
+                            blurRadius: isBoss ? 20 : 12,
+                            spreadRadius: isBoss ? 4 : 2,
+                          ),
+                        ]
+                        : [],
                   ),
-                  boxShadow: isUnlocked
-                      ? [
-                        BoxShadow(
-                          color: (isBoss ? theme.colorScheme.error : accentColor)
-                              .withValues(alpha: 0.3),
-                          blurRadius: isBoss ? 20 : 12,
-                          spreadRadius: isBoss ? 4 : 2,
-                        ),
-                      ]
-                      : [],
-                ),
-                child: Center(
-                  child: Stack(
-                    alignment: Alignment.center,
-                    children: [
-                      if (!isUnlocked)
-                        Icon(
-                          Icons.lock,
-                          color: AppDesignTokens.textMuted(context).withValues(alpha: 0.5),
-                          size: 24,
-                        ),
-                      if (isUnlocked)
-                        isBoss
-                            ? Icon(
-                              Icons.bolt,
-                              color: theme.colorScheme.error,
-                              size: 32,
-                            )
-                            : Text(
-                              level.toString(),
-                              style: TextStyle(
-                                fontSize: 22,
-                                fontWeight: FontWeight.bold,
-                                color: AppDesignTokens.textPrimary(context),
+                  child: Center(
+                    child: Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        if (!isUnlocked)
+                          Icon(
+                            Icons.lock,
+                            color: AppDesignTokens.textMuted(context).withValues(alpha: 0.5),
+                            size: 24,
+                          ),
+                        if (isUnlocked)
+                          isBoss
+                              ? Icon(
+                                Icons.bolt,
+                                color: theme.colorScheme.error,
+                                size: 32,
+                              )
+                              : Text(
+                                level.toString(),
+                                style: TextStyle(
+                                  fontSize: 22,
+                                  fontWeight: FontWeight.bold,
+                                  color: AppDesignTokens.textPrimary(context),
+                                ),
                               ),
-                            ),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
-              ).animate(target: isUnlocked ? 1 : 0)
-                .shimmer(duration: 2.seconds, color: (isBoss ? theme.colorScheme.error : accentColor).withValues(alpha: 0.1))
-                .scale(begin: const Offset(0.9, 0.9), end: const Offset(1, 1), duration: 400.ms, curve: Curves.easeOutBack),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: List.generate(3, (i) => Icon(
-              Icons.star,
-              size: 14,
-              color: i < stars ? AppDesignTokens.warning : AppDesignTokens.textMuted(context).withValues(alpha: 0.2),
-            )),
-          ),
-        ],
+                ).animate(target: isUnlocked ? 1 : 0)
+                  .shimmer(duration: 2.seconds, color: (isBoss ? theme.colorScheme.error : accentColor).withValues(alpha: 0.1))
+                  .scale(begin: const Offset(0.9, 0.9), end: const Offset(1, 1), duration: 400.ms, curve: Curves.easeOutBack),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: List.generate(3, (i) => Icon(
+                Icons.star,
+                size: 14,
+                color: i < stars ? AppDesignTokens.warning : AppDesignTokens.textMuted(context).withValues(alpha: 0.2),
+              )),
+            ),
+          ],
+        ),
       ),
     );
   }

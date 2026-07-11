@@ -93,6 +93,8 @@ class Achievement {
       case 'cross_numbers_novice': return l10n.gridExplorer;
       case 'cross_numbers_speed': return l10n.lightningGrid;
       case 'cross_numbers_master': return l10n.logicArchitect;
+      case 'daily_hero': return 'Daily Hero';
+      case 'challenge_master': return 'Challenge Master';
       default: return title;
     }
   }
@@ -153,6 +155,8 @@ class Achievement {
       case 'cross_numbers_novice': return l10n.gridExplorerDesc;
       case 'cross_numbers_speed': return l10n.lightningGridDesc;
       case 'cross_numbers_master': return l10n.logicArchitectDesc;
+      case 'daily_hero': return 'Complete 10 Daily Challenges';
+      case 'challenge_master': return 'Complete 50 Daily Challenges';
       default: return description;
     }
   }
@@ -719,6 +723,26 @@ final List<Achievement> _defaultAchievements = [
     points: 250,
     iconName: 'architecture',
     trigger: AchievementTrigger(type: 'cross_numbers_completed', targetValue: 50),
+  ),
+  const Achievement(
+    id: 'daily_hero',
+    title: 'Daily Hero',
+    description: 'Complete 10 Daily Challenges',
+    category: AchievementCategory.special,
+    rarity: AchievementRarity.rare,
+    points: 100,
+    iconName: 'event_available',
+    trigger: AchievementTrigger(type: 'daily_challenges_claimed', targetValue: 10),
+  ),
+  const Achievement(
+    id: 'challenge_master',
+    title: 'Challenge Master',
+    description: 'Complete 50 Daily Challenges',
+    category: AchievementCategory.special,
+    rarity: AchievementRarity.epic,
+    points: 250,
+    iconName: 'event_note',
+    trigger: AchievementTrigger(type: 'daily_challenges_claimed', targetValue: 50),
   ),
 ];
 

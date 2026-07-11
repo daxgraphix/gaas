@@ -30,9 +30,9 @@ class ProfileScreen extends ConsumerWidget {
 
     // Show loading if user is not initialized yet
     if (user == null) {
-      return Scaffold(
-        backgroundColor: theme.scaffoldBackgroundColor,
-        body: const Center(
+      return const Scaffold(
+        backgroundColor: Colors.transparent,
+        body: Center(
           child: CircularProgressIndicator(),
         ),
       );

@@ -354,26 +354,30 @@ class _PracticeScreenState extends ConsumerState<PracticeScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: timeOptions.map((time) {
               final isSelected = _timeLimit == time;
-              return GestureDetector(
-                onTap: () {
-                  HapticManager.instance.selectionClick();
-                  setState(() => _timeLimit = time);
-                },
-                child: AnimatedContainer(
-                  duration: 200.ms,
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                  decoration: BoxDecoration(
-                    color: isSelected ? theme.colorScheme.primary.withValues(alpha: 0.2) : Colors.transparent,
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(
-                      color: isSelected ? theme.colorScheme.primary : theme.colorScheme.outline.withValues(alpha: 0.1),
+              return Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: () {
+                    HapticManager.instance.selectionClick();
+                    setState(() => _timeLimit = time);
+                  },
+                  borderRadius: BorderRadius.circular(8),
+                  child: AnimatedContainer(
+                    duration: 200.ms,
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: isSelected ? theme.colorScheme.primary.withValues(alpha: 0.2) : Colors.transparent,
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                        color: isSelected ? theme.colorScheme.primary : theme.colorScheme.outline.withValues(alpha: 0.1),
+                      ),
                     ),
-                  ),
-                  child: Text(
-                    time == 0 ? '∞' : '${time}s',
-                    style: TextStyle(
-                      color: isSelected ? theme.colorScheme.primary : AppDesignTokens.textPrimary(context),
-                      fontWeight: isSelected ? FontWeight.w700 : FontWeight.w400,
+                    child: Text(
+                      time == 0 ? '∞' : '${time}s',
+                      style: TextStyle(
+                        color: isSelected ? theme.colorScheme.primary : AppDesignTokens.textPrimary(context),
+                        fontWeight: isSelected ? FontWeight.w700 : FontWeight.w400,
+                      ),
                     ),
                   ),
                 ),
@@ -403,27 +407,31 @@ class _PracticeScreenState extends ConsumerState<PracticeScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: countOptions.map((count) {
               final isSelected = _questionCount == count;
-              return GestureDetector(
-                onTap: () {
-                  HapticManager.instance.selectionClick();
-                  setState(() => _questionCount = count);
-                },
-                child: AnimatedContainer(
-                  duration: 200.ms,
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: isSelected ? theme.colorScheme.primary.withValues(alpha: 0.2) : Colors.transparent,
-                    borderRadius: BorderRadius.circular(6),
-                    border: Border.all(
-                      color: isSelected ? theme.colorScheme.primary : theme.colorScheme.outline.withValues(alpha: 0.1),
+              return Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: () {
+                    HapticManager.instance.selectionClick();
+                    setState(() => _questionCount = count);
+                  },
+                  borderRadius: BorderRadius.circular(6),
+                  child: AnimatedContainer(
+                    duration: 200.ms,
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: isSelected ? theme.colorScheme.primary.withValues(alpha: 0.2) : Colors.transparent,
+                      borderRadius: BorderRadius.circular(6),
+                      border: Border.all(
+                        color: isSelected ? theme.colorScheme.primary : theme.colorScheme.outline.withValues(alpha: 0.1),
+                      ),
                     ),
-                  ),
-                  child: Text(
-                    count.toString(),
-                    style: TextStyle(
-                      color: isSelected ? theme.colorScheme.primary : AppDesignTokens.textPrimary(context),
-                      fontWeight: isSelected ? FontWeight.w700 : FontWeight.w400,
-                      fontSize: 14,
+                    child: Text(
+                      count.toString(),
+                      style: TextStyle(
+                        color: isSelected ? theme.colorScheme.primary : AppDesignTokens.textPrimary(context),
+                        fontWeight: isSelected ? FontWeight.w700 : FontWeight.w400,
+                        fontSize: 14,
+                      ),
                     ),
                   ),
                 ),

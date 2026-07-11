@@ -847,7 +847,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
         final hoursLeft = challenge.expiresAt.difference(DateTime.now()).inHours;
         final minutesLeft = challenge.expiresAt.difference(DateTime.now()).inMinutes % 60;
 
-        return GestureDetector(
+        return InkWell(
           onTap: () {
             HapticManager.instance.selectionClick();
             ref.read(soundManagerProvider).playEffect('click');
@@ -856,6 +856,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
               MaterialPageRoute(builder: (_) => const EnhancedChallengeScreen()),
             );
           },
+          borderRadius: BorderRadius.circular(20),
           child: Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(

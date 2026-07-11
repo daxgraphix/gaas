@@ -269,40 +269,44 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: _shapes.map((shape) {
             final isSelected = _selectedShape == shape;
-            return GestureDetector(
-              onTap: () => setState(() => _selectedShape = shape),
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                width: 56,
-                height: 56,
-                decoration: BoxDecoration(
-                  color: isSelected
-                      ? theme.colorScheme.primary
-                      : theme.colorScheme.surface,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(
+            return Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: () => setState(() => _selectedShape = shape),
+                borderRadius: BorderRadius.circular(16),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  width: 56,
+                  height: 56,
+                  decoration: BoxDecoration(
                     color: isSelected
                         ? theme.colorScheme.primary
-                        : theme.colorScheme.outline.withValues(alpha: 0.3),
-                    width: isSelected ? 2 : 1,
-                  ),
-                  boxShadow: isSelected
-                      ? [
-                          BoxShadow(
-                            color: theme.colorScheme.primary.withValues(
-                              alpha: 0.3,
+                        : theme.colorScheme.surface,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(
+                      color: isSelected
+                          ? theme.colorScheme.primary
+                          : theme.colorScheme.outline.withValues(alpha: 0.3),
+                      width: isSelected ? 2 : 1,
+                    ),
+                    boxShadow: isSelected
+                        ? [
+                            BoxShadow(
+                              color: theme.colorScheme.primary.withValues(
+                                alpha: 0.3,
+                              ),
+                              blurRadius: 8,
+                              offset: const Offset(0, 2),
                             ),
-                            blurRadius: 8,
-                            offset: const Offset(0, 2),
-                          ),
-                        ]
-                      : null,
-                ),
-                child: Icon(
-                  _getAvatarIcon(shape),
-                  color: isSelected
-                      ? Colors.white
-                      : theme.colorScheme.onSurfaceVariant,
+                          ]
+                        : null,
+                  ),
+                  child: Icon(
+                    _getAvatarIcon(shape),
+                    color: isSelected
+                        ? Colors.white
+                        : theme.colorScheme.onSurfaceVariant,
+                  ),
                 ),
               ),
             );
@@ -328,32 +332,36 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
           runSpacing: 12,
           children: List.generate(_avatarColors.length, (index) {
             final isSelected = _selectedColorIndex == index;
-            return GestureDetector(
-              onTap: () => setState(() => _selectedColorIndex = index),
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                width: 48,
-                height: 48,
-                decoration: BoxDecoration(
-                  color: _avatarColors[index],
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                    color: isSelected ? Colors.white : Colors.transparent,
-                    width: 3,
+            return Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: () => setState(() => _selectedColorIndex = index),
+                customBorder: const CircleBorder(),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    color: _avatarColors[index],
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: isSelected ? Colors.white : Colors.transparent,
+                      width: 3,
+                    ),
+                    boxShadow: isSelected
+                        ? [
+                            BoxShadow(
+                              color: _avatarColors[index].withValues(alpha: 0.5),
+                              blurRadius: 8,
+                              offset: const Offset(0, 2),
+                            ),
+                          ]
+                        : null,
                   ),
-                  boxShadow: isSelected
-                      ? [
-                          BoxShadow(
-                            color: _avatarColors[index].withValues(alpha: 0.5),
-                            blurRadius: 8,
-                            offset: const Offset(0, 2),
-                          ),
-                        ]
+                  child: isSelected
+                      ? const Icon(Icons.check, color: Colors.white, size: 24)
                       : null,
                 ),
-                child: isSelected
-                    ? const Icon(Icons.check, color: Colors.white, size: 24)
-                    : null,
               ),
             );
           }),

@@ -1,5 +1,6 @@
 import 'dart:io' show Platform;
 import 'dart:developer';
+import 'dart:convert';
 import 'package:flutter/services.dart';
 import 'package:audioplayers/audioplayers.dart' show AudioPlayer, AssetSource, ReleaseMode;
 import 'package:shared_preferences/shared_preferences.dart';
@@ -16,6 +17,13 @@ class HapticManager {
     try {
       final prefs = await SharedPreferences.getInstance();
       _hapticsEnabled = prefs.getBool('haptics_enabled') ?? true;
+      
+      // Sync with centralized GameSettings if they exist
+      final String? settingsJson = prefs.getString('game_settings');
+      if (settingsJson != null) {
+        final Map<String, dynamic> settings = Map<String, dynamic>.from(jsonDecode(settingsJson));
+        _hapticsEnabled = settings['vibrationEnabled'] ?? _hapticsEnabled;
+      }
     } catch (e) {
       _hapticsEnabled = true;
     }
@@ -183,6 +191,14 @@ class SoundManager {
       _isMuted = prefs.getBool('sound_muted') ?? false;
       _soundEnabled = prefs.getBool('sound_enabled') ?? true;
       _volume = prefs.getDouble('sound_volume') ?? 1.0;
+
+      // Sync with centralized GameSettings if they exist
+      final String? settingsJson = prefs.getString('game_settings');
+      if (settingsJson != null) {
+        final Map<String, dynamic> settings = Map<String, dynamic>.from(jsonDecode(settingsJson));
+        _soundEnabled = settings['soundEnabled'] ?? _soundEnabled;
+        _isMuted = !_soundEnabled;
+      }
     } catch (e) {
       _isMuted = false;
       _soundEnabled = true;

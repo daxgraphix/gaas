@@ -433,6 +433,10 @@ class GameSessionNotifier extends StateNotifier<GameSession?> {
     int newBestStreak = max(state!.bestStreak, newStreak);
 
     final hintUsed = state!.hintsUsed[state!.currentQuestionIndex] ?? false;
+    final challengeNotifier = ref.read(dailyChallengeProvider.notifier);
+
+    challengeNotifier.incrementProgress('questions', 1);
+    challengeNotifier.updateProgressMax('streak', newStreak);
 
     final now = DateTime.now();
     int newCombo = state!.comboMultiplier;
@@ -446,6 +450,7 @@ class GameSessionNotifier extends StateNotifier<GameSession?> {
 
     if (isCorrect) {
       ref.read(soundManagerProvider).playCorrect();
+      challengeNotifier.incrementProgress('correct', 1);
       final baseScore = _getScoreForMode();
       newScore += (hintUsed ? (baseScore ~/ 2) : baseScore) * newCombo;
       newCorrect++;
@@ -470,15 +475,12 @@ class GameSessionNotifier extends StateNotifier<GameSession?> {
         );
       }
 
-      final challengeNotifier = ref.read(dailyChallengeProvider.notifier);
-      challengeNotifier.incrementProgress('questions', 1);
       if (state!.currentQuestion?.operation == 'division') {
         challengeNotifier.incrementProgress('division', 1);
       }
       if (state!.mode == GameMode.speedDemon) {
         challengeNotifier.incrementProgress('speed', 1);
       }
-      challengeNotifier.incrementProgress('streak', 1);
     } else {
       ref.read(soundManagerProvider).playIncorrect();
       newCombo = 1;
@@ -947,6 +949,7 @@ class GameSessionNotifier extends StateNotifier<GameSession?> {
 
       // Update Daily Challenges for Arcade modes
       final challengeNotifier = ref.read(dailyChallengeProvider.notifier);
+      challengeNotifier.incrementProgress('arcade_sessions', 1);
       
       if (state!.mode == GameMode.duel && (state!.playerWon ?? false)) {
         challengeNotifier.incrementProgress('wins', 1);

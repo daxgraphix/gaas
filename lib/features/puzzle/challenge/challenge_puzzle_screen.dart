@@ -632,32 +632,36 @@ class _ChallengePuzzleScreenState extends ConsumerState<ChallengePuzzleScreen> {
   ) {
     final theme = Theme.of(context);
     
-    return GestureDetector(
-      onTap: onTap,
-      child: Column(
-        children: [
-          Container(
-            width: 88,
-            height: 88,
-            decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(24),
-              border: Border.all(color: color.withValues(alpha: 0.3), width: 2),
-            ),
-            child: Center(
-              child: Icon(icon, color: color, size: 40),
-            ),
-          ),
-          const SizedBox(height: 12),
-          Text(
-            label,
-            style: theme.textTheme.labelLarge?.copyWith(
-              color: color,
-              fontWeight: FontWeight.bold,
+    return Column(
+      children: [
+        Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: onTap,
+            borderRadius: BorderRadius.circular(24),
+            child: Ink(
+              width: 88,
+              height: 88,
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(24),
+                border: Border.all(color: color.withValues(alpha: 0.3), width: 2),
+              ),
+              child: Center(
+                child: Icon(icon, color: color, size: 40),
+              ),
             ),
           ),
-        ],
-      ),
+        ),
+        const SizedBox(height: 12),
+        Text(
+          label,
+          style: theme.textTheme.labelLarge?.copyWith(
+            color: color,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ],
     );
   }
 

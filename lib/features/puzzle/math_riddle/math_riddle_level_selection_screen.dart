@@ -142,81 +142,85 @@ class _MathRiddleLevelSelectionScreenState extends ConsumerState<MathRiddleLevel
   Widget _buildLevelCard(int level, String difficulty, Color color, ThemeData theme, bool isUnlocked, int stars) {
     final accentColor = isUnlocked ? theme.colorScheme.primary : theme.colorScheme.onSurface.withValues(alpha: 0.1);
 
-    return GestureDetector(
-      onTap: isUnlocked
-          ? () {
-              HapticManager.instance.selectionClick();
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => MathRiddleScreen(
-                    riddleType: _selectedType,
-                    difficulty: level,
-                    operationId: 'logic',
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: isUnlocked
+            ? () {
+                HapticManager.instance.selectionClick();
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => MathRiddleScreen(
+                      riddleType: _selectedType,
+                      difficulty: level,
+                      operationId: 'logic',
+                    ),
                   ),
-                ),
-              );
-            }
-          : null,
-      child: Container(
-        decoration: BoxDecoration(
-          color: isUnlocked ? theme.colorScheme.surface : theme.colorScheme.surface.withValues(alpha: 0.1),
-          border: Border.all(
-            color: isUnlocked ? accentColor : theme.colorScheme.outline.withValues(alpha: 0.3),
-            width: 2,
+                );
+              }
+            : null,
+        borderRadius: BorderRadius.circular(12),
+        child: Ink(
+          decoration: BoxDecoration(
+            color: isUnlocked ? theme.colorScheme.surface : theme.colorScheme.surface.withValues(alpha: 0.1),
+            border: Border.all(
+              color: isUnlocked ? accentColor : theme.colorScheme.outline.withValues(alpha: 0.3),
+              width: 2,
+            ),
+            borderRadius: BorderRadius.circular(12),
           ),
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                'LEVEL',
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: accentColor,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              Text(
-                level.toString(),
-                style: theme.textTheme.headlineSmall?.copyWith(
-                  color: isUnlocked ? color : theme.colorScheme.onSurface.withValues(alpha: 0.1),
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                decoration: BoxDecoration(
-                  color: isUnlocked ? color.withValues(alpha: 0.1) : theme.colorScheme.onSurface.withValues(alpha: 0.05),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Text(
-                  difficulty,
-                  style: TextStyle(
-                    color: isUnlocked ? color : theme.colorScheme.onSurface.withValues(alpha: 0.2),
-                    fontSize: 10,
+          child: Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  'LEVEL',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: accentColor,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
-              ),
-              if (stars > 0)
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: List.generate(3, (i) => Icon(
-                    Icons.star,
-                    size: 10,
-                    color: i < stars ? theme.colorScheme.tertiary : theme.colorScheme.onSurface.withValues(alpha: 0.1),
-                  )),
+                Text(
+                  level.toString(),
+                  style: theme.textTheme.headlineSmall?.copyWith(
+                    color: isUnlocked ? color : theme.colorScheme.onSurface.withValues(alpha: 0.1),
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
-              if (!isUnlocked)
-                Icon(
-                  Icons.lock,
-                  size: 16,
-                  color: theme.colorScheme.onSurface.withValues(alpha: 0.38),
+                const SizedBox(height: 4),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: isUnlocked ? color.withValues(alpha: 0.1) : theme.colorScheme.onSurface.withValues(alpha: 0.05),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    difficulty,
+                    style: TextStyle(
+                      color: isUnlocked ? color : theme.colorScheme.onSurface.withValues(alpha: 0.2),
+                      fontSize: 10,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
                 ),
-            ],
+                if (stars > 0)
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: List.generate(3, (i) => Icon(
+                      Icons.star,
+                      size: 10,
+                      color: i < stars ? theme.colorScheme.tertiary : theme.colorScheme.onSurface.withValues(alpha: 0.1),
+                    )),
+                  ),
+                if (!isUnlocked)
+                  Icon(
+                    Icons.lock,
+                    size: 16,
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.38),
+                  ),
+              ],
+            ),
           ),
         ),
       ),

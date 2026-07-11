@@ -194,18 +194,24 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
             ),
           ),
           if (unreadCount > 0)
-            GestureDetector(
-              onTap: () => setState(() {
-                for (var n in notifications) {
-                  n['isRead'] = true;
-                }
-              }),
-              child: const Text(
-                '[ PURGE_ALL ]',
-                style: TextStyle(
-                  fontSize: 9,
-                  color: Color(0xFF00FFFF),
-                  fontFamily: 'monospace',
+            Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: () => setState(() {
+                  for (var n in notifications) {
+                    n['isRead'] = true;
+                  }
+                }),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                  child: const Text(
+                    '[ PURGE_ALL ]',
+                    style: TextStyle(
+                      fontSize: 9,
+                      color: Color(0xFF00FFFF),
+                      fontFamily: 'monospace',
+                    ),
+                  ),
                 ),
               ),
             ),

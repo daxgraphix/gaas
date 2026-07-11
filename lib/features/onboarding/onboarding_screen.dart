@@ -220,43 +220,47 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
             right: 32,
             child: Column(
               children: [
-                GestureDetector(
-                  onTap: () => _nextPage(pages),
-                  child: Container(
-                    width: double.infinity,
-                    height: 64,
-                    decoration: BoxDecoration(
-                      color: accent, // Solid color for better visibility
-                      borderRadius: BorderRadius.circular(12),
-                      boxShadow: [
-                        BoxShadow(
-                          color: accent.withValues(alpha: 0.4),
-                          blurRadius: 20,
-                          offset: const Offset(0, 8),
-                        ),
-                      ],
-                    ),
-                    child: Center(
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(
-                            _currentPage == pages.length - 1
-                                ? 'GET STARTED'
-                                : 'NEXT',
-                            style: theme.textTheme.labelLarge?.copyWith(
-                              color: accent.computeLuminance() > 0.5 ? Colors.black : Colors.white,
-                              fontWeight: FontWeight.w900,
-                              letterSpacing: 2,
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Icon(
-                            Icons.arrow_forward_rounded,
-                            size: 20,
-                            color: accent.computeLuminance() > 0.5 ? Colors.black : Colors.white,
+                Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    onTap: () => _nextPage(pages),
+                    borderRadius: BorderRadius.circular(12),
+                    child: Ink(
+                      width: double.infinity,
+                      height: 64,
+                      decoration: BoxDecoration(
+                        color: accent,
+                        borderRadius: BorderRadius.circular(12),
+                        boxShadow: [
+                          BoxShadow(
+                            color: accent.withValues(alpha: 0.4),
+                            blurRadius: 20,
+                            offset: const Offset(0, 8),
                           ),
                         ],
+                      ),
+                      child: Center(
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              _currentPage == pages.length - 1
+                                  ? 'GET STARTED'
+                                  : 'NEXT',
+                              style: theme.textTheme.labelLarge?.copyWith(
+                                color: accent.computeLuminance() > 0.5 ? Colors.black : Colors.white,
+                                fontWeight: FontWeight.w900,
+                                letterSpacing: 2,
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Icon(
+                              Icons.arrow_forward_rounded,
+                              size: 20,
+                              color: accent.computeLuminance() > 0.5 ? Colors.black : Colors.white,
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ),

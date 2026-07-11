@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/level_progress.dart';
@@ -12,12 +13,25 @@ class DatabaseService {
 
   DatabaseService._private();
 
+  static Completer<DatabaseService>? _initCompleter;
+
   static Future<DatabaseService> get instance async {
     if (_instance != null && _isInitialized) return _instance!;
-    _instance = DatabaseService._private();
-    _prefs = await SharedPreferences.getInstance();
-    _isInitialized = true;
-    return _instance!;
+    
+    if (_initCompleter != null) return _initCompleter!.future;
+    
+    _initCompleter = Completer<DatabaseService>();
+    try {
+      _instance = DatabaseService._private();
+      _prefs = await SharedPreferences.getInstance();
+      _isInitialized = true;
+      _initCompleter!.complete(_instance);
+      return _instance!;
+    } catch (e) {
+      _initCompleter!.completeError(e);
+      _initCompleter = null;
+      rethrow;
+    }
   }
 
   static Future<void> reset() async {

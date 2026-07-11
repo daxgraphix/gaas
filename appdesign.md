@@ -414,13 +414,9 @@ Stars are awarded per level and contribute to overall progress:
 
 ### Design System
 
-- **Theme**: Midnight dark theme (OLED-friendly)
-- **Colors**:
-  - Primary: Neon cyan (#00FFFF)
-  - Secondary: Electric purple (#8A2BE2)
-  - Tertiary: Hot pink (#FF69B4)
-  - Background: #030712 (deep space)
-  - Surface: #1A1A2E (card background)
+- **Themes**:
+  - **Solar**: Warm sunlight and paper-inspired light theme.
+  - **Cyber**: High-contrast neon dark theme (OLED-friendly).
 
 ### Components
 
@@ -579,5 +575,6 @@ Future<void> playCorrect() async {
 - XOR encryption for user session data
 - Input sanitization for user names
 - Score and level validation
-- Secure ID generation 
+- Secure ID generation
+ 
  

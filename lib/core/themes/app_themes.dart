@@ -5,7 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../accessibility/accessibility_settings.dart';
 import '../../l10n/generated/app_localizations.dart';
 
-enum AppThemeType { midnight, solar, cyber }
+enum AppThemeType { solar, cyber }
 
 enum AppRarity { common, uncommon, rare, epic, legendary, mythic }
 
@@ -79,14 +79,6 @@ class AppDesignTokens {
   static const Duration animationFast = Duration(milliseconds: 200);
   static const Duration animationNormal = Duration(milliseconds: 400);
   static const Duration animationSlow = Duration(milliseconds: 600);
-
-  // Midnight Theme (Deep Obsidian) - Dark Mode
-  static const Color midnightPrimary = Color(0xFF818CF8); // Indigo 400
-  static const Color midnightSecondary = Color(0xFF38BDF8); // Sky 400
-  static const Color midnightBackground = Color(0xFF020617); // Slate 950
-  static const Color midnightSurface = Color(0xFF0F172A); // Slate 900
-  static const Color midnightOnSurface = Color(0xFFF8FAFC); // Slate 50 (Brighter)
-  static const Color midnightOnSurfaceVariant = Color(0xFF94A3B8); // Slate 400 (Better contrast)
 
   // Solar Theme (Warm Sunlight) - Light Mode
   static const Color solarPrimary = Color(0xFFEA580C); // Orange 600
@@ -210,8 +202,6 @@ class GameThemeExtension extends ThemeExtension<GameThemeExtension> {
 class AppThemes {
   static ThemeData getTheme(AppThemeType type) {
     switch (type) {
-      case AppThemeType.midnight:
-        return _darkOnyxTheme;
       case AppThemeType.solar:
         return _solarTheme;
       case AppThemeType.cyber:
@@ -424,142 +414,6 @@ class AppThemes {
     ),
   );
 
-  static final ThemeData _darkOnyxTheme = ThemeData(
-    useMaterial3: true,
-    brightness: Brightness.dark,
-    colorScheme: ColorScheme.fromSeed(
-      seedColor: AppDesignTokens.midnightPrimary,
-      brightness: Brightness.dark,
-      primary: AppDesignTokens.midnightPrimary,
-      onPrimary: Colors.white,
-      secondary: AppDesignTokens.midnightSecondary,
-      onSecondary: Colors.black, // Dark text on Sky 500 for WCAG
-      surface: AppDesignTokens.midnightSurface,
-      onSurface: AppDesignTokens.midnightOnSurface,
-      surfaceContainerHighest: const Color(0xFF1F2937),
-      onSurfaceVariant: AppDesignTokens.midnightOnSurfaceVariant,
-      tertiary: const Color(0xFFF472B6), // Pink 400
-      onTertiary: Colors.white,
-      error: AppDesignTokens.error,
-      outline: AppDesignTokens.midnightOnSurfaceVariant.withValues(alpha: 0.4),
-    ),
-    extensions: [
-      GameThemeExtension(
-        operatorColor: AppDesignTokens.midnightSecondary,
-        gridLineColor: Colors.white.withValues(alpha: 0.1),
-        cellBackground: const Color(0xFF1E293B),
-        cellSelectedBorder: AppDesignTokens.midnightPrimary,
-        cellSelectedBackground: AppDesignTokens.midnightPrimary.withValues(alpha: 0.1),
-        numpadBackground: const Color(0xFF020617),
-        numpadButtonBackground: const Color(0xFF0F172A),
-        numpadText: Colors.white,
-        heatColor: const Color(0xFFF43F5E), // Rose 500
-        streakColor: AppDesignTokens.midnightPrimary,
-        timerColor: AppDesignTokens.midnightSecondary,
-        glassEffectColor: Colors.white.withValues(alpha: 0.1),
-      ),
-    ],
-    scaffoldBackgroundColor: AppDesignTokens.midnightBackground,
-    cardTheme: CardThemeData(
-      elevation: 0,
-      color: AppDesignTokens.midnightSurface,
-      clipBehavior: Clip.antiAlias,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(AppDesignTokens.radiusMedium),
-        side: BorderSide(color: Colors.white.withValues(alpha: 0.05)),
-      ),
-    ),
-    appBarTheme: const AppBarTheme(
-      elevation: 0,
-      centerTitle: true,
-      backgroundColor: Colors.transparent,
-      foregroundColor: AppDesignTokens.midnightOnSurface,
-      titleTextStyle: TextStyle(
-        fontSize: 18,
-        fontWeight: FontWeight.w700,
-        letterSpacing: 1.2,
-        color: AppDesignTokens.midnightOnSurface,
-      ),
-    ),
-    elevatedButtonTheme: ElevatedButtonThemeData(
-      style: ElevatedButton.styleFrom(
-        backgroundColor: AppDesignTokens.midnightPrimary,
-        foregroundColor: Colors.white,
-        elevation: 0,
-        padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 16),
-        minimumSize: const Size(0, 56),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppDesignTokens.radiusMedium),
-        ),
-        textStyle: const TextStyle(
-          fontSize: 16,
-          fontWeight: FontWeight.w600,
-          letterSpacing: 0.5,
-        ),
-      ),
-    ),
-    outlinedButtonTheme: OutlinedButtonThemeData(
-      style: OutlinedButton.styleFrom(
-        foregroundColor: AppDesignTokens.midnightOnSurface,
-        padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 16),
-        minimumSize: const Size(0, 56),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppDesignTokens.radiusMedium),
-        ),
-        side: BorderSide(color: AppDesignTokens.midnightPrimary.withValues(alpha: 0.5), width: 1.5),
-        textStyle: const TextStyle(
-          fontSize: 16,
-          fontWeight: FontWeight.w600,
-        ),
-      ),
-    ),
-    inputDecorationTheme: InputDecorationTheme(
-      filled: true,
-      fillColor: const Color(0xFF1F2937).withValues(alpha: 0.5),
-      contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(AppDesignTokens.radiusMedium),
-        borderSide: BorderSide.none,
-      ),
-      enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(AppDesignTokens.radiusMedium),
-        borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.05)),
-      ),
-      focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(AppDesignTokens.radiusMedium),
-        borderSide: const BorderSide(color: AppDesignTokens.midnightPrimary, width: 2),
-      ),
-      hintStyle: const TextStyle(color: AppDesignTokens.midnightOnSurfaceVariant),
-    ),
-    navigationBarTheme: NavigationBarThemeData(
-      elevation: 0,
-      backgroundColor: AppDesignTokens.midnightSurface,
-      indicatorColor: AppDesignTokens.midnightPrimary.withValues(alpha: 0.15),
-      labelTextStyle: WidgetStateProperty.resolveWith((states) {
-        final isSelected = states.contains(WidgetState.selected);
-        return TextStyle(
-          fontSize: 12,
-          fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-          color: isSelected ? AppDesignTokens.midnightPrimary : AppDesignTokens.midnightOnSurfaceVariant,
-        );
-      }),
-      iconTheme: WidgetStateProperty.resolveWith((states) {
-        final isSelected = states.contains(WidgetState.selected);
-        return IconThemeData(
-          color: isSelected ? AppDesignTokens.midnightPrimary : AppDesignTokens.midnightOnSurfaceVariant,
-          size: 24,
-        );
-      }),
-    ),
-    textTheme: _buildTextTheme(
-      AppDesignTokens.midnightOnSurface,
-      AppDesignTokens.midnightOnSurfaceVariant,
-    ),
-  );
-
-
-
-
   static TextTheme _buildTextTheme(Color primaryColor, Color secondaryColor) {
     return TextTheme(
       displayLarge: TextStyle(
@@ -651,8 +505,6 @@ class AppThemes {
 
   static String getThemeName(AppThemeType type) {
     switch (type) {
-      case AppThemeType.midnight:
-        return 'Midnight';
       case AppThemeType.solar:
         return 'Solar';
       case AppThemeType.cyber:
@@ -662,8 +514,6 @@ class AppThemes {
 
   static String getThemeDescription(AppThemeType type) {
     switch (type) {
-      case AppThemeType.midnight:
-        return 'Deep obsidian & neon';
       case AppThemeType.solar:
         return 'Warm sunlight & paper';
       case AppThemeType.cyber:
@@ -673,8 +523,6 @@ class AppThemes {
 
   static IconData getThemeIcon(AppThemeType type) {
     switch (type) {
-      case AppThemeType.midnight:
-        return Icons.dark_mode;
       case AppThemeType.solar:
         return Icons.light_mode;
       case AppThemeType.cyber:
@@ -684,8 +532,6 @@ class AppThemes {
 
   static Color getThemeColor(AppThemeType type) {
     switch (type) {
-      case AppThemeType.midnight:
-        return AppDesignTokens.midnightPrimary;
       case AppThemeType.solar:
         return AppDesignTokens.solarPrimary;
       case AppThemeType.cyber:

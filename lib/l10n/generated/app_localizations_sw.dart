@@ -205,13 +205,10 @@ class AppLocalizationsSw extends AppLocalizations {
   String get simulation => 'Uigaji';
 
   @override
-  String get paper => 'Karatasi';
+  String get solar => 'Solar';
 
   @override
-  String get midnight => 'Usiku wa Manane';
-
-  @override
-  String get forest => 'Msitu';
+  String get cyber => 'Cyber';
 
   @override
   String get selectOperation => 'Chagua Operesheni';

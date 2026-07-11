@@ -205,13 +205,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get simulation => 'Simulation';
 
   @override
-  String get paper => 'Paper';
+  String get solar => 'Solar';
 
   @override
-  String get midnight => 'Midnight';
-
-  @override
-  String get forest => 'Forest';
+  String get cyber => 'Cyber';
 
   @override
   String get selectOperation => 'Select Operation';

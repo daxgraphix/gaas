@@ -476,23 +476,17 @@ abstract class AppLocalizations {
   /// **'Simulation'**
   String get simulation;
 
-  /// No description provided for @paper.
+  /// No description provided for @solar.
   ///
   /// In en, this message translates to:
-  /// **'Paper'**
-  String get paper;
+  /// **'Solar'**
+  String get solar;
 
-  /// No description provided for @midnight.
+  /// No description provided for @cyber.
   ///
   /// In en, this message translates to:
-  /// **'Midnight'**
-  String get midnight;
-
-  /// No description provided for @forest.
-  ///
-  /// In en, this message translates to:
-  /// **'Forest'**
-  String get forest;
+  /// **'Cyber'**
+  String get cyber;
 
   /// No description provided for @selectOperation.
   ///

@@ -141,6 +141,21 @@ class AppLocalizationsEn extends AppLocalizations {
   String get time => 'Time';
 
   @override
+  String get timeUppercase => 'TIME';
+
+  @override
+  String get heat => 'HEAT';
+
+  @override
+  String get streakUppercase => 'STREAK';
+
+  @override
+  String get maxStreak => 'MAX STREAK';
+
+  @override
+  String get correctAnswersLabel => 'CORRECT';
+
+  @override
   String get gameOver => 'Game Over';
 
   @override
@@ -568,6 +583,29 @@ class AppLocalizationsEn extends AppLocalizations {
   String get exportReport => 'Export Report';
 
   @override
+  String get practiceProcedure => 'Practice Procedure';
+
+  @override
+  String get practiceMode => 'Practice Mode';
+
+  @override
+  String get feverMode => 'FEVER MODE';
+
+  @override
+  String get getHint => 'GET HINT';
+
+  @override
+  String hintCost(Object cost) {
+    return '$cost PTS';
+  }
+
+  @override
+  String get takeYourTime => 'Take your time.';
+
+  @override
+  String get practiceSession => 'Practice Session';
+
+  @override
   String get accuracyTrend => 'ACCURACY';
 
   @override
@@ -813,9 +851,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get startYourMathematicalJourney => 'Start your mathematical journey';
-
-  @override
-  String get practiceMode => 'Practice Mode';
 
   @override
   String get focusOnSpecificOperations => 'Focus on specific operations';
@@ -1748,4 +1783,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String generatedOn(Object date) {
     return 'Generated on $date';
   }
+
+  @override
+  String get challengesSummary => 'Challenges Summary';
+
+  @override
+  String get dailyChallenges => 'Daily Challenges';
+
+  @override
+  String get weeklyChallenges => 'Weekly Challenges';
+
+  @override
+  String get claimed => 'Claimed';
 }

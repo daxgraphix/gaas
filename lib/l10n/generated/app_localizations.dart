@@ -350,6 +350,36 @@ abstract class AppLocalizations {
   /// **'Time'**
   String get time;
 
+  /// No description provided for @timeUppercase.
+  ///
+  /// In en, this message translates to:
+  /// **'TIME'**
+  String get timeUppercase;
+
+  /// No description provided for @heat.
+  ///
+  /// In en, this message translates to:
+  /// **'HEAT'**
+  String get heat;
+
+  /// No description provided for @streakUppercase.
+  ///
+  /// In en, this message translates to:
+  /// **'STREAK'**
+  String get streakUppercase;
+
+  /// No description provided for @maxStreak.
+  ///
+  /// In en, this message translates to:
+  /// **'MAX STREAK'**
+  String get maxStreak;
+
+  /// No description provided for @correctAnswersLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'CORRECT'**
+  String get correctAnswersLabel;
+
   /// No description provided for @gameOver.
   ///
   /// In en, this message translates to:
@@ -1196,6 +1226,48 @@ abstract class AppLocalizations {
   /// **'Export Report'**
   String get exportReport;
 
+  /// No description provided for @practiceProcedure.
+  ///
+  /// In en, this message translates to:
+  /// **'Practice Procedure'**
+  String get practiceProcedure;
+
+  /// No description provided for @practiceMode.
+  ///
+  /// In en, this message translates to:
+  /// **'Practice Mode'**
+  String get practiceMode;
+
+  /// No description provided for @feverMode.
+  ///
+  /// In en, this message translates to:
+  /// **'FEVER MODE'**
+  String get feverMode;
+
+  /// No description provided for @getHint.
+  ///
+  /// In en, this message translates to:
+  /// **'GET HINT'**
+  String get getHint;
+
+  /// No description provided for @hintCost.
+  ///
+  /// In en, this message translates to:
+  /// **'{cost} PTS'**
+  String hintCost(Object cost);
+
+  /// No description provided for @takeYourTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Take your time.'**
+  String get takeYourTime;
+
+  /// No description provided for @practiceSession.
+  ///
+  /// In en, this message translates to:
+  /// **'Practice Session'**
+  String get practiceSession;
+
   /// No description provided for @accuracyTrend.
   ///
   /// In en, this message translates to:
@@ -1681,12 +1753,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Start your mathematical journey'**
   String get startYourMathematicalJourney;
-
-  /// No description provided for @practiceMode.
-  ///
-  /// In en, this message translates to:
-  /// **'Practice Mode'**
-  String get practiceMode;
 
   /// No description provided for @focusOnSpecificOperations.
   ///
@@ -3451,6 +3517,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Generated on {date}'**
   String generatedOn(Object date);
+
+  /// No description provided for @challengesSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'Challenges Summary'**
+  String get challengesSummary;
+
+  /// No description provided for @dailyChallenges.
+  ///
+  /// In en, this message translates to:
+  /// **'Daily Challenges'**
+  String get dailyChallenges;
+
+  /// No description provided for @weeklyChallenges.
+  ///
+  /// In en, this message translates to:
+  /// **'Weekly Challenges'**
+  String get weeklyChallenges;
+
+  /// No description provided for @claimed.
+  ///
+  /// In en, this message translates to:
+  /// **'Claimed'**
+  String get claimed;
 }
 
 class _AppLocalizationsDelegate

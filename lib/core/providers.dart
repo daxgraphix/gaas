@@ -139,6 +139,7 @@ final localeProvider = StateNotifierProvider<LocaleNotifier, AppLocale>((ref) {
 });
 
 const int hintCostPoints = 50;
+const int levelThreshold = 1000; // Point requirement per level
 
 // Startup Provider
 class StartupState {
@@ -233,6 +234,7 @@ class DailyChallenge {
   final DateTime expiresAt;
   final bool isCompleted;
   final bool isClaimed;
+  final bool isWeekly;
 
   DailyChallenge({
     required this.id,
@@ -245,6 +247,7 @@ class DailyChallenge {
     required this.expiresAt,
     this.isCompleted = false,
     this.isClaimed = false,
+    this.isWeekly = false,
   });
 
   double get progress => (currentValue / targetValue).clamp(0.0, 1.0);
@@ -261,6 +264,7 @@ class DailyChallenge {
       'expiresAt': expiresAt.toIso8601String(),
       'isCompleted': isCompleted,
       'isClaimed': isClaimed,
+      'isWeekly': isWeekly,
     };
   }
 
@@ -276,6 +280,7 @@ class DailyChallenge {
       expiresAt: DateTime.parse(map['expiresAt']),
       isCompleted: map['isCompleted'] ?? false,
       isClaimed: map['isClaimed'] ?? false,
+      isWeekly: map['isWeekly'] ?? false,
     );
   }
 
@@ -295,6 +300,7 @@ class DailyChallenge {
       expiresAt: expiresAt,
       isCompleted: isCompleted ?? this.isCompleted,
       isClaimed: isClaimed ?? this.isClaimed,
+      isWeekly: isWeekly,
     );
   }
 }
@@ -302,6 +308,7 @@ class DailyChallenge {
 class DailyChallengeNotifier extends StateNotifier<List<DailyChallenge>> {
   final SharedPreferences _prefs;
   static const String _lastResetKey = 'daily_challenges_last_reset';
+  static const String _lastWeeklyResetKey = 'weekly_challenges_last_reset';
   static const String _challengesKey = 'daily_challenges_data';
 
   DailyChallengeNotifier(this._prefs) : super([]) {
@@ -310,11 +317,20 @@ class DailyChallengeNotifier extends StateNotifier<List<DailyChallenge>> {
 
   void checkAndResetChallenges() {
     final now = DateTime.now();
+    
+    // Daily Reset
     final lastResetStr = _prefs.getString(_lastResetKey);
     final lastReset = lastResetStr != null ? DateTime.parse(lastResetStr) : null;
 
-    if (lastReset == null || _isDifferentDay(lastReset, now)) {
-      _generateNewChallenges(now);
+    // Weekly Reset (Mondays)
+    final lastWeeklyResetStr = _prefs.getString(_lastWeeklyResetKey);
+    final lastWeeklyReset = lastWeeklyResetStr != null ? DateTime.parse(lastWeeklyResetStr) : null;
+    
+    bool needsDaily = lastReset == null || _isDifferentDay(lastReset, now);
+    bool needsWeekly = lastWeeklyReset == null || _isDifferentWeek(lastWeeklyReset, now);
+
+    if (needsDaily || needsWeekly) {
+      _generateChallenges(now, needsDaily, needsWeekly);
     } else {
       _loadSavedChallenges();
     }
@@ -327,15 +343,14 @@ class DailyChallengeNotifier extends StateNotifier<List<DailyChallenge>> {
         final List<dynamic> decoded = json.decode(data);
         state = decoded.map((m) => DailyChallenge.fromMap(Map<String, dynamic>.from(m))).toList();
         
-        // If loading failed to produce challenges, generate new ones
         if (state.isEmpty) {
-          _generateNewChallenges(DateTime.now());
+          _generateChallenges(DateTime.now(), true, true);
         }
       } catch (e) {
-        _generateNewChallenges(DateTime.now());
+        _generateChallenges(DateTime.now(), true, true);
       }
     } else {
-      _generateNewChallenges(DateTime.now());
+      _generateChallenges(DateTime.now(), true, true);
     }
   }
 
@@ -348,91 +363,79 @@ class DailyChallengeNotifier extends StateNotifier<List<DailyChallenge>> {
     return d1.year != d2.year || d1.month != d2.month || d1.day != d2.day;
   }
 
-  void _generateNewChallenges(DateTime now) {
-    final endOfDay = DateTime(now.year, now.month, now.day, 23, 59, 59);
+  bool _isDifferentWeek(DateTime d1, DateTime d2) {
+    // Find last Monday for both
+    DateTime startOfWeek(DateTime d) {
+      return DateTime(d.year, d.month, d.day).subtract(Duration(days: d.weekday - 1));
+    }
+    return !startOfWeek(d1).isAtSameMomentAs(startOfWeek(d2));
+  }
+
+  void _generateChallenges(DateTime now, bool daily, bool weekly) {
     final random = Random();
-    
-    final pool = [
-      {
-        'id': 'questions_daily',
-        'title': 'Daily Practice',
-        'description': 'Solve 20 questions',
-        'type': 'questions',
-        'target': 20,
-        'reward': 100,
-      },
-      {
-        'id': 'correct_daily',
-        'title': 'Sharp Mind',
-        'description': 'Get 15 correct answers',
-        'type': 'correct',
-        'target': 15,
-        'reward': 150,
-      },
-      {
-        'id': 'arcade_daily',
-        'title': 'Arcade Runner',
-        'description': 'Play 3 Arcade sessions',
-        'type': 'arcade_sessions',
-        'target': 3,
-        'reward': 120,
-      },
-      {
-        'id': 'cross_daily',
-        'title': 'Grid Master',
-        'description': 'Solve 2 Cross Numbers puzzles',
-        'type': 'cross_numbers',
-        'target': 2,
-        'reward': 200,
-      },
-      {
-        'id': 'streak_daily',
-        'title': 'Consistency',
-        'description': 'Get a 10-question streak',
-        'type': 'streak',
-        'target': 10,
-        'reward': 180,
-      },
-      {
-        'id': 'stars_daily',
-        'title': 'Star Collector',
-        'description': 'Earn 10 stars in Campaign',
-        'type': 'stars',
-        'target': 10,
-        'reward': 200,
-      },
-      {
-        'id': 'wins_daily',
-        'title': 'Duel Champion',
-        'description': 'Win 2 Duels',
-        'type': 'wins',
-        'target': 2,
-        'reward': 150,
-      },
-      {
-        'id': 'division_daily',
-        'title': 'Division Master',
-        'description': 'Solve 10 division problems',
-        'type': 'division',
-        'target': 10,
-        'reward': 120,
-      },
-    ];
+    List<DailyChallenge> currentList = daily ? [] : state.where((c) => c.isWeekly).toList();
+    if (weekly) {
+       currentList = currentList.where((c) => !c.isWeekly).toList();
+    } else if (!daily) {
+       // If neither daily nor weekly reset, why are we here?
+       // Just to be safe, if we have state, use it.
+       if (state.isNotEmpty) return;
+    }
 
-    pool.shuffle(random);
-    final selected = pool.take(3).toList(); // Give 3 random challenges daily
+    if (daily) {
+      final endOfDay = DateTime(now.year, now.month, now.day, 23, 59, 59);
+      final dailyPool = [
+        {'id': 'q_d', 'title': 'Daily Practice', 'desc': 'Solve 25 questions', 'type': 'questions', 'target': 25, 'reward': 150},
+        {'id': 'c_d', 'title': 'Sharp Mind', 'desc': 'Get 20 correct answers', 'type': 'correct', 'target': 20, 'reward': 200},
+        {'id': 'a_d', 'title': 'Arcade Runner', 'desc': 'Play 3 Arcade sessions', 'type': 'arcade_sessions', 'target': 3, 'reward': 180},
+        {'id': 'cr_d', 'title': 'Grid Master', 'desc': 'Solve 2 Cross Numbers puzzles', 'type': 'cross_numbers', 'target': 2, 'reward': 250},
+        {'id': 's_d', 'title': 'Consistency', 'desc': 'Get a 15-question streak', 'type': 'streak', 'target': 15, 'reward': 220},
+        {'id': 'st_d', 'title': 'Star Collector', 'desc': 'Earn 12 stars in Campaign', 'type': 'stars', 'target': 12, 'reward': 300},
+        {'id': 'f_d', 'title': 'Fever Frenzy', 'desc': 'Trigger Fever Mode 5 times', 'type': 'fever_mode', 'target': 5, 'reward': 250},
+        {'id': 'h_d', 'title': 'Hint Scholar', 'desc': 'Use 3 hints in Practice', 'type': 'hints_used', 'target': 3, 'reward': 100},
+      ];
+      dailyPool.shuffle(random);
+      final selectedDaily = dailyPool.take(3).map((c) => DailyChallenge(
+        id: '${c['id']}_${now.day}',
+        title: c['title'] as String,
+        description: c['desc'] as String,
+        type: c['type'] as String,
+        targetValue: c['target'] as int,
+        rewardPoints: c['reward'] as int,
+        expiresAt: endOfDay,
+        isWeekly: false,
+      ));
+      currentList.addAll(selectedDaily);
+      _prefs.setString(_lastResetKey, now.toIso8601String());
+    }
 
-    state = selected.map((c) => DailyChallenge(
-      id: c['id'] as String,
-      title: c['title'] as String,
-      description: c['description'] as String,
-      type: c['type'] as String,
-      targetValue: c['target'] as int,
-      rewardPoints: c['reward'] as int,
-      expiresAt: endOfDay,
-    )).toList();
+    if (weekly) {
+      final nextMonday = now.add(Duration(days: 8 - now.weekday));
+      final endOfWeek = DateTime(nextMonday.year, nextMonday.month, nextMonday.day, 0, 0, 0);
+      final weeklyPool = [
+        {'id': 'q_w', 'title': 'Weekly Marathon', 'desc': 'Solve 200 questions', 'type': 'questions', 'target': 200, 'reward': 1000},
+        {'id': 'c_w', 'title': 'Math Titan', 'desc': 'Get 150 correct answers', 'type': 'correct', 'target': 150, 'reward': 1200},
+        {'id': 'st_w', 'title': 'Galaxy Explorer', 'desc': 'Earn 50 stars in Campaign', 'type': 'stars', 'target': 50, 'reward': 1500},
+        {'id': 'a_w', 'title': 'Arcade Legend', 'desc': 'Play 20 Arcade sessions', 'type': 'arcade_sessions', 'target': 20, 'reward': 1000},
+        {'id': 'cr_w', 'title': 'Grid Overlord', 'desc': 'Solve 15 Cross Numbers puzzles', 'type': 'cross_numbers', 'target': 15, 'reward': 1500},
+        {'id': 'f_w', 'title': 'Heat Wave', 'desc': 'Stay in Fever Mode for 5 mins total', 'type': 'fever_duration', 'target': 300, 'reward': 2000},
+      ];
+      weeklyPool.shuffle(random);
+      final selectedWeekly = weeklyPool.take(2).map((c) => DailyChallenge(
+        id: '${c['id']}_${now.year}_${now.month}',
+        title: c['title'] as String,
+        description: c['desc'] as String,
+        type: c['type'] as String,
+        targetValue: c['target'] as int,
+        rewardPoints: c['reward'] as int,
+        expiresAt: endOfWeek,
+        isWeekly: true,
+      ));
+      currentList.addAll(selectedWeekly);
+      _prefs.setString(_lastWeeklyResetKey, now.toIso8601String());
+    }
 
-    _prefs.setString(_lastResetKey, now.toIso8601String());
+    state = currentList;
     _saveChallenges();
   }
 
@@ -1060,6 +1063,17 @@ class CrossNumbersNotifier extends StateNotifier<CrossNumbersState> {
 
     if (nextIndex > state.totalQuestions) {
       ref.read(dailyChallengeProvider.notifier).incrementProgress('cross_numbers', 1);
+      
+      // Record session to analytics
+      ref.read(analyticsProvider.notifier).recordSession(
+        'cross_numbers',
+        state.elapsedSeconds,
+        state.totalQuestions,
+        newCorrectCount,
+        state.hintsUsed,
+        mode: 'puzzle',
+      );
+
       state = state.copyWith(
         correctQuestions: newCorrectCount,
         isLevelFinished: true,

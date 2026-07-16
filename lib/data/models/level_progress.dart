@@ -21,10 +21,10 @@ class LevelProgress {
     return {
       'id': id,
       'operationId': operationId,
-      'level': SecurityService.instance.validateAndSanitizeScore(level, 30),
+      'level': SecurityService.instance.validateAndSanitizeScore(level, 100),
       'stars': SecurityService.instance.validateAndSanitizeScore(stars, 3),
       'isUnlocked': isUnlocked,
-      'highScore': SecurityService.instance.validateAndSanitizeScore(highScore, 2000),
+      'highScore': SecurityService.instance.validateAndSanitizeScore(highScore, 10000),
     };
   }
 
@@ -32,10 +32,10 @@ class LevelProgress {
     return LevelProgress(
       id: json['id'],
       operationId: json['operationId'],
-      level: SecurityService.instance.validateAndSanitizeScore(json['level'] ?? 0, 30),
+      level: SecurityService.instance.validateAndSanitizeScore(json['level'] ?? 0, 100),
       stars: SecurityService.instance.validateAndSanitizeScore(json['stars'] ?? 0, 3),
       isUnlocked: json['isUnlocked'] ?? false,
-      highScore: SecurityService.instance.validateAndSanitizeScore(json['highScore'] ?? 0, 2000),
+      highScore: SecurityService.instance.validateAndSanitizeScore(json['highScore'] ?? 0, 10000),
     );
   }
 }

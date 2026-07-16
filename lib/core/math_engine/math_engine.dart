@@ -40,6 +40,36 @@ class MathQuestion {
     }
     return '$operand1 $symbol $operand2 = ?';
   }
+
+  MathQuestion copyWith({
+    String? id,
+    int? operand1,
+    int? operand2,
+    int? operand3,
+    String? operation,
+    dynamic correctAnswer,
+    String? difficulty,
+    String? hint,
+    List<String>? progressiveHints,
+    String? customQuestion,
+    List<String>? options,
+    String? explanation,
+  }) {
+    return MathQuestion(
+      id: id ?? this.id,
+      operand1: operand1 ?? this.operand1,
+      operand2: operand2 ?? this.operand2,
+      operand3: operand3 ?? this.operand3,
+      operation: operation ?? this.operation,
+      correctAnswer: correctAnswer ?? this.correctAnswer,
+      difficulty: difficulty ?? this.difficulty,
+      hint: hint ?? this.hint,
+      progressiveHints: progressiveHints ?? this.progressiveHints,
+      customQuestion: customQuestion ?? this.customQuestion,
+      options: options ?? this.options,
+      explanation: explanation ?? this.explanation,
+    );
+  }
 }
 
 class MathEngine {
@@ -109,6 +139,10 @@ class MathEngine {
       return _generateAdvancedQuestion(currentOp, level);
     }
 
+    if (isArcade == false && level == 0) { // Assuming level 0 means practice
+       return _generatePracticeQuestion(currentOp, 1);
+    }
+
     final isBoss = level % 10 == 0 && !isArcade;
     MathQuestion question;
     int attempts = 0;
@@ -125,36 +159,46 @@ class MathEngine {
         question = _generateBossQuestion(currentOp, effectiveLevel);
       } else {
         final (min, max) = getNumberRange(effectiveLevel, currentOp);
-        
-        // Dynamic complexity: if skill is high OR heat is high, potentially add a third operand
-        // High heat makes the chance for 3 operands increase up to 70%
-        final threeOperandChance = (0.3 * heatIndex).clamp(0.1, 0.7);
-        final useThreeOperands = (skillRating > 1400 || heatIndex > 1.5) && 
-                                 _random.nextDouble() < threeOperandChance;
-
-        switch (currentOp) {
-          case 'addition':
-            question = useThreeOperands 
-                ? _generateThreeOperandAddition(min, max, effectiveLevel)
-                : _generateAddition(min, max, effectiveLevel);
-            break;
-          case 'subtraction':
-            question = _generateSubtraction(min, max, effectiveLevel);
-            break;
-          case 'multiplication':
-            question = _generateMultiplication(effectiveLevel);
-            break;
-          case 'division':
-            question = _generateDivision(effectiveLevel);
-            break;
-          default:
-            question = _generateAddition(min, max, effectiveLevel);
-        }
+        question = _generateQuestion(currentOp, effectiveLevel, min, max, skillRating: skillRating, heatIndex: heatIndex);
       }
       attempts++;
     } while (excludeQuestions != null && excludeQuestions.contains(question.displayString) && attempts < 50);
 
     return question;
+  }
+
+  static MathQuestion _generateQuestion(
+    String operation,
+    int level,
+    int min,
+    int max, {
+    int skillRating = 1000,
+    double heatIndex = 1.0,
+  }) {
+    // Dynamic complexity: if skill is high OR heat is high, potentially add a third operand
+    // High heat makes the chance for 3 operands increase up to 70%
+    final threeOperandChance = (0.3 * heatIndex).clamp(0.1, 0.7);
+    final useThreeOperands = (skillRating > 1400 || heatIndex > 1.5) &&
+        _random.nextDouble() < threeOperandChance;
+
+    switch (operation) {
+      case 'addition':
+        return useThreeOperands
+            ? _generateThreeOperandAddition(min, max, level)
+            : _generateAddition(min, max, level);
+      case 'subtraction':
+        return _random.nextDouble() < (threeOperandChance * 0.5)
+            ? _generateThreeOperandSubtraction(min, max, level)
+            : _generateSubtraction(min, max, level);
+      case 'multiplication':
+        return _random.nextDouble() < (threeOperandChance * 0.3)
+            ? _generateThreeOperandMultiplication(level)
+            : _generateMultiplication(level);
+      case 'division':
+        return _generateDivision(level);
+      default:
+        return _generateAddition(min, max, level);
+    }
   }
 
   static MathQuestion _generateThreeOperandAddition(int min, int max, int level) {
@@ -250,6 +294,10 @@ class MathEngine {
   static MathQuestion _generateArcadeQuestion(String operation, int level) {
     final difficulty = _getArcadeDifficulty(level);
 
+    if (difficulty == 'master') {
+      return _generateBossQuestion(operation, level);
+    }
+
     switch (operation) {
       case 'addition':
         return _generateArcadeAddition(difficulty);
@@ -273,9 +321,9 @@ class MathEngine {
     final useThreeOperands = isHighLevelBoss || _random.nextDouble() < 0.4;
 
     if (useThreeOperands) {
-      final op1 = _random.nextInt(max ~/ 2 - min + 1) + min;
-      final op2 = _random.nextInt(max ~/ 2 - min + 1) + min;
-      final op3 = _random.nextInt(max ~/ 2 - min + 1) + min;
+      int op1 = _random.nextInt(max ~/ 2 - min + 1) + min;
+      int op2 = _random.nextInt(max ~/ 2 - min + 1) + min;
+      int op3 = _random.nextInt(max ~/ 2 - min + 1) + min;
       
       int result;
       String opSymbol1 = '+';
@@ -286,15 +334,29 @@ class MathEngine {
       final mixType = isHighLevelBoss ? _random.nextInt(3) : (_random.nextBool() ? 1 : 0);
       
       if (mixType == 1) {
+        // Ensure op1 + op2 > op3
+        if (op1 + op2 < op3) {
+          op3 = op1 + op2 - _random.nextInt(min.clamp(1, 10));
+        }
         result = op1 + op2 - op3;
         opSymbol2 = '-';
       } else if (mixType == 2 && isHighLevelBoss) {
         // Guaranteed mixed: (a - b) + c or (a + b) - c
         if (_random.nextBool()) {
+           // a - b + c
+           if (op1 < op2) {
+             final tempValue = op1;
+             op1 = op2;
+             op2 = tempValue;
+           }
            result = op1 - op2 + op3;
            opSymbol1 = '-';
            opSymbol2 = '+';
         } else {
+           // a + b - c
+           if (op1 + op2 < op3) {
+             op3 = (op1 + op2) ~/ 2 + 1;
+           }
            result = op1 + op2 - op3;
            opSymbol1 = '+';
            opSymbol2 = '-';
@@ -321,25 +383,43 @@ class MathEngine {
     }
 
     // Default boss question with increased difficulty
+    final (minVal, maxVal) = getNumberRange(level + 5, operation);
     switch (operation) {
       case 'addition':
-        return _generateAddition(min, max, level + 5);
+        return _generateAddition(minVal, maxVal, level + 5);
       case 'subtraction':
-        return _generateSubtraction(min, max, level + 5);
+        return _generateSubtraction(minVal, maxVal, level + 5);
       case 'multiplication':
         return _generateMultiplication(level + 5);
       case 'division':
         return _generateDivision(level + 5);
       default:
-        return _generateAddition(min, max, level + 5);
+        return _generateAddition(minVal, maxVal, level + 5);
     }
   }
 
+  static MathQuestion _generatePracticeQuestion(String operation, int level) {
+    // Practice mode uses a slightly easier range
+    final (minVal, maxVal) = getNumberRange(max(1, level), operation);
+    
+    // Generate standard question
+    final q = _generateQuestion(operation, max(1, level), minVal, maxVal);
+    
+    return q.copyWith(
+      progressiveHints: [
+        'Take your time.',
+        ...q.progressiveHints,
+        'The answer is ${q.correctAnswer}',
+      ],
+    );
+  }
+
   static String _getArcadeDifficulty(int level) {
-    if (level <= 5) return 'easy';
-    if (level <= 15) return 'medium';
-    if (level <= 25) return 'hard';
-    return 'expert';
+    if (level <= 15) return 'easy';
+    if (level <= 35) return 'medium';
+    if (level <= 60) return 'hard';
+    if (level <= 85) return 'expert';
+    return 'master';
   }
 
   static MathQuestion _generateArcadeAddition(String difficulty) {
@@ -499,6 +579,45 @@ class MathEngine {
       hint: 'Ends with ${result % 10}',
       progressiveHints: ['Ends with ${result % 10}'],
       explanation: '$a + $b = $result',
+    );
+  }
+
+  static MathQuestion _generateThreeOperandSubtraction(int min, int max, int level) {
+    final range = (10 + level * 8).clamp(20, 400);
+    // Ensure 'a' is large enough to keep the result positive
+    var b = _random.nextInt(range) + 10;
+    var c = _random.nextInt(range) + 5;
+    var a = _random.nextInt(range) + (b + c); 
+    
+    return MathQuestion(
+      operand1: a,
+      operand2: b,
+      operand3: c,
+      operation: 'subtraction',
+      correctAnswer: a - b - c,
+      difficulty: 'hard',
+      hint: 'Subtract two numbers from the first',
+      progressiveHints: ['Subtract $b from $a, then subtract $c', 'Try first step: $a - $b = ${a - b}'],
+      explanation: '$a - $b - $c = ${a - b - c}',
+    );
+  }
+
+  static MathQuestion _generateThreeOperandMultiplication(int level) {
+    final maxFactor = (5 + level / 10).clamp(3, 15).toInt();
+    final a = _random.nextInt(maxFactor) + 2;
+    final b = _random.nextInt(maxFactor) + 2;
+    final c = _random.nextInt(5) + 2;
+    
+    return MathQuestion(
+      operand1: a,
+      operand2: b,
+      operand3: c,
+      operation: 'multiplication',
+      correctAnswer: a * b * c,
+      difficulty: 'extreme',
+      hint: 'Multiply three numbers',
+      progressiveHints: ['Multiply $a and $b first', 'Next: ${a * b} * $c'],
+      explanation: '$a * $b * $c = ${a * b * c}',
     );
   }
 

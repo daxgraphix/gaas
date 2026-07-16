@@ -308,7 +308,18 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
           if (lastMode == 'campaign') {
             subtitle = '${lastOp.toUpperCase()} ${l10n.levelUppercase(lastLevel ?? 1)}';
           } else {
-            subtitle = '${lastMode.toUpperCase()} - ${lastOp.toUpperCase()}';
+            String modeTitle = lastMode.toUpperCase();
+            if (lastMode == 'scoreAttack') modeTitle = l10n.scoreAttack;
+            if (lastMode == 'endless') modeTitle = l10n.endless;
+            if (lastMode == 'duel') modeTitle = l10n.duel;
+            if (lastMode == 'flash') modeTitle = l10n.flash;
+            if (lastMode == 'speedDemon') modeTitle = l10n.speedDemon;
+            if (lastMode == 'mathMaster') modeTitle = l10n.mathMaster;
+            if (lastMode == 'marathon') modeTitle = l10n.marathon;
+            if (lastMode == 'practice') modeTitle = l10n.practice;
+            if (lastMode == 'custommix') modeTitle = l10n.customMix;
+            
+            subtitle = '$modeTitle - ${lastOp.toUpperCase()}';
           }
         } else {
           // Fallback logic if no last played data
@@ -348,6 +359,49 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                     totalQuestions: lastLevel > 50 ? 60 : 50,
                   );
               _navigateToScreen(GameScreen());
+            } else if (lastMode != null && lastOp != null) {
+              // Handle Arcade and other modes specifically
+              final GameMode mode = GameMode.values.firstWhere(
+                (m) => m.name == lastMode,
+                orElse: () => GameMode.campaign,
+              );
+
+              if (mode != GameMode.campaign) {
+                ref.read(soundManagerProvider).playGameStart();
+                
+                // Calculate arcade parameters if it's an arcade mode
+                int totalQuestions = 60;
+                int? timeLimit;
+                int level = lastLevel ?? 1;
+
+                if (mode == GameMode.scoreAttack) {
+                  totalQuestions = (200 * (1 + level * 0.05)).round();
+                  timeLimit = 90 + (level * 5);
+                } else if (mode == GameMode.speedDemon) {
+                  totalQuestions = (35 * (1 + level * 0.05)).round();
+                  timeLimit = 45 + (level * 2);
+                } else if (mode == GameMode.endless) {
+                  totalQuestions = 1000;
+                } else if (mode == GameMode.mathMaster) {
+                  totalQuestions = (100 * (1 + level * 0.05)).round();
+                } else if (mode == GameMode.marathon) {
+                  totalQuestions = 500;
+                } else if (mode == GameMode.flash) {
+                  totalQuestions = (50 * (1 + level * 0.05)).round();
+                  timeLimit = 60 + (level * 3);
+                }
+
+                ref.read(gameSessionProvider.notifier).startGame(
+                  mode: mode,
+                  operation: lastOp,
+                  level: level,
+                  totalQuestions: totalQuestions,
+                  timeLimit: timeLimit,
+                );
+                _navigateToScreen(GameScreen());
+              } else {
+                _navigateToScreen(const CampaignScreen());
+              }
             } else if (lastMode == 'arcade') {
               _navigateToScreen(const ArcadeScreen());
             } else if (lastMode == 'practice') {

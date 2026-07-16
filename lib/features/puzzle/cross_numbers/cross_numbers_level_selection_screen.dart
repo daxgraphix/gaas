@@ -168,10 +168,22 @@ class CrossNumbersLevelSelectionScreen extends ConsumerWidget {
             alignment: Alignment.center,
             children: [
               if (!isUnlocked)
-                Icon(
-                  Icons.lock_outline_rounded, 
-                  color: theme.colorScheme.onSurface.withValues(alpha: 0.2), 
-                  size: 20
+                Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      '$level',
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        color: theme.colorScheme.onSurface.withValues(alpha: 0.2),
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                    Icon(
+                      Icons.lock_outline_rounded, 
+                      color: theme.colorScheme.onSurface.withValues(alpha: 0.2), 
+                      size: 14
+                    ),
+                  ],
                 ),
               if (isUnlocked)
                 Column(

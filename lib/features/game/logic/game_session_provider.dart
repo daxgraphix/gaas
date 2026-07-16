@@ -57,6 +57,7 @@ class GameSession {
   final List<Map<String, dynamic>> pendingStats;
   final int? ghostScore;
   final double heatIndex;
+  final bool feverActive;
 
   GameSession({
     required this.mode,
@@ -89,6 +90,7 @@ class GameSession {
     this.pendingStats = const [],
     this.ghostScore,
     this.heatIndex = 1.0,
+    this.feverActive = false,
   });
 
   int get questionsRemaining => totalQuestions - currentQuestionIndex;
@@ -160,6 +162,7 @@ class GameSession {
     List<Map<String, dynamic>>? pendingStats,
     int? ghostScore,
     double? heatIndex,
+    bool? feverActive,
   }) {
     return GameSession(
       mode: mode ?? this.mode,
@@ -190,6 +193,7 @@ class GameSession {
       pendingStats: pendingStats ?? this.pendingStats,
       ghostScore: ghostScore ?? this.ghostScore,
       heatIndex: heatIndex ?? this.heatIndex,
+      feverActive: feverActive ?? this.feverActive,
     );
   }
 }
@@ -242,7 +246,7 @@ class GameSessionNotifier extends StateNotifier<GameSession?> {
     int minNumber = 1,
     int maxNumber = 10,
     bool isVisualCounting = false,
-    int totalQuestions = 45,
+    int? totalQuestions,
     int? timeLimit,
     List<MathQuestion>? preloadedQuestions,
   }) async {
@@ -250,34 +254,48 @@ class GameSessionNotifier extends StateNotifier<GameSession?> {
     _duelTimer?.cancel();
 
     bool isBossLevel = false;
+    int calculatedTotalQuestions = totalQuestions ?? 45;
     int timeRemaining = 60;
     int lives = 3;
 
+    // Mode-specific configuration
     if (mode == GameMode.campaign) {
       timeRemaining = 0;
-      totalQuestions = level <= 50 ? 50 : 60;
+      calculatedTotalQuestions = level <= 50 ? 50 : 60;
       if (level % 10 == 0) {
         isBossLevel = true;
       }
     } else if (mode == GameMode.scoreAttack) {
-      timeRemaining = 60;
+      timeRemaining = (90 + (level - 1) * 1.5).round().clamp(90, 240);
+      calculatedTotalQuestions = (200 * (1 + level * 0.05)).toInt();
     } else if (mode == GameMode.speedDemon) {
-      timeRemaining = 30; // Speed demon: 30 seconds
+      timeRemaining = (45 + (level - 1) * 0.5).round().clamp(45, 90);
+      calculatedTotalQuestions = (40 * (1 + level * 0.05)).toInt();
     } else if (mode == GameMode.endless) {
       timeRemaining = 0;
+      calculatedTotalQuestions = 1000; // Effectively endless
+      lives = 3;
     } else if (mode == GameMode.mathMaster) {
       timeRemaining = 0;
+      calculatedTotalQuestions = (100 * (1 + level * 0.05)).toInt();
+      lives = 999;
+    } else if (mode == GameMode.marathon) {
+      timeRemaining = 0;
+      calculatedTotalQuestions = 500;
+      lives = 999;
+    } else if (mode == GameMode.duel) {
+      timeRemaining = 0;
+      calculatedTotalQuestions = 50;
+    } else if (mode == GameMode.flash) {
+      timeRemaining = (60 + (level - 1) * 0.6).round().clamp(60, 120);
+      calculatedTotalQuestions = (50 * (1 + level * 0.05)).toInt();
     } else if (mode == GameMode.customMix) {
       timeRemaining = timeLimit ?? 60;
-      if (timeLimit == null) {
-         // Default if not specified
-      }
     }
 
-    // Override with explicit timeLimit if provided and not handled above
-    if (timeLimit != null) {
-      timeRemaining = timeLimit;
-    }
+    // Explicit overrides
+    if (timeLimit != null) timeRemaining = timeLimit;
+    if (totalQuestions != null) calculatedTotalQuestions = totalQuestions;
 
     // Set lives for modes that don't use lives
     if (mode == GameMode.mathMaster || mode == GameMode.marathon) {
@@ -316,16 +334,27 @@ class GameSessionNotifier extends StateNotifier<GameSession?> {
       final batch = await MathEngine.generateQuestionsBatch(
         operation,
         level,
-        totalQuestions,
+        calculatedTotalQuestions,
         isArcade: isArcade,
         skillRating: skillRating,
         heatIndex: 1.0, // Initial heat is 1.0
       );
       questions.addAll(batch);
       
-      // Shuffle questions for random order
-      questions.shuffle();
+      // Shuffle questions for random order unless it's a specific ordered mode
+      if (mode != GameMode.campaign) {
+        questions.shuffle();
+      }
     }
+
+    // Save session info to user profile for "Quick Resume"
+    ref.read(userSessionProvider.notifier).updateUser(
+          lastPlayedMode: mode.name,
+          lastPlayedOperation: operation,
+          lastPlayedLevel: level,
+          lastPlayedAt: DateTime.now(),
+          lastHeatIndex: user?.lastHeatIndex ?? 1.0,
+        );
 
     state = GameSession(
       mode: mode,
@@ -335,7 +364,7 @@ class GameSessionNotifier extends StateNotifier<GameSession?> {
       maxNumber: maxNumber,
       questions: questions,
       currentQuestion: questions.isNotEmpty ? questions[0] : null,
-      totalQuestions: totalQuestions,
+      totalQuestions: calculatedTotalQuestions,
       timeRemaining: timeRemaining,
       lives: lives,
       isVisualCounting: isVisualCounting,
@@ -362,7 +391,7 @@ class GameSessionNotifier extends StateNotifier<GameSession?> {
         // Apply Heat Index Decay: slightly decrease heat every few seconds if no answer
         double newHeat = state!.heatIndex;
         if (state!.timeRemaining % 3 == 0) {
-          newHeat = (newHeat - 0.05).clamp(1.0, 3.0);
+          newHeat = (newHeat - 0.05).clamp(1.0, 4.0);
         }
 
         state = state!.copyWith(
@@ -370,7 +399,7 @@ class GameSessionNotifier extends StateNotifier<GameSession?> {
           heatIndex: newHeat,
         );
         ref.read(soundManagerProvider).updateHeat(newHeat);
-      } else if (state != null && state!.timeRemaining <= 0) {
+      } else if (state != null && (state!.mode == GameMode.scoreAttack || state!.mode == GameMode.speedDemon || (state!.mode == GameMode.customMix && state!.timeRemaining <= 0)) && state!.timeRemaining <= 0) {
         _endGame();
       }
     });
@@ -426,6 +455,13 @@ class GameSessionNotifier extends StateNotifier<GameSession?> {
     }
 
     final isCorrect = answer.toString() == state!.currentQuestion!.correctAnswer.toString();
+    
+    // Performance improvement: track stats early
+    final now = DateTime.now();
+    final timeSpent = state!.lastAnswerTime == null
+        ? 2 // minimum 2s for first question
+        : now.difference(state!.lastAnswerTime!).inSeconds.clamp(1, 120);
+
     int newScore = state!.score;
     int newCorrect = state!.correctAnswers;
     int newLives = state!.lives;
@@ -438,22 +474,43 @@ class GameSessionNotifier extends StateNotifier<GameSession?> {
     challengeNotifier.incrementProgress('questions', 1);
     challengeNotifier.updateProgressMax('streak', newStreak);
 
-    final now = DateTime.now();
     int newCombo = state!.comboMultiplier;
+    bool newFever = state!.feverActive;
 
     if (state!.lastAnswerTime != null &&
         now.difference(state!.lastAnswerTime!).inSeconds <= 4) {
       newCombo = (newCombo < 4) ? newCombo + 1 : 4;
+      if (newCombo >= 4 && !newFever) {
+        newFever = true;
+        ref.read(soundManagerProvider).playEffect('fever_start');
+      }
     } else {
       newCombo = 1;
+      if (newFever) {
+        newFever = false;
+        ref.read(soundManagerProvider).playEffect('fever_end');
+      }
     }
 
+    int bonusSeconds = 0;
+    int questionScore = 0;
     if (isCorrect) {
       ref.read(soundManagerProvider).playCorrect();
       challengeNotifier.incrementProgress('correct', 1);
       final baseScore = _getScoreForMode();
-      newScore += (hintUsed ? (baseScore ~/ 2) : baseScore) * newCombo;
+      int multiplier = newCombo;
+      if (newFever) multiplier *= 2; // Double points during fever
+      
+      questionScore = (hintUsed ? (baseScore ~/ 2) : baseScore) * multiplier;
+      newScore += questionScore;
       newCorrect++;
+
+      // Time Bonus for Score Attack and Speed Demon
+      if (state!.mode == GameMode.scoreAttack) {
+        bonusSeconds = 2 + (multiplier ~/ 2);
+      } else if (state!.mode == GameMode.speedDemon) {
+        bonusSeconds = 1 + (newFever ? 1 : 0);
+      }
 
       if (newCombo == 5) {
         ref.read(soundManagerProvider).playLevelUp();
@@ -497,26 +554,37 @@ class GameSessionNotifier extends StateNotifier<GameSession?> {
     newUserAnswers[state!.currentQuestionIndex] = answer;
 
     final newPendingStats = List<Map<String, dynamic>>.from(state!.pendingStats);
-    final timeSpent = state!.lastAnswerTime == null
-        ? 0
-        : now.difference(state!.lastAnswerTime!).inSeconds.clamp(1, 120);
+    newPendingStats.add({
+      'operationId': state!.operation,
+      'isCorrect': isCorrect,
+      'timeSpent': timeSpent,
+      'score': questionScore,
+      'mode': state!.mode.name,
+      'levelKey': '${state!.operation}_${state!.level}',
+    });
 
     // Calculate Heat Index: increases if answering quickly and correctly
     double newHeat = state!.heatIndex;
     if (isCorrect) {
       if (timeSpent <= 3) {
-        newHeat += 0.1;
+        newHeat += 0.15; // Increased heat gain
       } else if (timeSpent <= 5) {
-        newHeat += 0.05;
+        newHeat += 0.08;
       }
     } else {
-      newHeat = (newHeat - 0.2).clamp(1.0, 3.0);
+      newHeat = (newHeat - 0.25).clamp(1.0, 4.0);
     }
-    newHeat = newHeat.clamp(1.0, 3.0);
+    
+    // Endless mode makes heat increase faster over time
+    if (state!.mode == GameMode.endless) {
+       newHeat += 0.02;
+    }
+    
+    newHeat = newHeat.clamp(1.0, 4.0);
 
     // If heat increased significantly, inject a tougher question
     List<MathQuestion> updatedQuestions = List.from(state!.questions);
-    if (newHeat > state!.heatIndex + 0.15 && state!.currentQuestionIndex + 1 < state!.totalQuestions) {
+    if (newHeat > state!.heatIndex + 0.1 && state!.currentQuestionIndex + 1 < state!.totalQuestions) {
        final user = ref.read(userSessionProvider);
        final skillRating = user?.skillRating ?? 1000;
        
@@ -530,27 +598,18 @@ class GameSessionNotifier extends StateNotifier<GameSession?> {
        updatedQuestions[state!.currentQuestionIndex + 1] = toughQuestion;
     }
 
-    final questionScore = isCorrect 
-        ? (_getScoreForMode() * newCombo) 
-        : 0;
 
-    newPendingStats.add({
-      'operationId': state!.operation,
-      'score': hintUsed ? (questionScore ~/ 2) : questionScore,
-      'isCorrect': isCorrect,
-      'timeSpent': timeSpent,
-      'mode': state!.mode.name,
-      'levelKey': '${state!.operation}_${state!.level}',
-    });
 
     state = state!.copyWith(
       score: newScore,
       correctAnswers: newCorrect,
       currentStreak: newStreak,
-      bestStreak: newBestStreak,
+      bestStreak: max(state!.bestStreak, newBestStreak),
       lives: newLives,
+      timeRemaining: state!.timeRemaining + bonusSeconds,
       userAnswers: newUserAnswers,
       comboMultiplier: newCombo,
+      feverActive: newFever,
       lastAnswerTime: now,
       pendingStats: newPendingStats,
       heatIndex: newHeat,
@@ -674,23 +733,23 @@ class GameSessionNotifier extends StateNotifier<GameSession?> {
       case GameMode.campaign:
         return 10;
       case GameMode.practice:
-        return 0;
+        return 5; // Practice now gives a small reward
       case GameMode.scoreAttack:
         final level = state?.level ?? 1;
-        return (10 + (level ~/ 5)).clamp(10, 20);
+        return (10 + (level ~/ 5)).clamp(10, 50);
       case GameMode.endless:
         final streak = state?.correctAnswers ?? 0;
-        return (10 + (streak ~/ 5) * 2).clamp(10, 30);
+        return (10 + (streak ~/ 5) * 5).clamp(10, 100);
       case GameMode.duel:
-        return 15;
+        return 25;
       case GameMode.flash:
-        return 15;
+        return 20;
       case GameMode.speedDemon:
-        return 20; // high points for speed
+        return 30; // high points for speed
       case GameMode.mathMaster:
-        return 15;
+        return 25;
       case GameMode.marathon:
-        return 15;
+        return 20;
       default:
         return 10;
     }
@@ -706,7 +765,7 @@ class GameSessionNotifier extends StateNotifier<GameSession?> {
 
     if (isCorrect) {
       ref.read(soundManagerProvider).playCorrect();
-      newScore += 15;
+      newScore += state!.mode == GameMode.practice ? 5 : 15;
       newCorrect++;
     } else {
       ref.read(soundManagerProvider).playIncorrect();
@@ -898,6 +957,11 @@ class GameSessionNotifier extends StateNotifier<GameSession?> {
       // Update Daily Challenge for stars
       if (stars > 0) {
         ref.read(dailyChallengeProvider.notifier).incrementProgress('stars', stars);
+        
+        final achievements = ref.read(achievementDatabaseProvider);
+        final achievementNotifier = ref.read(achievementStateProvider.notifier);
+        final currentStars = achievementNotifier.getProgress('total_stars');
+        achievementNotifier.checkAndUnlock('total_stars', currentStars + stars, achievements);
       }
 
       if (passed) {
@@ -1001,6 +1065,29 @@ class GameSessionNotifier extends StateNotifier<GameSession?> {
       achievementNotifier.checkAndUnlock('accuracy', accuracy.toInt(), achievements);
       achievementNotifier.checkAndUnlock('speed_run', state!.correctAnswers.toInt(), achievements, timeValue: durationSeconds.toInt());
       achievementNotifier.checkAndUnlock('questions', state!.totalQuestions, achievements);
+      achievementNotifier.checkAndUnlock('streak', state!.bestStreak, achievements);
+      achievementNotifier.checkAndUnlock('score', state!.score, achievements);
+      
+      if (accuracy >= 100 && state!.totalQuestions >= 10) {
+        achievementNotifier.checkAndUnlock('perfect', 1, achievements);
+      }
+
+      if (state!.heatIndex >= 2.5) {
+        achievementNotifier.checkAndUnlock('heat', 250, achievements);
+      }
+
+      if (avgTime < 2.0 && state!.totalQuestions >= 50) {
+        achievementNotifier.checkAndUnlock('avg_time', 50, achievements, timeValue: avgTime.toInt());
+      }
+      
+      if (state!.mode == GameMode.campaign && state!.level == 50 && passed) {
+         achievementNotifier.checkAndUnlock('campaign_levels_unlocked', 50, achievements);
+      }
+
+      if (state!.mode == GameMode.duel && (state!.playerWon ?? false)) {
+        final currentWins = achievementNotifier.getProgress('duel_wins');
+        achievementNotifier.checkAndUnlock('duel_wins', currentWins + 1, achievements);
+      }
 
       // Unify analytics recording
       ref.read(analyticsProvider.notifier).recordSession(

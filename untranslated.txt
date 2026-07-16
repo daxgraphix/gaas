@@ -14,11 +14,21 @@
     "suddenDeathDesc",
     "zenDesc",
     "timeAttackDesc",
+    "practiceProcedure",
+    "feverMode",
+    "getHint",
+    "hintCost",
+    "takeYourTime",
+    "practiceSession",
     "accuracyTrend",
     "temporalInvestmentLabel",
     "difficultyLevelLabel",
     "excellent",
     "done",
-    "mathRiddles"
+    "mathRiddles",
+    "challengesSummary",
+    "dailyChallenges",
+    "weeklyChallenges",
+    "claimed"
   ]
 }

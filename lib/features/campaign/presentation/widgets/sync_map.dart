@@ -256,10 +256,23 @@ class _SyncNode extends StatelessWidget {
                       alignment: Alignment.center,
                       children: [
                         if (!isUnlocked)
-                          Icon(
-                            Icons.lock,
-                            color: AppDesignTokens.textMuted(context).withValues(alpha: 0.5),
-                            size: 24,
+                          Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                level.toString(),
+                                style: TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold,
+                                  color: AppDesignTokens.textMuted(context).withValues(alpha: 0.3),
+                                ),
+                              ),
+                              Icon(
+                                Icons.lock,
+                                color: AppDesignTokens.textMuted(context).withValues(alpha: 0.3),
+                                size: 14,
+                              ),
+                            ],
                           ),
                         if (isUnlocked)
                           isBoss

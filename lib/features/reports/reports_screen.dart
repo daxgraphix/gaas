@@ -67,6 +67,9 @@ class ReportsScreen extends ConsumerWidget {
                       child = _buildPerformanceInsights(context, theme, l10n);
                       break;
                     case 6:
+                      child = _buildChallengesSummary(context, theme, ref, l10n);
+                      break;
+                    case 7:
                       child = const SizedBox(height: 100); // Increased spacing for bottom navigation
                       break;
                   }
@@ -77,12 +80,160 @@ class ReportsScreen extends ConsumerWidget {
                       .fadeIn(duration: 400.ms, delay: (index * 50).ms)
                       .slideY(begin: 0.05, end: 0, curve: Curves.easeOutCubic);
                 },
-                childCount: 7, // Updated count to include the spacer
+                childCount: 8, // Updated count to include the spacer
               ),
             ),
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildChallengesSummary(BuildContext context, ThemeData theme, WidgetRef ref, AppLocalizations l10n) {
+    final challenges = ref.watch(dailyChallengeProvider);
+    final dailyChallenges = challenges.where((c) => !c.isWeekly).toList();
+    final weeklyChallenges = challenges.where((c) => c.isWeekly).toList();
+
+    return RepaintBoundary(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const SizedBox(height: 32),
+          Text(
+            l10n.challengesSummary,
+            style: theme.textTheme.titleLarge?.copyWith(
+              fontWeight: FontWeight.bold,
+              color: theme.colorScheme.onSurface,
+            ),
+          ),
+          const SizedBox(height: 16),
+          PremiumCard(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildChallengeSection(l10n.dailyChallenges, dailyChallenges, theme, l10n),
+                const SizedBox(height: 24),
+                Divider(height: 1, color: theme.colorScheme.outline.withValues(alpha: 0.1)),
+                const SizedBox(height: 24),
+                _buildChallengeSection(l10n.weeklyChallenges, weeklyChallenges, theme, l10n),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildChallengeSection(String title, List<DailyChallenge> challenges, ThemeData theme, AppLocalizations l10n) {
+    final completedCount = challenges.where((c) => c.isCompleted).length;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              title.toUpperCase(),
+              style: theme.textTheme.labelLarge?.copyWith(
+                fontWeight: FontWeight.w900,
+                letterSpacing: 1.2,
+                color: theme.colorScheme.primary,
+              ),
+            ),
+            Text(
+              '$completedCount / ${challenges.length}',
+              style: theme.textTheme.labelLarge?.copyWith(
+                fontWeight: FontWeight.bold,
+                color: theme.colorScheme.primary,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+        ...challenges.map((challenge) => Padding(
+          padding: const EdgeInsets.only(bottom: 12),
+          child: Row(
+            children: [
+              Container(
+                width: 32,
+                height: 32,
+                decoration: BoxDecoration(
+                  color: challenge.isCompleted 
+                      ? theme.colorScheme.primary.withValues(alpha: 0.1)
+                      : theme.colorScheme.surface,
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: challenge.isCompleted 
+                        ? theme.colorScheme.primary 
+                        : theme.colorScheme.outline.withValues(alpha: 0.2),
+                  ),
+                ),
+                child: Icon(
+                  challenge.isCompleted ? Icons.check : Icons.circle_outlined,
+                  size: 16,
+                  color: challenge.isCompleted 
+                      ? theme.colorScheme.primary 
+                      : theme.colorScheme.onSurface.withValues(alpha: 0.2),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      challenge.title,
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        decoration: challenge.isCompleted ? TextDecoration.lineThrough : null,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(2),
+                      child: LinearProgressIndicator(
+                        value: (challenge.currentValue / challenge.targetValue).clamp(0.0, 1.0),
+                        backgroundColor: theme.colorScheme.outline.withValues(alpha: 0.1),
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                          challenge.isCompleted ? theme.colorScheme.primary : theme.colorScheme.secondary,
+                        ),
+                        minHeight: 4,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 12),
+              if (challenge.isClaimed)
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: Colors.green.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Text(
+                    l10n.claimed.toUpperCase(),
+                    style: const TextStyle(
+                      color: Colors.green,
+                      fontSize: 8,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                )
+              else
+                Text(
+                  '${challenge.rewardPoints} pts',
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                  ),
+                ),
+            ],
+          ),
+        )),
+      ],
     );
   }
 

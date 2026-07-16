@@ -141,6 +141,21 @@ class AppLocalizationsSw extends AppLocalizations {
   String get time => 'Muda';
 
   @override
+  String get timeUppercase => 'MUDA';
+
+  @override
+  String get heat => 'JOTO';
+
+  @override
+  String get streakUppercase => 'MFULULIZO';
+
+  @override
+  String get maxStreak => 'MFULULIZO BORA';
+
+  @override
+  String get correctAnswersLabel => 'SAHIHI';
+
+  @override
   String get gameOver => 'Mchezo Umekwisha';
 
   @override
@@ -567,6 +582,29 @@ class AppLocalizationsSw extends AppLocalizations {
   String get exportReport => 'Hamisha Ripoti';
 
   @override
+  String get practiceProcedure => 'Practice Procedure';
+
+  @override
+  String get practiceMode => 'Hali ya Mazoezi';
+
+  @override
+  String get feverMode => 'FEVER MODE';
+
+  @override
+  String get getHint => 'GET HINT';
+
+  @override
+  String hintCost(Object cost) {
+    return '$cost PTS';
+  }
+
+  @override
+  String get takeYourTime => 'Take your time.';
+
+  @override
+  String get practiceSession => 'Practice Session';
+
+  @override
   String get accuracyTrend => 'ACCURACY';
 
   @override
@@ -813,9 +851,6 @@ class AppLocalizationsSw extends AppLocalizations {
 
   @override
   String get startYourMathematicalJourney => 'Anza safari yako ya hisabati';
-
-  @override
-  String get practiceMode => 'Hali ya Mazoezi';
 
   @override
   String get focusOnSpecificOperations => 'Zingatia operesheni maalum';
@@ -1748,4 +1783,16 @@ class AppLocalizationsSw extends AppLocalizations {
   String generatedOn(Object date) {
     return 'Imetolewa mnamo $date';
   }
+
+  @override
+  String get challengesSummary => 'Challenges Summary';
+
+  @override
+  String get dailyChallenges => 'Daily Challenges';
+
+  @override
+  String get weeklyChallenges => 'Weekly Challenges';
+
+  @override
+  String get claimed => 'Claimed';
 }

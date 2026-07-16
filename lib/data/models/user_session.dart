@@ -40,9 +40,9 @@ class UserSession {
   })  : createdAt = createdAt ?? DateTime.now(),
         lastPlayedAt = lastPlayedAt ?? DateTime.now();
 
-  int get level => (totalPoints / 2500).floor() + 1;
-  double get levelProgress => (totalPoints % 2500) / 2500;
-  int get pointsToNextLevel => 2500 - (totalPoints % 2500);
+  int get level => (totalPoints / 1000).floor() + 1;
+  double get levelProgress => (totalPoints % 1000) / 1000;
+  int get pointsToNextLevel => 1000 - (totalPoints % 1000);
 
   UserSession copyWith({
     String? id,
